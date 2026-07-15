@@ -245,7 +245,7 @@ export default function FloorsMap() {
           </div>
         ) : (
           <div className="space-y-6">
-            {floors.map((floor) => (
+            {[...floors].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true })).reverse().map((floor) => (
               <FloorCard
                 key={floor._id}
                 floor={floor}
