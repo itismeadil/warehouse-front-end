@@ -12,7 +12,6 @@ const emptyPart = (id) => ({
   stock: "",
 });
 
-
 export default function AddItemForm() {
   const [itemSerialNumber, setItemSerialNumber] = useState("");
   const [itemName, setItemName] = useState("");
@@ -106,21 +105,27 @@ export default function AddItemForm() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 sm:py-10">
+      <button
+        type="button"
+        onClick={() => navigate(-1)}
+        className="mb-6 inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-white px-4 py-3 text-base font-semibold text-blue-600 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500/30 group"
+      >
+        <span className="inline-block transition-transform group-hover:-translate-x-1">
+          ←
+        </span>
+        Back
+      </button>
+
       <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h2 className="text-xl font-semibold text-slate-900">Add New Item</h2>
+            <h2 className="text-xl font-semibold text-slate-900">
+              Add New Item
+            </h2>
             <p className="mt-1 text-sm text-slate-500">
               Enter the item details and at least one storage location.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            className="rounded-lg border border-slate-300 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
-          >
-            Back
-          </button>
         </div>
 
         <form onSubmit={handleSubmit} className="mt-6">

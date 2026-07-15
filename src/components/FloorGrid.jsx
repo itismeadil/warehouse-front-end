@@ -94,10 +94,20 @@ export default function FloorGrid({
   };
 
   const handleMouseMove = (e) => {
-    if (!onCellClick) return;
     const { row, col } = cellFromEvent(e);
     const key = `${row}-${col}`;
-    setHover(shapeSet.has(key) ? occupiedMap.get(key) || null : null);
+    const entry = shapeSet.has(key) ? occupiedMap.get(key) : null;
+
+    if (!entry) {
+      setHover(null);
+      return;
+    }
+
+    setHover({
+      entry,
+      x: col * PITCH + PITCH / 2,
+      y: row * PITCH + PITCH / 2,
+    });
   };
 
   return (
@@ -112,9 +122,20 @@ export default function FloorGrid({
         className={onCellClick ? "cursor-pointer" : ""}
       />
       {hover && (
-        <div className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-slate-900 px-2 py-1 text-xs text-white shadow">
-          {hover.itemName}
-          {hover.partName ? ` — ${hover.partName}` : ""}
+        <div
+          className="pointer-events-none absolute whitespace-nowrap rounded bg-slate-900 px-2 py-1 text-xs text-white shadow"
+          style={{
+            left: hover.x + 8, // +8 accounts for the container's p-2 padding
+            top: hover.y + 8,
+            transform: "translate(-50%, calc(-100% - 8px))",
+          }}
+        >
+          {hover.entry.itemName}
+          {hover.entry.partName ? ` — ${hover.entry.partName}` : ""}
+          {" · SN: #"}
+          {hover.entry.serialNumber}
+          {" · Qty: "}
+          {hover.entry.stock}
         </div>
       )}
     </div>
