@@ -1,4 +1,5 @@
 import { useRef, useEffect, useState } from "react";
+import { expandArea } from "../lib/floorShape";
 
 const PITCH = 6;
 const RADIUS = 2.4;
@@ -8,8 +9,12 @@ const OCCUPIED_COLOR = "#2563eb"; // blue-600
 const SELECTED_COLOR = "#10b981"; // emerald-500
 
 // Renders a floor's drawn shape as dots. Only cells the person actually
-// painted in (shapeCells) are drawn — everything else is left blank, so the
-// floor looks like the shape it was drawn as, not a rectangle.
+// painted in (shapeCells — already decoded from the floor's bitmap) are
+// drawn; everything else is left blank.
+//
+// `occupied` is a list of parts, each with a rectangular `area` — this
+// component expands those into individual dots itself, so nothing upstream
+// has to send or store per-cell data.
 //
 // Read-only when no onCellClick is passed. Otherwise, clicking a shape dot
 // toggles it in/out of selectedCells; a dot already occupied by something
@@ -26,8 +31,14 @@ export default function FloorGrid({
   const [hover, setHover] = useState(null);
 
   const shapeSet = new Set(shapeCells.map((c) => `${c.row}-${c.col}`));
+
   const occupiedMap = new Map();
-  occupied.forEach((c) => occupiedMap.set(`${c.row}-${c.col}`, c));
+  occupied.forEach((entry) => {
+    expandArea(entry.area).forEach(({ row, col }) => {
+      occupiedMap.set(`${row}-${col}`, entry);
+    });
+  });
+
   const selectedSet = new Set(selectedCells.map((c) => `${c.row}-${c.col}`));
 
   const width = cols * PITCH;

@@ -1,9 +1,44 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { getFloors, createFloor, getFloorOccupancy } from "../api/floors";
 import { FLOOR_SIZE_PRESETS } from "../floorSizePresets";
+import { encodeShape, decodeShape, areaSize } from "../lib/floorShape";
 import FloorShapeEditor from "./FloorShapeEditor";
 import FloorGrid from "./FloorGrid";
+
+function FloorCard({ floor, occupancy }) {
+  const shapeCells = useMemo(
+    () => decodeShape(floor.rows, floor.cols, floor.shape),
+    [floor],
+  );
+
+  const occupiedCount = useMemo(
+    () =>
+      occupancy
+        ? occupancy.occupied.reduce((sum, o) => sum + areaSize(o.area), 0)
+        : 0,
+    [occupancy],
+  );
+
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="font-semibold text-slate-900">{floor.name}</h2>
+        <span className="text-sm text-slate-500">
+          {occupiedCount} / {shapeCells.length} occupied
+        </span>
+      </div>
+      {occupancy && (
+        <FloorGrid
+          rows={floor.rows}
+          cols={floor.cols}
+          shapeCells={shapeCells}
+          occupied={occupancy.occupied}
+        />
+      )}
+    </div>
+  );
+}
 
 export default function FloorsMap() {
   const [floors, setFloors] = useState([]);
@@ -61,13 +96,15 @@ export default function FloorsMap() {
       return;
     }
 
+    const shape = encodeShape(preset.rows, preset.cols, cells);
+
     setSaving(true);
     try {
       await createFloor({
         name,
         rows: preset.rows,
         cols: preset.cols,
-        cells,
+        shape,
       });
       resetForm();
       loadFloors();
@@ -208,33 +245,13 @@ export default function FloorsMap() {
           </div>
         ) : (
           <div className="space-y-6">
-            {floors.map((floor) => {
-              const occ = occupancyByFloor[floor._id];
-              return (
-                <div
-                  key={floor._id}
-                  className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
-                >
-                  <div className="mb-4 flex items-center justify-between">
-                    <h2 className="font-semibold text-slate-900">
-                      {floor.name}
-                    </h2>
-                    <span className="text-sm text-slate-500">
-                      {occ ? occ.occupied.length : 0} / {floor.cells.length}{" "}
-                      occupied
-                    </span>
-                  </div>
-                  {occ && (
-                    <FloorGrid
-                      rows={floor.rows}
-                      cols={floor.cols}
-                      shapeCells={floor.cells}
-                      occupied={occ.occupied}
-                    />
-                  )}
-                </div>
-              );
-            })}
+            {floors.map((floor) => (
+              <FloorCard
+                key={floor._id}
+                floor={floor}
+                occupancy={occupancyByFloor[floor._id]}
+              />
+            ))}
           </div>
         )}
       </div>

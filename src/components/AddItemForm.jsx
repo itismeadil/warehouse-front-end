@@ -7,9 +7,7 @@ const emptyPart = (id) => ({
   id,
   floorId: null,
   floorName: null,
-  row: null,
-  col: null,
-  cells: [],
+  area: null,
   stock: "",
 });
 
@@ -73,9 +71,7 @@ export default function AddItemForm() {
           // format: "totalParts/index pcs/ctn" e.g. "3/1 pcs/ctn"
           name: `${parts.length}/${index + 1} pcs/ctn`,
           floorId: part.floorId || null,
-          row: part.row,
-          col: part.col,
-          cells: part.cells || [],
+          area: part.area || null,
           stock: stockVal,
           damaged: parseInt(part.damaged) || 0,
           reserved: parseInt(part.reserved) || 0,

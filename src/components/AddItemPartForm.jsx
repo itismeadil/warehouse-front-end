@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { areaSize } from "../lib/floorShape";
 import FloorPickerModal from "./FloorPickerModal";
 
 export default function AddItemPartForm({
@@ -12,7 +13,7 @@ export default function AddItemPartForm({
 }) {
   const [showPicker, setShowPicker] = useState(false);
 
-  const hasLocation = part.floorId && part.cells && part.cells.length > 0;
+  const hasLocation = Boolean(part.floorId && part.area);
 
   return (
     <div className="relative rounded-lg border border-slate-200 bg-slate-50 p-4">
@@ -43,8 +44,8 @@ export default function AddItemPartForm({
             <div className="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900">
               {hasLocation ? (
                 <>
-                  {part.floorName ?? "Floor"} · {part.cells.length} square
-                  {part.cells.length !== 1 ? "s" : ""}
+                  {part.floorName ?? "Floor"} · {areaSize(part.area)} square
+                  {areaSize(part.area) !== 1 ? "s" : ""}
                 </>
               ) : (
                 <span className="text-slate-400">No location set</span>
@@ -84,10 +85,10 @@ export default function AddItemPartForm({
         <FloorPickerModal
           floors={floors}
           initialFloorId={part.floorId}
-          initialCells={hasLocation ? part.cells : []}
+          initialArea={hasLocation ? part.area : null}
           onClose={() => setShowPicker(false)}
-          onConfirm={({ floorId, floorName, row, col, cells }) => {
-            onLocationChange(part.id, { floorId, floorName, row, col, cells });
+          onConfirm={({ floorId, floorName, area }) => {
+            onLocationChange(part.id, { floorId, floorName, area });
             setShowPicker(false);
           }}
         />

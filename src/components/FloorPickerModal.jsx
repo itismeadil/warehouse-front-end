@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { getFloorOccupancy } from "../api/floors";
+import { decodeShape, expandArea } from "../lib/floorShape";
 import FloorGrid from "./FloorGrid";
 
 const MIN_CELLS = 4;
@@ -7,16 +8,27 @@ const MIN_CELLS = 4;
 export default function FloorPickerModal({
   floors,
   initialFloorId,
-  initialCells = [],
+  initialArea,
   onConfirm,
   onClose,
 }) {
   const [floorId, setFloorId] = useState(initialFloorId || "");
   const [occupancy, setOccupancy] = useState(null);
-  const [selectedCells, setSelectedCells] = useState(initialCells);
+  const [selectedCells, setSelectedCells] = useState(
+    initialArea ? expandArea(initialArea) : [],
+  );
   const [loading, setLoading] = useState(!!initialFloorId);
 
   const selectedFloor = floors.find((f) => f._id === floorId);
+
+  const shapeCells = useMemo(() => {
+    if (!occupancy) return [];
+    return decodeShape(
+      occupancy.floor.rows,
+      occupancy.floor.cols,
+      occupancy.floor.shape,
+    );
+  }, [occupancy]);
 
   useEffect(() => {
     if (!floorId) {
@@ -27,7 +39,9 @@ export default function FloorPickerModal({
     }
 
     // Only keep the incoming selection if we're viewing the floor it belongs to
-    setSelectedCells(floorId === initialFloorId ? initialCells : []);
+    setSelectedCells(
+      floorId === initialFloorId && initialArea ? expandArea(initialArea) : [],
+    );
 
     setLoading(true);
     getFloorOccupancy(floorId)
@@ -89,15 +103,19 @@ export default function FloorPickerModal({
       return;
     }
 
-    const minRow = Math.min(...selectedCells.map((c) => c.row));
-    const minCol = Math.min(...selectedCells.map((c) => c.col));
+    // selectedCells is always a filled rectangle by this point, so its
+    // bounding box fully describes it — that's all that gets stored.
+    const area = {
+      rowStart: Math.min(...selectedCells.map((c) => c.row)),
+      rowEnd: Math.max(...selectedCells.map((c) => c.row)),
+      colStart: Math.min(...selectedCells.map((c) => c.col)),
+      colEnd: Math.max(...selectedCells.map((c) => c.col)),
+    };
 
     onConfirm({
       floorId,
       floorName: selectedFloor?.name,
-      row: minRow, // top-left cell, kept for quick display
-      col: minCol,
-      cells: selectedCells, // the full selected area
+      area,
     });
   };
 
@@ -180,7 +198,7 @@ export default function FloorPickerModal({
                 <FloorGrid
                   rows={occupancy.floor.rows}
                   cols={occupancy.floor.cols}
-                  shapeCells={occupancy.floor.cells}
+                  shapeCells={shapeCells}
                   occupied={occupancy.occupied}
                   selectedCells={selectedCells}
                   onCellClick={toggleCell}
