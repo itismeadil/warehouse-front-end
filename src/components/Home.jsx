@@ -15,13 +15,21 @@ export default function Home() {
             </p>
           </div>
 
-          <Link
-            to="/add"
-            className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-          >
-            <span className="text-base leading-none">+</span>
-            Add Item
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              to="/floors"
+              className="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            >
+              Floor Maps
+            </Link>
+            <Link
+              to="/add"
+              className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            >
+              <span className="text-base leading-none">+</span>
+              Add Item
+            </Link>
+          </div>
         </div>
 
         <ItemList />

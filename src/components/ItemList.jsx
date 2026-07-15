@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+import { getItems, updatePart } from "../api/items";
 
 const ItemList = () => {
   const [items, setItems] = useState([]);
@@ -9,44 +9,35 @@ const ItemList = () => {
 
   const fetchItems = async () => {
     setLoading(true);
-
     try {
-      const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/items`);
-
-      setItems(data);
-    } catch (error) {
-      console.error(error);
+      const data = await getItems();
+      setItems(data || []);
+    } catch (err) {
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
-  // Fixed useEffect
   useEffect(() => {
     fetchItems();
-  }, []); // Empty dependency array is correct
+  }, []);
 
   const updatePartField = async (partId, field, change) => {
-    if (!selectedPart || !selectedItem) return;
+    if (!selectedItem || !selectedPart) return;
 
     try {
-      const { data } = await axios.patch(
-        `${import.meta.env.VITE_API_URL}/items/${selectedItem._id}/parts/${partId}`,
-        {
-          field,
-          change,
-        },
-      );
-
-      // Update the selected part with the latest data from the server
-      setSelectedPart(data);
-
-      // Refresh the items list so the popup and cards stay in sync
+      const updated = await updatePart(selectedItem._id, partId, {
+        field,
+        change,
+      });
+      setSelectedPart(updated);
+      // Refresh full list in background
       fetchItems();
     } catch (error) {
-      console.error(error);
-
-      alert(error.response?.data?.message || "Update failed");
+      alert(
+        "Update failed: " + (error.response?.data?.message || error.message),
+      );
     }
   };
 
@@ -174,7 +165,15 @@ const ItemList = () => {
               <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2.5">
                 <span className="text-sm text-slate-500">Location</span>
                 <span className="text-sm font-medium text-slate-900">
-                  {selectedPart.location}
+                  {selectedPart.floorId ? (
+                    <>
+                      {selectedPart.floorId.name} ·{" "}
+                      {selectedPart.cells?.length || 0} square
+                      {selectedPart.cells?.length !== 1 ? "s" : ""}
+                    </>
+                  ) : (
+                    <span className="text-slate-400">Not set</span>
+                  )}
                 </span>
               </div>
 
@@ -250,7 +249,9 @@ const ItemList = () => {
                     {selectedPart.sold || 0}
                   </span>
                   <button
-                    onClick={() => updatePartField(selectedPart._id, "sold", 1)}
+                    onClick={() =>
+                      updatePartField(selectedPart._id, "sold", 1)
+                    }
                     className="flex h-7 w-7 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-600 transition-colors hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
                   >
                     +

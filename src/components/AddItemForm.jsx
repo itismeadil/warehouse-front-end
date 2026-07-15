@@ -1,13 +1,31 @@
-import { useState } from "react";
-import axios from "axios";
+import { useState, useEffect } from "react";
+import { createItem } from "../api/items";
+import { getFloors } from "../api/floors";
 import AddItemPartForm from "./AddItemPartForm";
+
+const emptyPart = (id) => ({
+  id,
+  floorId: null,
+  floorName: null,
+  row: null,
+  col: null,
+  cells: [],
+  stock: "",
+});
 
 export default function AddItemForm() {
   const [itemSerialNumber, setItemSerialNumber] = useState("");
   const [itemName, setItemName] = useState("");
-  const [parts, setParts] = useState([{ id: 1, location: "", stock: "" }]);
+  const [parts, setParts] = useState([emptyPart(1)]);
   const [nextId, setNextId] = useState(2);
   const [loading, setLoading] = useState(false);
+  const [floors, setFloors] = useState([]);
+
+  useEffect(() => {
+    getFloors()
+      .then(setFloors)
+      .catch((err) => console.error("Failed to load floors:", err));
+  }, []);
 
   const handlePartChange = (id, field, value) => {
     setParts(
@@ -17,8 +35,14 @@ export default function AddItemForm() {
     );
   };
 
+  const handlePartLocationChange = (id, location) => {
+    setParts(
+      parts.map((part) => (part.id === id ? { ...part, ...location } : part)),
+    );
+  };
+
   const handleAddPart = () => {
-    setParts([...parts, { id: nextId, location: "", stock: "" }]);
+    setParts([...parts, emptyPart(nextId)]);
     setNextId(nextId + 1);
   };
 
@@ -30,7 +54,6 @@ export default function AddItemForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!itemSerialNumber || !itemName) {
       alert("Serial Number and Item Name are required");
       return;
@@ -39,31 +62,43 @@ export default function AddItemForm() {
     setLoading(true);
 
     try {
-      const item = {
+      const partsToInsert = parts.map((part, index) => {
+        const stockVal =
+          (parseInt(part.stock) || 0) +
+          (parseInt(part.damaged) || 0) +
+          (parseInt(part.reserved) || 0) +
+          (parseInt(part.sold) || 0);
+
+        return {
+          // format: "totalParts/index pcs/ctn" e.g. "3/1 pcs/ctn"
+          name: `${parts.length}/${index + 1} pcs/ctn`,
+          floorId: part.floorId || null,
+          row: part.row,
+          col: part.col,
+          cells: part.cells || [],
+          stock: stockVal,
+          damaged: parseInt(part.damaged) || 0,
+          reserved: parseInt(part.reserved) || 0,
+          sold: parseInt(part.sold) || 0,
+        };
+      });
+
+      await createItem({
         serialNumber: itemSerialNumber,
         name: itemName,
-        parts: parts.map((part, index) => ({
-          name: `${parts.length}/${index + 1} pcs/ctn`,
-          location: part.location,
-          stock: Number(part.stock) || 0,
-          reserved: Number(part.reserved) || 0,
-          damaged: Number(part.damaged) || 0,
-          sold: Number(part.sold) || 0,
-        })),
-      };
+        parts: partsToInsert,
+      });
 
-      await axios.post(`${import.meta.env.VITE_API_URL}/items`, item);
+      alert("✅ Item and parts added successfully!");
 
-      alert("✅ Item added successfully!");
-
+      // Reset
       setItemSerialNumber("");
       setItemName("");
-      setParts([{ id: 1, location: "", stock: "" }]);
+      setParts([emptyPart(1)]);
       setNextId(2);
     } catch (error) {
       console.error(error);
-
-      alert(error.response?.data?.message || "Failed to save item.");
+      alert("Error: " + (error.response?.data?.message || error.message));
     } finally {
       setLoading(false);
     }
@@ -117,9 +152,16 @@ export default function AddItemForm() {
           </div>
 
           <div className="mt-8 border-t border-slate-200 pt-6">
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Parts
-            </h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Parts
+              </h3>
+              {floors.length === 0 && (
+                <span className="text-xs text-amber-600">
+                  No floors yet — add one on the Floor Maps page
+                </span>
+              )}
+            </div>
 
             <div className="mt-3 space-y-3">
               {parts.map((part, index) => (
@@ -128,7 +170,9 @@ export default function AddItemForm() {
                   part={part}
                   index={index}
                   totalParts={parts.length}
+                  floors={floors}
                   onChange={handlePartChange}
+                  onLocationChange={handlePartLocationChange}
                   onRemove={handleRemovePart}
                 />
               ))}
