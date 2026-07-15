@@ -1,114 +1,149 @@
-import FloorMap from "./FloorMap";
+import { useState, useEffect } from "react";
+import { getFloorOccupancy } from "../api/floors";
+import { areaSize, decodeShape, expandArea } from "../lib/floorShape";
+import FloorGrid from "./FloorGrid";
 
-/**
- * Part details panel / modal.
- * Shows stock counters and an interactive floor map for navigation.
- */
-const PartDetail = ({ item, part, onClose, onUpdateField, onCellClick }) => {
+const PartDetail = ({ item, part, onBack, onUpdateField }) => {
+  const [partFloorMap, setPartFloorMap] = useState(null);
+  const [partFloorMapLoading, setPartFloorMapLoading] = useState(false);
+
+  useEffect(() => {
+    const floorId = part?.floorId?._id;
+    if (!floorId) {
+      setPartFloorMap(null);
+      return;
+    }
+
+    setPartFloorMapLoading(true);
+    getFloorOccupancy(floorId)
+      .then(setPartFloorMap)
+      .catch((err) => {
+        console.error(err);
+        setPartFloorMap(null);
+      })
+      .finally(() => setPartFloorMapLoading(false));
+  }, [part?.floorId?._id]);
+
   if (!part) return null;
 
-  const locationLabel = part.floorId?.name
-    ? `${part.floorId.name} · Row ${Number(part.row) + 1}, Col ${Number(part.col) + 1}`
-    : part.floorName
-      ? `${part.floorName} · Row ${Number(part.row) + 1}, Col ${Number(part.col) + 1}`
-      : "No floor assigned";
-
-  const fields = [
-    { key: "stock", label: "Stock", value: part.stock, allowDecrement: true },
-    {
-      key: "damaged",
-      label: "Damaged",
-      value: part.damaged || 0,
-      allowDecrement: true,
-    },
-    {
-      key: "reserved",
-      label: "Reserved",
-      value: part.reserved || 0,
-      allowDecrement: true,
-    },
-    {
-      key: "sold",
-      label: "Sold",
-      value: part.sold || 0,
-      allowDecrement: true,
-    },
-  ];
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
-      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl bg-white p-5 shadow-xl">
-        <div className="mb-4 flex items-start justify-between gap-3">
-          <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-              {item?.name || "Item"}
-            </p>
-            <h2 className="text-lg font-semibold text-slate-900">
-              {part.name}
-            </h2>
-            <p className="mt-1 text-sm text-slate-500">{locationLabel}</p>
-            {part.locationType && (
-              <p className="mt-0.5 text-xs capitalize text-slate-400">
-                Location type: {part.locationType}
+    <div className="mx-auto max-w-2xl">
+      <button
+        onClick={onBack}
+        className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 transition-colors hover:text-slate-800"
+      >
+        ← Back to {item?.name || "item"}
+      </button>
+
+      <h2 className="text-lg font-semibold text-slate-900">{item?.name}</h2>
+      <p className="mt-0.5 text-sm font-medium text-blue-600">{part.name}</p>
+
+      <div className="mt-5 space-y-3">
+        <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2.5">
+          <span className="text-sm text-slate-500">Location</span>
+          <span className="text-sm font-medium text-slate-900">
+            {part.floorId && part.area ? (
+              <>
+                {part.floorId.name} · {areaSize(part.area)} square
+                {areaSize(part.area) !== 1 ? "s" : ""}
+              </>
+            ) : (
+              <span className="text-slate-400">Not set</span>
+            )}
+          </span>
+        </div>
+
+        {part.floorId && part.area && (
+          <div className="rounded-lg bg-slate-50 p-3">
+            {partFloorMapLoading || !partFloorMap ? (
+              <p className="py-4 text-center text-sm text-slate-500">
+                Loading map...
               </p>
+            ) : (
+              <FloorGrid
+                rows={partFloorMap.floor.rows}
+                cols={partFloorMap.floor.cols}
+                shapeCells={decodeShape(
+                  partFloorMap.floor.rows,
+                  partFloorMap.floor.cols,
+                  partFloorMap.floor.shape,
+                )}
+                occupied={partFloorMap.occupied}
+                selectedCells={expandArea(part.area)}
+              />
             )}
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-md px-2 py-1 text-sm text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800"
-            aria-label="Close part details"
-          >
-            ✕
-          </button>
+        )}
+
+        <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2.5">
+          <span className="text-sm text-slate-500">Stock</span>
+          <span className="text-sm font-medium text-slate-900">
+            {part.stock}
+          </span>
         </div>
 
-        <div className="space-y-2">
-          {fields.map(({ key, label, value }) => (
-            <div
-              key={key}
-              className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2.5"
+        <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2.5">
+          <span className="text-sm text-slate-500">Damaged</span>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => onUpdateField(part._id, "damaged", -1)}
+              className="flex h-7 w-7 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-600 transition-colors hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
             >
-              <span className="text-sm text-slate-500">{label}</span>
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => onUpdateField?.(part._id, key, -1)}
-                  className="flex h-7 w-7 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-600 transition-colors hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
-                  aria-label={`Decrease ${label}`}
-                >
-                  −
-                </button>
-                <span className="w-6 text-center text-sm font-medium text-slate-900">
-                  {value}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => onUpdateField?.(part._id, key, 1)}
-                  className="flex h-7 w-7 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-600 transition-colors hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
-                  aria-label={`Increase ${label}`}
-                >
-                  +
-                </button>
-              </div>
-            </div>
-          ))}
+              −
+            </button>
+            <span className="w-4 text-center text-sm font-medium text-slate-900">
+              {part.damaged || 0}
+            </span>
+            <button
+              onClick={() => onUpdateField(part._id, "damaged", 1)}
+              className="flex h-7 w-7 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-600 transition-colors hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+            >
+              +
+            </button>
+          </div>
         </div>
 
-        <div className="mt-5 border-t border-slate-100 pt-4">
-          <h3 className="mb-3 text-sm font-semibold text-slate-900">
-            Floor map
-          </h3>
-          <FloorMap part={part} onCellClick={onCellClick} />
+        <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2.5">
+          <span className="text-sm text-slate-500">Reserved</span>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => onUpdateField(part._id, "reserved", -1)}
+              className="flex h-7 w-7 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-600 transition-colors hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+            >
+              −
+            </button>
+            <span className="w-4 text-center text-sm font-medium text-slate-900">
+              {part.reserved || 0}
+            </span>
+            <button
+              onClick={() => onUpdateField(part._id, "reserved", 1)}
+              className="flex h-7 w-7 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-600 transition-colors hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+            >
+              +
+            </button>
+          </div>
         </div>
 
-        <button
-          type="button"
-          onClick={onClose}
-          className="mt-6 w-full rounded-lg border border-slate-300 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
-        >
-          Back to Parts
-        </button>
+        <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2.5">
+          <span className="text-sm text-slate-500">Sold</span>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => onUpdateField(part._id, "sold", -1)}
+              className="flex h-7 w-7 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-600 transition-colors hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+            >
+              −
+            </button>
+            <span className="w-4 text-center text-sm font-medium text-slate-900">
+              {part.sold || 0}
+            </span>
+            <button
+              onClick={() => onUpdateField(part._id, "sold", 1)}
+              className="flex h-7 w-7 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-600 transition-colors hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+            >
+              +
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
