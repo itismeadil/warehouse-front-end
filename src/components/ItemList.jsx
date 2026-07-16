@@ -83,7 +83,7 @@ const ItemList = ({ items, loading, searchTerm = "" }) => {
                 >
                   <div className="flex min-w-0 items-center gap-3">
                     <span
-                      className="h-4 w-4 flex-shrink-0 rounded-sm border border-slate-300"
+                      className="h-4 w-4 shrink-0 rounded-sm border border-slate-300"
                       style={{ backgroundColor: item.color }}
                       title={item.color}
                     />
@@ -91,7 +91,7 @@ const ItemList = ({ items, loading, searchTerm = "" }) => {
                       {item.name}
                     </span>
                   </div>
-                  <span className="flex-shrink-0 pl-3 text-sm text-slate-500">
+                  <span className="shrink-0 pl-3 text-sm text-slate-500">
                     {item.serialNumber}
                   </span>
                 </button>

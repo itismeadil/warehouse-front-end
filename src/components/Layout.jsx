@@ -3,8 +3,18 @@ import { Home, Plus, Map } from "lucide-react";
 
 const NAV_ITEMS = [
   { to: "/", label: "Home", icon: Home, match: (path) => path === "/" },
-  { to: "/add", label: "Add item", icon: Plus, match: (path) => path === "/add" },
-  { to: "/floors", label: "Floor maps", icon: Map, match: (path) => path === "/floors" },
+  {
+    to: "/add",
+    label: "Add item",
+    icon: Plus,
+    match: (path) => path === "/add",
+  },
+  {
+    to: "/floors",
+    label: "Floor maps",
+    icon: Map,
+    match: (path) => path === "/floors",
+  },
 ];
 
 export default function Layout({ children }) {
@@ -13,7 +23,7 @@ export default function Layout({ children }) {
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="mx-auto flex max-w-6xl gap-6 px-4 py-6 sm:px-6">
-        <aside className="w-44 flex-shrink-0">
+        <aside className="w-44 shrink-0">
           <div className="sticky top-6 rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
             <p className="px-2 pb-3 pt-1 text-sm font-semibold text-slate-900">
               Warehouse

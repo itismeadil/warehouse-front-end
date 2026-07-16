@@ -50,8 +50,11 @@ export default function Home() {
   };
 
   useEffect(() => {
-    loadItems();
-    loadFloorStats();
+    // avoid calling setState synchronously in the effect body
+    (async () => {
+      await loadItems();
+      await loadFloorStats();
+    })();
   }, []);
 
   const refresh = () => {
