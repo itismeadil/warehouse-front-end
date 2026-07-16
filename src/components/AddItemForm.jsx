@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { createItem } from "../api/items";
 import { getFloors } from "../api/floors";
 import AddItemPartForm from "./AddItemPartForm";
@@ -15,11 +14,11 @@ const emptyPart = (id) => ({
 export default function AddItemForm() {
   const [itemSerialNumber, setItemSerialNumber] = useState("");
   const [itemName, setItemName] = useState("");
+  const [itemColor, setItemColor] = useState("");
   const [parts, setParts] = useState([emptyPart(1)]);
   const [nextId, setNextId] = useState(2);
   const [loading, setLoading] = useState(false);
   const [floors, setFloors] = useState([]);
-  const navigate = useNavigate();
 
   useEffect(() => {
     getFloors()
@@ -54,8 +53,8 @@ export default function AddItemForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!itemSerialNumber || !itemName) {
-      alert("Serial Number and Item Name are required");
+    if (!itemSerialNumber || !itemName || !itemColor) {
+      alert("Serial Number, Item Name, and Color are required");
       return;
     }
 
@@ -84,6 +83,7 @@ export default function AddItemForm() {
       await createItem({
         serialNumber: itemSerialNumber,
         name: itemName,
+        color: itemColor,
         parts: partsToInsert,
       });
 
@@ -92,9 +92,9 @@ export default function AddItemForm() {
       // Reset
       setItemSerialNumber("");
       setItemName("");
+      setItemColor("");
       setParts([emptyPart(1)]);
       setNextId(2);
-      navigate("/");
     } catch (error) {
       console.error(error);
       alert("Error: " + (error.response?.data?.message || error.message));
@@ -104,29 +104,12 @@ export default function AddItemForm() {
   };
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 sm:py-10">
-      <button
-        type="button"
-        onClick={() => navigate(-1)}
-        className="mb-6 inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-white px-4 py-3 text-base font-semibold text-blue-600 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500/30 group"
-      >
-        <span className="inline-block transition-transform group-hover:-translate-x-1">
-          ←
-        </span>
-        Back
-      </button>
-
+    <div className="mx-auto max-w-2xl">
       <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h2 className="text-xl font-semibold text-slate-900">
-              Add New Item
-            </h2>
-            <p className="mt-1 text-sm text-slate-500">
-              Enter the item details and at least one storage location.
-            </p>
-          </div>
-        </div>
+        <h2 className="text-xl font-semibold text-slate-900">Add New Item</h2>
+        <p className="mt-1 text-sm text-slate-500">
+          Enter the item details and at least one storage location.
+        </p>
 
         <form onSubmit={handleSubmit} className="mt-6">
           <div className="space-y-4">
@@ -141,6 +124,7 @@ export default function AddItemForm() {
                 type="text"
                 id="serialNumber"
                 value={itemSerialNumber}
+                autocomplete="off"
                 onChange={(e) => setItemSerialNumber(e.target.value)}
                 placeholder="Enter item serial number"
                 required
@@ -159,11 +143,39 @@ export default function AddItemForm() {
                 type="text"
                 id="itemName"
                 value={itemName}
+                autocomplete="off"
                 onChange={(e) => setItemName(e.target.value)}
                 placeholder="Enter item name"
                 required
                 className="mt-1.5 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
               />
+            </div>
+
+            <div>
+              <label
+                htmlFor="itemColor"
+                className="block text-sm font-medium text-slate-700"
+              >
+                Color
+              </label>
+              <div className="mt-1.5 flex items-center gap-2">
+                <input
+                  type="color"
+                  value={itemColor || "#94a3b8"}
+                  onChange={(e) => setItemColor(e.target.value)}
+                  className="h-10 w-12 shrink-0 cursor-pointer rounded-lg border border-slate-300 p-1"
+                />
+                <input
+                  type="text"
+                  id="itemColor"
+                  autocomplete="off"
+                  value={itemColor}
+                  onChange={(e) => setItemColor(e.target.value)}
+                  placeholder="e.g. Walnut or #8a5a3a"
+                  required
+                  className="block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                />
+              </div>
             </div>
           </div>
 

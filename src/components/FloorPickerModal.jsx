@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { getFloorOccupancy } from "../api/floors";
+import { X } from "lucide-react";
 import { decodeShape, expandArea } from "../lib/floorShape";
 import FloorGrid from "./FloorGrid";
 
@@ -137,7 +138,7 @@ export default function FloorPickerModal({
             aria-label="Close"
             className="rounded-md p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
           >
-            ✕
+            <X className="h-5 w-5" />
           </button>
         </div>
 

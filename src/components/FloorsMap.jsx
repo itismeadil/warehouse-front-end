@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useMemo } from "react";
-import { Link } from "react-router-dom";
 import { getFloors, createFloor, getFloorOccupancy } from "../api/floors";
 import { FLOOR_SIZE_PRESETS } from "../floorSizePresets";
 import { encodeShape, decodeShape, areaSize } from "../lib/floorShape";
@@ -116,32 +115,23 @@ export default function FloorsMap() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-10">
-        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <Link
-              to="/"
-              className="text-sm font-medium text-blue-600 hover:text-blue-700"
-            >
-              ← Back to inventory
-            </Link>
-            <h1 className="mt-1 text-2xl font-bold text-slate-900">
-              Floor Maps
-            </h1>
-            <p className="mt-1 text-sm text-slate-500">
-              Dark squares are occupied, light squares are empty.
-            </p>
-          </div>
-
-          <button
-            onClick={() => setShowForm((v) => !v)}
-            className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-          >
-            <span className="text-base leading-none">+</span>
-            Add Floor
-          </button>
+    <div>
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Floor Maps</h1>
+          <p className="mt-1 text-sm text-slate-500">
+            Dark squares are occupied, light squares are empty.
+          </p>
         </div>
+
+        <button
+          onClick={() => setShowForm((v) => !v)}
+          className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+        >
+          <span className="text-base leading-none">+</span>
+          Add Floor
+        </button>
+      </div>
 
         {showForm && (
           <div className="mb-8 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -245,7 +235,7 @@ export default function FloorsMap() {
           </div>
         ) : (
           <div className="space-y-6">
-            {[...floors].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true })).reverse().map((floor) => (
+            {floors.map((floor) => (
               <FloorCard
                 key={floor._id}
                 floor={floor}
@@ -255,6 +245,5 @@ export default function FloorsMap() {
           </div>
         )}
       </div>
-    </div>
   );
 }
