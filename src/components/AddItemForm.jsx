@@ -124,7 +124,7 @@ export default function AddItemForm() {
                 type="text"
                 id="serialNumber"
                 value={itemSerialNumber}
-                autocomplete="off"
+                autoComplete="off"
                 onChange={(e) => setItemSerialNumber(e.target.value)}
                 placeholder="Enter item serial number"
                 required
@@ -143,7 +143,7 @@ export default function AddItemForm() {
                 type="text"
                 id="itemName"
                 value={itemName}
-                autocomplete="off"
+                autoComplete="off"
                 onChange={(e) => setItemName(e.target.value)}
                 placeholder="Enter item name"
                 required
@@ -168,7 +168,7 @@ export default function AddItemForm() {
                 <input
                   type="text"
                   id="itemColor"
-                  autocomplete="off"
+                  autoComplete="off"
                   value={itemColor}
                   onChange={(e) => setItemColor(e.target.value)}
                   placeholder="e.g. Walnut or #8a5a3a"

@@ -54,10 +54,11 @@ export default function FloorsMap() {
     setLoading(true);
     try {
       const data = await getFloors();
-      setFloors(data);
+      const sortedData = data.sort((a, b) => b.name.localeCompare(a.name));
+      setFloors(sortedData);
 
       const occupancyEntries = await Promise.all(
-        data.map((floor) =>
+        sortedData.map((floor) =>
           getFloorOccupancy(floor._id).then((res) => [floor._id, res]),
         ),
       );
@@ -133,117 +134,115 @@ export default function FloorsMap() {
         </button>
       </div>
 
-        {showForm && (
-          <div className="mb-8 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-sm font-semibold text-slate-900">
-              New Floor
-            </h2>
+      {showForm && (
+        <div className="mb-8 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="text-sm font-semibold text-slate-900">New Floor</h2>
 
-            <div className="mt-4">
-              <label className="block text-sm font-medium text-slate-700">
-                Name
-              </label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Floor 1"
-                className="mt-1.5 block w-full max-w-xs rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-              />
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-slate-700">
+              Name
+            </label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. Floor 1"
+              className="mt-1.5 block w-full max-w-xs rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            />
+          </div>
+
+          <div className="mt-5">
+            <label className="block text-sm font-medium text-slate-700">
+              Size
+            </label>
+            <div className="mt-2 flex items-end gap-4">
+              {FLOOR_SIZE_PRESETS.map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => setPreset(p)}
+                  className={`flex h-16 w-16 items-center justify-center rounded-lg border-2 transition-colors ${
+                    preset?.id === p.id
+                      ? "border-blue-500 bg-blue-50"
+                      : "border-slate-200 bg-slate-50 hover:border-slate-300"
+                  }`}
+                >
+                  <span
+                    className={`rounded-sm ${
+                      preset?.id === p.id ? "bg-blue-600" : "bg-slate-400"
+                    }`}
+                    style={{
+                      width: p.previewPx,
+                      height: p.previewPx,
+                    }}
+                  />
+                </button>
+              ))}
             </div>
+          </div>
 
+          {preset && (
             <div className="mt-5">
               <label className="block text-sm font-medium text-slate-700">
-                Size
+                Draw the shape — tap or drag over the dots
               </label>
-              <div className="mt-2 flex items-end gap-4">
-                {FLOOR_SIZE_PRESETS.map((p) => (
-                  <button
-                    key={p.id}
-                    type="button"
-                    onClick={() => setPreset(p)}
-                    className={`flex h-16 w-16 items-center justify-center rounded-lg border-2 transition-colors ${
-                      preset?.id === p.id
-                        ? "border-blue-500 bg-blue-50"
-                        : "border-slate-200 bg-slate-50 hover:border-slate-300"
-                    }`}
-                  >
-                    <span
-                      className={`rounded-sm ${
-                        preset?.id === p.id ? "bg-blue-600" : "bg-slate-400"
-                      }`}
-                      style={{
-                        width: p.previewPx,
-                        height: p.previewPx,
-                      }}
-                    />
-                  </button>
-                ))}
+              <div className="mt-2">
+                <FloorShapeEditor
+                  key={preset.id}
+                  ref={editorRef}
+                  rows={preset.rows}
+                  cols={preset.cols}
+                />
               </div>
-            </div>
-
-            {preset && (
-              <div className="mt-5">
-                <label className="block text-sm font-medium text-slate-700">
-                  Draw the shape — tap or drag over the dots
-                </label>
-                <div className="mt-2">
-                  <FloorShapeEditor
-                    key={preset.id}
-                    ref={editorRef}
-                    rows={preset.rows}
-                    cols={preset.cols}
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={() => editorRef.current?.clear()}
-                  className="mt-2 text-sm text-slate-500 transition-colors hover:text-red-600"
-                >
-                  Clear drawing
-                </button>
-              </div>
-            )}
-
-            <div className="mt-5 flex gap-2">
               <button
                 type="button"
-                onClick={resetForm}
-                className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+                onClick={() => editorRef.current?.clear()}
+                className="mt-2 text-sm text-slate-500 transition-colors hover:text-red-600"
               >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleCreateFloor}
-                disabled={saving}
-                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {saving ? "Saving..." : "Create Floor"}
+                Clear drawing
               </button>
             </div>
-          </div>
-        )}
+          )}
 
-        {loading ? (
-          <p className="text-sm text-slate-500">Loading floors...</p>
-        ) : floors.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-slate-300 bg-white py-12 text-center">
-            <p className="text-sm text-slate-500">
-              No floors yet. Add one to start mapping locations.
-            </p>
+          <div className="mt-5 flex gap-2">
+            <button
+              type="button"
+              onClick={resetForm}
+              className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleCreateFloor}
+              disabled={saving}
+              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {saving ? "Saving..." : "Create Floor"}
+            </button>
           </div>
-        ) : (
-          <div className="space-y-6">
-            {floors.map((floor) => (
-              <FloorCard
-                key={floor._id}
-                floor={floor}
-                occupancy={occupancyByFloor[floor._id]}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {loading ? (
+        <p className="text-sm text-slate-500">Loading floors...</p>
+      ) : floors.length === 0 ? (
+        <div className="rounded-lg border border-dashed border-slate-300 bg-white py-12 text-center">
+          <p className="text-sm text-slate-500">
+            No floors yet. Add one to start mapping locations.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {floors.map((floor) => (
+            <FloorCard
+              key={floor._id}
+              floor={floor}
+              occupancy={occupancyByFloor[floor._id]}
+            />
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
