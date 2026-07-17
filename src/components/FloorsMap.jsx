@@ -48,7 +48,9 @@ export default function FloorsMap() {
   const [name, setName] = useState("");
   const [preset, setPreset] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState(null);
   const editorRef = useRef(null);
+  const toastTimeoutRef = useRef(null);
 
   const loadFloors = async () => {
     setLoading(true);
@@ -80,19 +82,25 @@ export default function FloorsMap() {
     setShowForm(false);
   };
 
+  const showToast = (message) => {
+    setToast(message);
+    window.clearTimeout(toastTimeoutRef.current);
+    toastTimeoutRef.current = window.setTimeout(() => setToast(null), 3500);
+  };
+
   const handleCreateFloor = async () => {
     if (!name) {
-      alert("Give the floor a name first");
+      showToast("Give the floor a name first");
       return;
     }
     if (!preset) {
-      alert("Pick a size first");
+      showToast("Pick a size first");
       return;
     }
 
     const cells = editorRef.current?.getCells() || [];
     if (cells.length === 0) {
-      alert("Draw the floor's shape by tapping the dots");
+      showToast("Draw the floor's shape by tapping the dots");
       return;
     }
 
@@ -109,7 +117,7 @@ export default function FloorsMap() {
       resetForm();
       loadFloors();
     } catch (error) {
-      alert("Error: " + (error.response?.data?.message || error.message));
+      showToast("Error: " + (error.response?.data?.message || error.message));
     } finally {
       setSaving(false);
     }
@@ -117,6 +125,13 @@ export default function FloorsMap() {
 
   return (
     <div>
+      <div className="fixed inset-x-0 top-4 z-50 flex justify-center pointer-events-none">
+        {toast && (
+          <div className="pointer-events-auto rounded-xl bg-slate-900 px-4 py-2 text-sm text-white shadow-lg">
+            {toast}
+          </div>
+        )}
+      </div>
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Floor Maps</h1>

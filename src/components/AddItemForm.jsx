@@ -1,4 +1,7 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { createItem } from "../api/items";
 import { getFloors } from "../api/floors";
 import AddItemPartForm from "./AddItemPartForm";
@@ -19,6 +22,7 @@ export default function AddItemForm() {
   const [nextId, setNextId] = useState(2);
   const [loading, setLoading] = useState(false);
   const [floors, setFloors] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     getFloors()
@@ -51,14 +55,41 @@ export default function AddItemForm() {
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!itemSerialNumber || !itemName || !itemColor) {
-      alert("Serial Number, Item Name, and Color are required");
-      return;
+  const validateForm = () => {
+    if (!itemSerialNumber.trim() || !itemName.trim() || !itemColor.trim()) {
+      toast.warn("Serial Number, Item Name, and Color are required");
+      return false;
     }
 
+    if (parts.length === 0) {
+      toast.warn("At least one part is required");
+      return false;
+    }
+
+    for (let index = 0; index < parts.length; index += 1) {
+      const part = parts[index];
+      const stockValue = part.stock?.toString().trim();
+
+      if (!part.floorId || !part.area?.toString().trim() || !stockValue) {
+        toast.warn(`Part ${index + 1} must include location and stock number`);
+        return false;
+      }
+
+      if (Number.isNaN(parseInt(stockValue, 10))) {
+        toast.warn(`Stock must be a valid number for part ${index + 1}`);
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!validateForm()) return;
+
     setLoading(true);
+    let created = false;
 
     try {
       const partsToInsert = parts.map((part, index) => {
@@ -87,7 +118,8 @@ export default function AddItemForm() {
         parts: partsToInsert,
       });
 
-      alert("✅ Item and parts added successfully!");
+      toast.success("Item and parts added successfully!");
+      created = true;
 
       // Reset
       setItemSerialNumber("");
@@ -97,9 +129,10 @@ export default function AddItemForm() {
       setNextId(2);
     } catch (error) {
       console.error(error);
-      alert("Error: " + (error.response?.data?.message || error.message));
+      toast.error("Error: " + (error.response?.data?.message || error.message));
     } finally {
       setLoading(false);
+      if (created) navigate("/");
     }
   };
 
@@ -158,24 +191,16 @@ export default function AddItemForm() {
               >
                 Color
               </label>
-              <div className="mt-1.5 flex items-center gap-2">
-                <input
-                  type="color"
-                  value={itemColor || "#94a3b8"}
-                  onChange={(e) => setItemColor(e.target.value)}
-                  className="h-10 w-12 shrink-0 cursor-pointer rounded-lg border border-slate-300 p-1"
-                />
-                <input
-                  type="text"
-                  id="itemColor"
-                  autoComplete="off"
-                  value={itemColor}
-                  onChange={(e) => setItemColor(e.target.value)}
-                  placeholder="e.g. Walnut or #8a5a3a"
-                  required
-                  className="block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                />
-              </div>
+              <input
+                type="text"
+                id="itemColor"
+                autoComplete="off"
+                value={itemColor}
+                onChange={(e) => setItemColor(e.target.value)}
+                placeholder="Enter color"
+                required
+                className="mt-1.5 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              />
             </div>
           </div>
 
@@ -223,6 +248,17 @@ export default function AddItemForm() {
             {loading ? "Saving..." : "Submit"}
           </button>
         </form>
+        <ToastContainer
+          position="top-right"
+          autoClose={5000}
+          hideProgressBar={false}
+          newestOnTop
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+        />
       </div>
     </div>
   );

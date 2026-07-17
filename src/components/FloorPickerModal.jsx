@@ -6,6 +6,50 @@ import FloorGrid from "./FloorGrid";
 
 const MIN_CELLS = 4;
 
+const toastRootId = "floor-picker-toast-root";
+const showToast = (message, type = "info") => {
+  if (typeof document === "undefined") return;
+
+  let root = document.getElementById(toastRootId);
+  if (!root) {
+    root = document.createElement("div");
+    root.id = toastRootId;
+    Object.assign(root.style, {
+      position: "fixed",
+      right: "1rem",
+      bottom: "1rem",
+      zIndex: "9999",
+      display: "flex",
+      flexDirection: "column",
+      gap: "0.5rem",
+      alignItems: "flex-end",
+      pointerEvents: "none",
+    });
+    document.body.appendChild(root);
+  }
+
+  const toast = document.createElement("div");
+  Object.assign(toast.style, {
+    backgroundColor: type === "error" ? "#dc2626" : "#0f172a",
+    color: "white",
+    padding: "0.75rem 1rem",
+    borderRadius: "0.5rem",
+    boxShadow: "0 10px 20px rgba(0,0,0,0.12)",
+    fontSize: "0.875rem",
+    maxWidth: "320px",
+    pointerEvents: "auto",
+  });
+  toast.textContent = message;
+  root.appendChild(toast);
+
+  setTimeout(() => {
+    toast.remove();
+    if (root.childElementCount === 0) {
+      root.remove();
+    }
+  }, 4000);
+};
+
 export default function FloorPickerModal({
   floors,
   initialFloorId,
@@ -49,7 +93,7 @@ export default function FloorPickerModal({
       .then((data) => setOccupancy(data))
       .catch((err) => {
         console.error(err);
-        alert("Failed to load floor: " + err.message);
+        showToast("Failed to load floor: " + err.message, "error");
         setOccupancy(null);
       })
       .finally(() => setLoading(false));
@@ -96,11 +140,14 @@ export default function FloorPickerModal({
 
   const handleConfirm = () => {
     if (!floorId || selectedCells.length === 0) {
-      alert("Please select a location");
+      showToast("Please select a location", "error");
       return;
     }
     if (selectedCells.length < MIN_CELLS) {
-      alert(`Please select at least ${MIN_CELLS} squares to define a space`);
+      showToast(
+        `Please select at least ${MIN_CELLS} squares to define a space`,
+        "error",
+      );
       return;
     }
 
