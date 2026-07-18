@@ -9,6 +9,9 @@
   "addItem": "إضافة عنصر",
   "floorMaps": "خرائط الأدوار",
 
+  "noItemYet": "No items yet. Add your first item to get started.",
+  "noItemsMatchSearch": "No items match your search.",
+
   "addNewItem": "إضافة عنصر جديد",
   "addItemDescription": "أدخل تفاصيل العنصر وموقع تخزين واحد على الأقل",
 
@@ -27,6 +30,10 @@
 
   "saving": "جاري الحفظ...",
   "submit": "حفظ",
+
+  "requiredFieldsError": "يرجى تعبئة جميع الحقول المطلوبة.",
+  "itemAddedSuccess": "تمت إضافة العنصر بنجاح.",
+  "itemAddedError": "فشلت إضافة العنصر. يرجى المحاولة مرة أخرى.",
 
   "location": "الموقع",
   "floor": "الطابق",

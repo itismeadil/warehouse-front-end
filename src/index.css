@@ -1,1 +1,37 @@
 @import "tailwindcss";
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Design tokens. Tailwind v4 turns each of these into real utility classes —
+ * e.g. --color-primary-600 becomes usable as bg-primary-600, text-primary-600,
+ * border-primary-600, ring-primary-600, etc. Change the values here and every
+ * component using these classes updates automatically; no need to touch
+ * component files to retheme the app.
+ */
+@theme {
+  /* Neutral scale: backgrounds, borders, body text */
+  --color-graphite-50: #f8f9fa;
+  --color-graphite-100: #f1f2f4;
+  --color-graphite-200: #e4e6e9;
+  --color-graphite-300: #d1d5db;
+  --color-graphite-400: #9aa1ac;
+  --color-graphite-500: #6b7280;
+  --color-graphite-600: #4b5157;
+  --color-graphite-700: #363a3f;
+  --color-graphite-800: #23262a;
+  --color-graphite-900: #16181b;
+  --color-graphite-950: #0d0e10;
+
+  /* Primary accent: buttons, links, active nav state, focus rings */
+  --color-primary-50: #eef2ff;
+  --color-primary-100: #e0e7ff;
+  --color-primary-200: #c7d2fe;
+  --color-primary-300: #a5b4fc;
+  --color-primary-400: #818cf8;
+  --color-primary-500: #6366f1;
+  --color-primary-600: #4f46e5;
+  --color-primary-700: #4338ca;
+  --color-primary-800: #3730a3;
+  --color-primary-900: #312e81;
+}

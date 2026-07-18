@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { areaSize } from "../lib/floorShape";
 import { useTranslation } from "react-i18next";
+import { X } from "lucide-react";
+import { areaSize } from "../lib/floorShape";
 import FloorPickerModal from "./FloorPickerModal";
 
 export default function AddItemPartForm({
@@ -12,15 +13,15 @@ export default function AddItemPartForm({
   onLocationChange,
   onRemove,
 }) {
-  const [showPicker, setShowPicker] = useState(false);
   const { t } = useTranslation();
+  const [showPicker, setShowPicker] = useState(false);
 
   const hasLocation = Boolean(part.floorId && part.area);
 
   return (
-    <div className="relative rounded-lg border border-slate-200 bg-slate-50 p-4">
+    <div className="relative rounded-lg border border-graphite-200 bg-graphite-50 p-4">
       <div className="mb-3 flex items-center justify-between">
-        <span className="inline-flex items-center rounded-md border border-slate-200 bg-white px-2 py-0.5 text-xs font-medium text-slate-500">
+        <span className="inline-flex items-center rounded-md border border-graphite-200 bg-white px-2 py-0.5 text-xs font-medium text-graphite-500">
           PCS/CTN {totalParts}/{index + 1}
         </span>
 
@@ -28,36 +29,36 @@ export default function AddItemPartForm({
           <button
             type="button"
             onClick={() => onRemove(part.id)}
-            aria-label="Remove part"
-            className="rounded-md p-1 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/30"
+            aria-label={t("removePart")}
+            className="rounded-md p-1 text-graphite-400 transition-colors hover:bg-red-50 hover:text-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/30"
           >
-            ✕
+            <X className="h-4 w-4" />
           </button>
         )}
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div>
-          <label className="block text-sm font-medium text-slate-700">
+          <label className="block text-sm font-medium text-graphite-700">
             {t("location")}
           </label>
 
           <div className="mt-1.5 flex items-center gap-2">
-            <div className="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900">
+            <div className="flex-1 rounded-lg border border-graphite-300 bg-white px-3 py-2 text-sm text-graphite-900">
               {hasLocation ? (
                 <>
                   {part.floorName ?? t("floor")} · {areaSize(part.area)}{" "}
                   {areaSize(part.area) === 1 ? t("square") : t("squares")}
                 </>
               ) : (
-                <span className="text-slate-400">{t("noLocationSet")}</span>
+                <span className="text-graphite-400">{t("noLocationSet")}</span>
               )}
             </div>
 
             <button
               type="button"
               onClick={() => setShowPicker(true)}
-              className="whitespace-nowrap rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100"
+              className="whitespace-nowrap rounded-lg border border-graphite-300 px-3 py-2 text-sm font-medium text-graphite-700 transition-colors hover:bg-graphite-100"
             >
               {hasLocation ? t("change") : t("choose")}
             </button>
@@ -67,7 +68,7 @@ export default function AddItemPartForm({
         <div>
           <label
             htmlFor={`stock-${part.id}`}
-            className="block text-sm font-medium text-slate-700"
+            className="block text-sm font-medium text-graphite-700"
           >
             {t("stock")}
           </label>
@@ -80,7 +81,7 @@ export default function AddItemPartForm({
             placeholder={t("stockPlaceholder")}
             min="0"
             required
-            className="mt-1.5 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            className="mt-1.5 block w-full rounded-lg border border-graphite-300 bg-white px-3 py-2 text-sm text-graphite-900 placeholder:text-graphite-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
           />
         </div>
       </div>

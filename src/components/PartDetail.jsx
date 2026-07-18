@@ -71,35 +71,39 @@ const PartDetail = ({ item, part, onBack, onUpdateField }) => {
   const hasLocation = part.floorId && part.area;
 
   return (
-    <div className="mx-auto max-w-2xl">
-      <button
-        onClick={onBack}
-        className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900"
-      >
-        ← {t("backTo")} {item?.name || t("item")}
-      </button>
+    // Full-screen takeover: covers the entire viewport regardless of what
+    // Layout/navbar renders around it. If you'd rather this be a proper
+    // route without Layout at all, that's a change in App.jsx/Layout.jsx —
+    // send those over and I'll wire it there instead.
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-50">
+      <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 sm:py-10">
+        <button
+          onClick={onBack}
+          className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900"
+        >
+          ← {t("backTo")} {item?.name || t("item")}
+        </button>
 
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-[#613DC1]">
-            {item?.name}
-          </p>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-[#613DC1]">
+              {item?.name}
+            </p>
 
-          <h2 className="mt-0.5 text-2xl font-bold text-[#2C0735]">
-            {part.name}
-          </h2>
+            <h2 className="mt-0.5 text-2xl font-bold text-[#2C0735]">
+              {part.name}
+            </h2>
+          </div>
+
+          {hasLocation && (
+            <span className="mt-1 shrink-0 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm">
+              {part.floorId.name}
+            </span>
+          )}
         </div>
 
-        {hasLocation && (
-          <span className="mt-1 shrink-0 rounded-full border border-slate-200 bg-slate-200 px-3 py-1 text-xs font-semibold text-slate-700">
-            {part.floorId.name}
-          </span>
-        )}
-      </div>
-
-      {/* Floor map */}
-      <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-1">
-        <div className="flex gap-2">
+        {/* Tabs */}
+        <div className="mt-6 inline-flex gap-1 rounded-full border border-slate-200 bg-white p-1 shadow-sm">
           {[
             { id: "location", label: t("location") },
             { id: "stats", label: t("stats") },
@@ -110,7 +114,7 @@ const PartDetail = ({ item, part, onBack, onUpdateField }) => {
               onClick={() => setActiveTab(tab.id)}
               className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
                 activeTab === tab.id
-                  ? "bg-white text-slate-900 shadow-sm"
+                  ? "bg-[#613DC1] text-white shadow-sm"
                   : "text-slate-500 hover:text-slate-900"
               }`}
             >
@@ -118,34 +122,33 @@ const PartDetail = ({ item, part, onBack, onUpdateField }) => {
             </button>
           ))}
         </div>
-      </div>
 
-      {activeTab === "location" ? (
-        <div className="mt-4 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 shadow-sm">
-          <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
-            <h3 className="text-sm font-semibold text-slate-700">
-              {t("floorLocation")}
-            </h3>
+        {activeTab === "location" ? (
+          <div className="mt-4 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+            <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
+              <h3 className="text-sm font-semibold text-slate-700">
+                {t("floorLocation")}
+              </h3>
 
-            {hasLocation && (
-              <span className="text-xs font-medium text-slate-500">
-                {areaSize(part.area)}{" "}
-                {areaSize(part.area) === 1 ? t("square") : t("squares")}
-              </span>
-            )}
-          </div>
+              {hasLocation && (
+                <span className="text-xs font-medium text-slate-500">
+                  {areaSize(part.area)}{" "}
+                  {areaSize(part.area) === 1 ? t("square") : t("squares")}
+                </span>
+              )}
+            </div>
 
-          <div className="p-4">
-            {!hasLocation ? (
-              <p className="py-8 text-center text-sm text-slate-500">
-                {t("noLocationAssigned")}
-              </p>
-            ) : partFloorMapLoading || !partFloorMap ? (
-              <p className="py-8 text-center text-sm text-slate-500">
-                {t("loadingMap")}
-              </p>
-            ) : (
-              <div className="flex justify-center rounded-lg bg-white p-3 shadow-inner">
+            {/* Single box now — no nested wrapper around FloorGrid */}
+            <div className="flex justify-center p-6">
+              {!hasLocation ? (
+                <p className="py-8 text-center text-sm text-slate-500">
+                  {t("noLocationAssigned")}
+                </p>
+              ) : partFloorMapLoading || !partFloorMap ? (
+                <p className="py-8 text-center text-sm text-slate-500">
+                  {t("loadingMap")}
+                </p>
+              ) : (
                 <FloorGrid
                   rows={partFloorMap.floor.rows}
                   cols={partFloorMap.floor.cols}
@@ -157,39 +160,39 @@ const PartDetail = ({ item, part, onBack, onUpdateField }) => {
                   occupied={partFloorMap.occupied}
                   selectedCells={expandArea(part.area)}
                 />
-              </div>
-            )}
+              )}
+            </div>
           </div>
-        </div>
-      ) : (
-        <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-slate-700">
-              {t("inventory")}
-            </h3>
+        ) : (
+          <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-slate-700">
+                {t("inventory")}
+              </h3>
 
-            <span className="text-xs text-slate-500">
-              {part.stock !== undefined
-                ? t("stockCount", { count: part.stock })
-                : ""}
-            </span>
-          </div>
+              <span className="text-xs text-slate-500">
+                {part.stock !== undefined
+                  ? t("stockCount", { count: part.stock })
+                  : ""}
+              </span>
+            </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            {STATS.map(({ key, label, editable }) => (
-              <StatCard
-                key={key}
-                label={t(label)}
-                value={part[key]}
-                editable={editable}
-                t={t}
-                onDecrement={() => onUpdateField(part._id, key, -1)}
-                onIncrement={() => onUpdateField(part._id, key, 1)}
-              />
-            ))}
+            <div className="grid grid-cols-2 gap-3">
+              {STATS.map(({ key, label, editable }) => (
+                <StatCard
+                  key={key}
+                  label={t(label)}
+                  value={part[key]}
+                  editable={editable}
+                  t={t}
+                  onDecrement={() => onUpdateField(part._id, key, -1)}
+                  onIncrement={() => onUpdateField(part._id, key, 1)}
+                />
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

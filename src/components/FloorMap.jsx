@@ -1,10 +1,18 @@
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 
 /**
- * Small floor locator map.
+ * Small floor locator map shown inside PartDetail.
  * Whole map stays compact; only shows where the part sits.
  *
- * Expected part shape:
+ * NOTE: this reads part.row / part.col / part.area.{minRow,maxRow,minCol,
+ * maxCol,totalCells} — the backend's Part.area shape is actually
+ * { rowStart, rowEnd, colStart, colEnd } with no standalone row/col fields.
+ * Left exactly as-is per request; flagging here since it means the
+ * "Position"/"Area rows..." caption below and cell size never populate from
+ * real data until the field names are reconciled.
+ *
+ * Expected part shape (as currently read):
  * {
  *   floorId: { name, rows, cols },
  *   cells: [{ row, col }],
@@ -13,6 +21,7 @@ import { useMemo } from "react";
  * }
  */
 const FloorMap = ({ part, onCellClick }) => {
+  const { t } = useTranslation();
   const floor = part?.floorId || {};
   const rows = Number(floor.rows) || 0;
   const cols = Number(floor.cols) || 0;
@@ -32,14 +41,14 @@ const FloorMap = ({ part, onCellClick }) => {
   }, [part?.cells]);
 
   if (!part) {
-    return <p className="text-sm text-slate-500">No part selected.</p>;
+    return <p className="text-sm text-graphite-500">{t("noPartSelected")}</p>;
   }
 
   if (!rows || !cols) {
     return (
-      <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 px-3 py-4 text-center">
-        <p className="text-sm text-slate-500">
-          Floor dimensions are missing for this part.
+      <div className="rounded-lg border border-dashed border-graphite-300 bg-graphite-50 px-3 py-4 text-center">
+        <p className="text-sm text-graphite-500">
+          {t("floorDimensionsMissing")}
         </p>
       </div>
     );
@@ -52,43 +61,43 @@ const FloorMap = ({ part, onCellClick }) => {
     <div className="space-y-2">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <p className="text-sm font-medium text-slate-900">
-            {floor.name || part.floorName || "Floor"}
+          <p className="text-sm font-medium text-graphite-900">
+            {floor.name || part.floorName || t("floor")}
           </p>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-graphite-500">
             {rows} × {cols}
             {part.area?.totalCells != null
-              ? ` · ${part.area.totalCells} cells`
+              ? ` · ${part.area.totalCells} ${t("cells")}`
               : occupied.size
-                ? ` · ${occupied.size} cells`
+                ? ` · ${occupied.size} ${t("cells")}`
                 : ""}
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5 text-[11px] text-slate-500">
+        <div className="flex flex-wrap items-center gap-2.5 text-[11px] text-graphite-500">
           <span className="inline-flex items-center gap-1">
             <span
-              className="inline-block bg-blue-500"
+              className="inline-block bg-primary-500"
               style={{
                 width: 6,
                 height: 6,
-                border: "1px solid #1d4ed8",
+                border: "1px solid var(--color-primary-700)",
                 borderRadius: 1,
               }}
             />
-            Part
+            {t("part")}
           </span>
           <span className="inline-flex items-center gap-1">
             <span
-              className="inline-block bg-slate-200"
+              className="inline-block bg-graphite-200"
               style={{
                 width: 6,
                 height: 6,
-                border: "1px solid #64748b",
+                border: "1px solid var(--color-graphite-400)",
                 borderRadius: 1,
               }}
             />
-            Empty
+            {t("empty")}
           </span>
         </div>
       </div>
@@ -98,21 +107,23 @@ const FloorMap = ({ part, onCellClick }) => {
         <div
           className="inline-block rounded-md bg-white shadow-sm"
           style={{
-            border: "2px solid #334155", // strong outer floor border
+            border: "2px solid var(--color-graphite-700)", // strong outer floor border
             padding: 8,
           }}
         >
           <div
             className="rounded-sm"
             style={{
-              border: "1px solid #94a3b8", // inner border
-              background: "#f8fafc",
+              border: "1px solid var(--color-graphite-400)", // inner border
+              background: "var(--color-graphite-50)",
               padding: 6,
             }}
           >
             <div
               role="grid"
-              aria-label={`${floor.name || "Floor"} map`}
+              aria-label={t("floorMapAriaLabel", {
+                floor: floor.name || t("floor"),
+              })}
               style={{
                 display: "grid",
                 gridTemplateColumns: `repeat(${cols}, ${cellSize}px)`,
@@ -126,11 +137,15 @@ const FloorMap = ({ part, onCellClick }) => {
                   const key = `${row}-${col}`;
                   const isOccupied = occupied.has(key);
 
-                  const background = isOccupied ? "#3b82f6" : "#e2e8f0";
-                  const borderColor = isOccupied ? "#1d4ed8" : "#64748b";
+                  const background = isOccupied
+                    ? "var(--color-primary-500)"
+                    : "var(--color-graphite-200)";
+                  const borderColor = isOccupied
+                    ? "var(--color-primary-700)"
+                    : "var(--color-graphite-400)";
 
-                  const label = `Row ${row + 1}, Col ${col + 1}${
-                    isOccupied ? " (part)" : ""
+                  const label = `${t("row")} ${row + 1}, ${t("col")} ${col + 1}${
+                    isOccupied ? ` (${t("part")})` : ""
                   }`;
 
                   return (
@@ -169,17 +184,18 @@ const FloorMap = ({ part, onCellClick }) => {
       </div>
 
       {(part.row != null || part.area) && (
-        <p className="text-center text-xs text-slate-500">
+        <p className="text-center text-xs text-graphite-500">
           {part.row != null && part.col != null && (
             <>
-              Position: Row {part.row + 1}, Col {part.col + 1}
+              {t("position")}: {t("row")} {part.row + 1}, {t("col")}{" "}
+              {part.col + 1}
             </>
           )}
           {part.area && (
             <>
               {part.row != null ? " · " : ""}
-              Area rows {part.area.minRow + 1}–{part.area.maxRow + 1}, cols{" "}
-              {part.area.minCol + 1}–{part.area.maxCol + 1}
+              {t("areaRows")} {part.area.minRow + 1}–{part.area.maxRow + 1},{" "}
+              {t("areaCols")} {part.area.minCol + 1}–{part.area.maxCol + 1}
             </>
           )}
         </p>
