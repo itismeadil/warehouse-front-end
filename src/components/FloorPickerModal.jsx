@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { getFloorOccupancy } from "../api/floors";
 import { X } from "lucide-react";
 import { decodeShape, expandArea } from "../lib/floorShape";
@@ -63,6 +64,8 @@ export default function FloorPickerModal({
     initialArea ? expandArea(initialArea) : [],
   );
   const [loading, setLoading] = useState(!!initialFloorId);
+
+  const { t } = useTranslation();
 
   const selectedFloor = floors.find((f) => f._id === floorId);
 
@@ -178,11 +181,12 @@ export default function FloorPickerModal({
       >
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-slate-900">
-            Pick a location
+            {t("pickLocation")}
           </h2>
+
           <button
             onClick={onClose}
-            aria-label="Close"
+            aria-label={t("close")}
             className="rounded-md p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
           >
             <X className="h-5 w-5" />
@@ -191,14 +195,16 @@ export default function FloorPickerModal({
 
         <div className="mt-4">
           <label className="block text-sm font-medium text-slate-700">
-            Floor
+            {t("floor")}
           </label>
+
           <select
             value={floorId}
             onChange={(e) => setFloorId(e.target.value)}
             className="mt-1.5 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
           >
-            <option value="">Select a floor</option>
+            <option value="">{t("selectFloor")}</option>
+
             {floors.map((floor) => (
               <option key={floor._id} value={floor._id}>
                 {floor.name}
@@ -210,11 +216,11 @@ export default function FloorPickerModal({
         <div className="mt-4">
           {!floorId ? (
             <p className="py-8 text-center text-sm text-slate-500">
-              Choose a floor to see its map.
+              {t("chooseFloorToSeeMap")}
             </p>
           ) : loading || !occupancy ? (
             <p className="py-8 text-center text-sm text-slate-500">
-              Loading floor...
+              {t("loadingFloor")}
             </p>
           ) : (
             <>
@@ -222,15 +228,17 @@ export default function FloorPickerModal({
                 <div className="flex items-center gap-4 text-xs text-slate-500">
                   <span className="inline-flex items-center gap-1.5">
                     <span className="h-3 w-3 rounded-full border border-slate-300 bg-slate-200" />
-                    Empty
+                    {t("empty")}
                   </span>
+
                   <span className="inline-flex items-center gap-1.5">
                     <span className="h-3 w-3 rounded-full border border-blue-700 bg-blue-600" />
-                    Occupied
+                    {t("occupied")}
                   </span>
+
                   <span className="inline-flex items-center gap-1.5">
                     <span className="h-3 w-3 rounded-full border border-emerald-600 bg-emerald-500" />
-                    Selected
+                    {t("selected")}
                   </span>
                 </div>
 
@@ -238,7 +246,7 @@ export default function FloorPickerModal({
                   onClick={clearSelection}
                   className="text-sm text-slate-500 transition-colors hover:text-red-600"
                 >
-                  Clear
+                  {t("clear")}
                 </button>
               </div>
 
@@ -254,11 +262,14 @@ export default function FloorPickerModal({
               </div>
 
               <p className="mt-3 text-sm text-slate-600">
-                {selectedCells.length} square
-                {selectedCells.length !== 1 ? "s" : ""} selected
+                {selectedCells.length}{" "}
+                {selectedCells.length === 1 ? t("square") : t("squares")}{" "}
+                {t("selected")}
                 {selectedCells.length > 0 &&
                   selectedCells.length < MIN_CELLS &&
-                  ` — pick ${MIN_CELLS - selectedCells.length} more`}
+                  ` — ${t("pickMore", {
+                    count: MIN_CELLS - selectedCells.length,
+                  })}`}
               </p>
             </>
           )}
@@ -269,14 +280,15 @@ export default function FloorPickerModal({
             onClick={onClose}
             className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
           >
-            Cancel
+            {t("cancel")}
           </button>
+
           <button
             onClick={handleConfirm}
             disabled={!floorId || selectedCells.length < MIN_CELLS}
             className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Confirm location
+            {t("confirmLocation")}
           </button>
         </div>
       </div>

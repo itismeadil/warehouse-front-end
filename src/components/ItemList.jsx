@@ -1,9 +1,11 @@
 import { useState, useMemo } from "react";
 import { X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { updatePart } from "../api/items";
 import PartDetail from "./PartDetail";
 
 const ItemList = ({ items, loading, searchTerm = "" }) => {
+  const { t } = useTranslation();
   const [selectedItem, setSelectedItem] = useState(null);
   const [selectedPart, setSelectedPart] = useState(null);
 
@@ -128,18 +130,20 @@ const ItemList = ({ items, loading, searchTerm = "" }) => {
                   </h2>
                 </div>
                 <p className="mt-1 text-sm text-slate-500">
-                  <span className="font-medium text-slate-700">Serial:</span>{" "}
+                  <span className="font-medium text-slate-700">
+                    {t("serialNumber")}:
+                  </span>{" "}
                   {selectedItem.serialNumber}
                   <span className="mx-1.5">·</span>
                   <span className="font-medium text-slate-700">
-                    Color:
+                    {t("color")}:
                   </span>{" "}
                   {selectedItem.color}
                 </p>
 
                 <div className="mt-6 border-t border-slate-200 pt-4">
                   <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                    Parts
+                    {t("parts")}
                   </h3>
                   <div className="mt-3 flex flex-wrap gap-2">
                     {selectedItem.parts?.map((part) => (

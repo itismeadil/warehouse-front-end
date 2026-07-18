@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { areaSize } from "../lib/floorShape";
+import { useTranslation } from "react-i18next";
 import FloorPickerModal from "./FloorPickerModal";
 
 export default function AddItemPartForm({
@@ -12,6 +13,7 @@ export default function AddItemPartForm({
   onRemove,
 }) {
   const [showPicker, setShowPicker] = useState(false);
+  const { t } = useTranslation();
 
   const hasLocation = Boolean(part.floorId && part.area);
 
@@ -37,26 +39,27 @@ export default function AddItemPartForm({
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div>
           <label className="block text-sm font-medium text-slate-700">
-            Location
+            {t("location")}
           </label>
 
           <div className="mt-1.5 flex items-center gap-2">
             <div className="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900">
               {hasLocation ? (
                 <>
-                  {part.floorName ?? "Floor"} · {areaSize(part.area)} square
-                  {areaSize(part.area) !== 1 ? "s" : ""}
+                  {part.floorName ?? t("floor")} · {areaSize(part.area)}{" "}
+                  {areaSize(part.area) === 1 ? t("square") : t("squares")}
                 </>
               ) : (
-                <span className="text-slate-400">No location set</span>
+                <span className="text-slate-400">{t("noLocationSet")}</span>
               )}
             </div>
+
             <button
               type="button"
               onClick={() => setShowPicker(true)}
               className="whitespace-nowrap rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100"
             >
-              {hasLocation ? "Change" : "Choose"}
+              {hasLocation ? t("change") : t("choose")}
             </button>
           </div>
         </div>
@@ -66,14 +69,15 @@ export default function AddItemPartForm({
             htmlFor={`stock-${part.id}`}
             className="block text-sm font-medium text-slate-700"
           >
-            Stock
+            {t("stock")}
           </label>
+
           <input
             type="number"
             id={`stock-${part.id}`}
             value={part.stock}
             onChange={(e) => onChange(part.id, "stock", e.target.value)}
-            placeholder="Enter stock quantity"
+            placeholder={t("stockPlaceholder")}
             min="0"
             required
             className="mt-1.5 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"

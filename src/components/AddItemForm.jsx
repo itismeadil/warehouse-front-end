@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { createItem } from "../api/items";
@@ -15,6 +16,7 @@ const emptyPart = (id) => ({
 });
 
 export default function AddItemForm() {
+  const { t } = useTranslation();
   const [itemSerialNumber, setItemSerialNumber] = useState("");
   const [itemName, setItemName] = useState("");
   const [itemColor, setItemColor] = useState("");
@@ -139,10 +141,10 @@ export default function AddItemForm() {
   return (
     <div className="mx-auto max-w-2xl">
       <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-        <h2 className="text-xl font-semibold text-slate-900">Add New Item</h2>
-        <p className="mt-1 text-sm text-slate-500">
-          Enter the item details and at least one storage location.
-        </p>
+        <h2 className="text-xl font-semibold text-slate-900">
+          {t("addNewItem")}
+        </h2>
+        <p className="mt-1 text-sm text-slate-500">{t("addItemDescription")}</p>
 
         <form onSubmit={handleSubmit} className="mt-6">
           <div className="space-y-4">
@@ -151,7 +153,7 @@ export default function AddItemForm() {
                 htmlFor="serialNumber"
                 className="block text-sm font-medium text-slate-700"
               >
-                Item Serial Number
+                {t("serialNumber")}
               </label>
               <input
                 type="text"
@@ -159,7 +161,7 @@ export default function AddItemForm() {
                 value={itemSerialNumber}
                 autoComplete="off"
                 onChange={(e) => setItemSerialNumber(e.target.value)}
-                placeholder="Enter item serial number"
+                placeholder={t("serialNumberPlaceholder")}
                 required
                 className="mt-1.5 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
               />
@@ -170,7 +172,7 @@ export default function AddItemForm() {
                 htmlFor="itemName"
                 className="block text-sm font-medium text-slate-700"
               >
-                Item Name
+                {t("itemName")}
               </label>
               <input
                 type="text"
@@ -178,7 +180,7 @@ export default function AddItemForm() {
                 value={itemName}
                 autoComplete="off"
                 onChange={(e) => setItemName(e.target.value)}
-                placeholder="Enter item name"
+                placeholder={t("itemNamePlaceholder")}
                 required
                 className="mt-1.5 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
               />
@@ -189,7 +191,7 @@ export default function AddItemForm() {
                 htmlFor="itemColor"
                 className="block text-sm font-medium text-slate-700"
               >
-                Color
+                {t("color")}
               </label>
               <input
                 type="text"
@@ -197,7 +199,7 @@ export default function AddItemForm() {
                 autoComplete="off"
                 value={itemColor}
                 onChange={(e) => setItemColor(e.target.value)}
-                placeholder="Enter color"
+                placeholder={t("colorPlaceholder")}
                 required
                 className="mt-1.5 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
               />
@@ -207,11 +209,11 @@ export default function AddItemForm() {
           <div className="mt-8 border-t border-slate-200 pt-6">
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Parts
+                {t("parts")}
               </h3>
               {floors.length === 0 && (
                 <span className="text-xs text-amber-600">
-                  No floors yet — add one on the Floor Maps page
+                  {t("noFloorsWarning")}
                 </span>
               )}
             </div>
@@ -236,7 +238,7 @@ export default function AddItemForm() {
               onClick={handleAddPart}
               className="mt-3 w-full rounded-lg border border-dashed border-slate-300 py-2.5 text-sm font-medium text-blue-600 transition-colors hover:border-blue-400 hover:bg-blue-50"
             >
-              + Add Part
+              {t("addPart")}
             </button>
           </div>
 
@@ -245,7 +247,7 @@ export default function AddItemForm() {
             disabled={loading}
             className="mt-8 w-full rounded-lg bg-blue-600 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {loading ? "Saving..." : "Submit"}
+            {loading ? t("saving") : t("submit")}
           </button>
         </form>
         <ToastContainer
