@@ -28,6 +28,10 @@
   "saving": "Saving...",
   "submit": "Submit",
 
+  "requiredFieldsError": "Please fill in all required fields.",
+  "itemAddedSuccess": "Item added successfully.",
+  "itemAddedError": "Failed to add item. Please try again.",
+
   "location": "Location",
   "floor": "Floor",
   "square": "square",

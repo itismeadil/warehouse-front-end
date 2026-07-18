@@ -70,7 +70,11 @@ const ItemList = ({ items, loading, searchTerm = "" }) => {
           ) : filteredItems.length === 0 ? (
             <div className="rounded-lg border border-dashed border-graphite-300 bg-white py-12 text-center">
               <p className="text-sm text-graphite-500">
-                {items.length === 0 ? t("noItemYet", { defaultValue: "No items yet" }) : t("noItemsMatchSearch", { defaultValue: "No items match your search" })}
+                {items.length === 0
+                  ? t("noItemYet", { defaultValue: "No items yet" })
+                  : t("noItemsMatchSearch", {
+                      defaultValue: "No items match your search",
+                    })}
               </p>
             </div>
           ) : (
@@ -112,7 +116,7 @@ const ItemList = ({ items, loading, searchTerm = "" }) => {
                 <button
                   onClick={handleCloseItemPopup}
                   aria-label="Close"
-                  className="absolute end-4 top-4 rounded-md p-1 text-graphite-400 transition-colors hover:bg-graphite-100 hover:text-graphite-600 focus:outline-none focus:ring-2 focus:ring-primary-500/30"
+                  className="absolute inset-e-4 top-4 rounded-md p-1 text-graphite-400 transition-colors hover:bg-graphite-100 hover:text-graphite-600 focus:outline-none focus:ring-2 focus:ring-primary-500/30"
                 >
                   <X className="h-5 w-5" />
                 </button>
