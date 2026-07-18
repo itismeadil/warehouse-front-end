@@ -148,13 +148,13 @@ const ItemList = ({ items, loading, searchTerm = "" }) => {
                     {t("parts")}
                   </h3>
                   <div className="mt-3 flex flex-wrap gap-2">
-                    {selectedItem.parts?.map((part) => (
+                    {selectedItem.parts?.map((part, index) => (
                       <button
                         key={part._id}
                         onClick={() => handlePartClick(part)}
                         className="rounded-lg border border-graphite-200 bg-graphite-50 px-3 py-1.5 text-sm font-medium text-graphite-700 transition-colors hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700"
                       >
-                        {part.name}
+                        {selectedItem.parts.length}/{index + 1}
                       </button>
                     ))}
                   </div>

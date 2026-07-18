@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { createItem } from "../api/items";
+import { createItem, addPart } from "../api/items";
 import { getFloors } from "../api/floors";
 import AddItemPartForm from "./AddItemPartForm";
 
@@ -17,11 +17,20 @@ const emptyPart = (id) => ({
 
 export default function AddItemForm() {
   const { t } = useTranslation();
+
   const [itemSerialNumber, setItemSerialNumber] = useState("");
   const [itemName, setItemName] = useState("");
   const [itemColor, setItemColor] = useState("");
-  const [parts, setParts] = useState([emptyPart(1)]);
-  const [nextId, setNextId] = useState(2);
+
+  // The part currently being filled in (not yet saved to backend)
+  const [draftPart, setDraftPart] = useState(emptyPart(1));
+
+  // Parts already saved to the backend (locked, read-only)
+  const [savedParts, setSavedParts] = useState([]);
+
+  const [itemId, setItemId] = useState(null); // null until Part 1 is submitted
+  const [addingAnother, setAddingAnother] = useState(false);
+
   const [loading, setLoading] = useState(false);
   const [floors, setFloors] = useState([]);
   const navigate = useNavigate();
@@ -32,78 +41,45 @@ export default function AddItemForm() {
       .catch((err) => console.error("Failed to load floors:", err));
   }, []);
 
-  const handlePartChange = (id, field, value) => {
-    setParts(
-      parts.map((part) =>
-        part.id === id ? { ...part, [field]: value } : part,
-      ),
-    );
+  const handleDraftChange = (id, field, value) => {
+    setDraftPart((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handlePartLocationChange = (id, location) => {
-    setParts(
-      parts.map((part) => (part.id === id ? { ...part, ...location } : part)),
-    );
+  const handleDraftLocationChange = (id, location) => {
+    setDraftPart((prev) => ({ ...prev, ...location }));
   };
 
-  const handleAddPart = () => {
-    setParts([...parts, emptyPart(nextId)]);
-    setNextId(nextId + 1);
-  };
+  const buildPartPayload = (part) => ({
+    floorId: part.floorId || null,
+    area: part.area || null,
+    stock: parseInt(part.stock) || 0,
+  });
 
-  const handleRemovePart = (id) => {
-    if (parts.length > 1) {
-      setParts(parts.filter((part) => part.id !== id));
-    }
-  };
-
-  const handleSubmit = async (e) => {
+  // Phase 1: create the item with Part 1
+  const handleCreateItem = async (e) => {
     e.preventDefault();
     if (!itemSerialNumber || !itemName || !itemColor) {
       toast.error(t("requiredFieldsError"));
       return;
     }
+    if (!draftPart.floorId || !draftPart.area || draftPart.stock === "") {
+      toast.error(t("completeCurrentPartError"));
+      return;
+    }
 
     setLoading(true);
-
     try {
-      const partsToInsert = parts.map((part, index) => {
-        const stockVal =
-          (parseInt(part.stock) || 0) +
-          (parseInt(part.damaged) || 0) +
-          (parseInt(part.reserved) || 0) +
-          (parseInt(part.sold) || 0);
-
-        return {
-          // format: "totalParts/index pcs/ctn" e.g. "3/1 pcs/ctn"
-          name: `${parts.length}/${index + 1} pcs/ctn`,
-          floorId: part.floorId || null,
-          area: part.area || null,
-          stock: stockVal,
-          damaged: parseInt(part.damaged) || 0,
-          reserved: parseInt(part.reserved) || 0,
-          sold: parseInt(part.sold) || 0,
-        };
-      });
-
-      await createItem({
+      const created = await createItem({
         serialNumber: itemSerialNumber,
         name: itemName,
         color: itemColor,
-        parts: partsToInsert,
+        parts: [buildPartPayload(draftPart)],
       });
 
+      setItemId(created._id);
+      setSavedParts(created.parts); // parts come back with real _id + populated floorId
       toast.success(t("itemAddedSuccess"));
-      navigate("/");
-
-      // Reset
-      setItemSerialNumber("");
-      setItemName("");
-      setItemColor("");
-      setParts([emptyPart(1)]);
-      setNextId(2);
     } catch (error) {
-      console.error(error);
       toast.error(
         t("itemAddedError", {
           message: error.response?.data?.message || error.message,
@@ -113,6 +89,37 @@ export default function AddItemForm() {
       setLoading(false);
     }
   };
+
+  // Phase 2: save an additional part to the existing item
+  const handleSavePart = async () => {
+    if (!draftPart.floorId || !draftPart.area || draftPart.stock === "") {
+      toast.error(t("completeCurrentPartError"));
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const newPart = await addPart(itemId, buildPartPayload(draftPart));
+      setSavedParts((prev) => [...prev, newPart]);
+      setDraftPart(emptyPart(Date.now()));
+      setAddingAnother(false); // back to the yes/no prompt
+      toast.success(t("partAddedSuccess"));
+    } catch (error) {
+      toast.error(
+        t("partAddedError", {
+          message: error.response?.data?.message || error.message,
+        }),
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFinish = () => {
+    navigate("/");
+  };
+
+  const totalPartsPreview = savedParts.length + (itemId ? 0 : 1);
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -124,7 +131,7 @@ export default function AddItemForm() {
           {t("addItemDescription")}
         </p>
 
-        <form onSubmit={handleSubmit} className="mt-6">
+        <form onSubmit={handleCreateItem} className="mt-6">
           <div className="space-y-4">
             <div>
               <label
@@ -138,10 +145,11 @@ export default function AddItemForm() {
                 id="serialNumber"
                 value={itemSerialNumber}
                 autoComplete="off"
+                disabled={Boolean(itemId)}
                 onChange={(e) => setItemSerialNumber(e.target.value)}
                 placeholder={t("serialNumberPlaceholder")}
                 required
-                className="mt-1.5 block w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm text-graphite-900 placeholder:text-graphite-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                className="mt-1.5 block w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm text-graphite-900 placeholder:text-graphite-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 disabled:bg-graphite-100 disabled:text-graphite-500"
               />
             </div>
 
@@ -157,10 +165,11 @@ export default function AddItemForm() {
                 id="itemName"
                 value={itemName}
                 autoComplete="off"
+                disabled={Boolean(itemId)}
                 onChange={(e) => setItemName(e.target.value)}
                 placeholder={t("itemNamePlaceholder")}
                 required
-                className="mt-1.5 block w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm text-graphite-900 placeholder:text-graphite-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                className="mt-1.5 block w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm text-graphite-900 placeholder:text-graphite-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 disabled:bg-graphite-100 disabled:text-graphite-500"
               />
             </div>
 
@@ -176,58 +185,116 @@ export default function AddItemForm() {
                 id="itemColor"
                 autoComplete="off"
                 value={itemColor}
+                disabled={Boolean(itemId)}
                 onChange={(e) => setItemColor(e.target.value)}
                 placeholder={t("colorPlaceholder")}
                 required
-                className="mt-1.5 block w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm text-graphite-900 placeholder:text-graphite-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                className="mt-1.5 block w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm text-graphite-900 placeholder:text-graphite-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 disabled:bg-graphite-100 disabled:text-graphite-500"
               />
             </div>
           </div>
 
           <div className="mt-8 border-t border-graphite-200 pt-6">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-graphite-500">
-                {t("parts")}
-              </h3>
-              {floors.length === 0 && (
-                <span className="text-xs text-primary-600">
-                  {t("noFloorsWarning")}
-                </span>
-              )}
-            </div>
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-graphite-500">
+              {t("parts")}
+            </h3>
 
-            <div className="mt-3 space-y-3">
-              {parts.map((part, index) => (
+            {/* Already-saved parts: read-only summaries */}
+            {savedParts.length > 0 && (
+              <div className="mt-3 space-y-2">
+                {savedParts.map((part, index) => (
+                  <div
+                    key={part._id}
+                    className="rounded-lg border border-graphite-200 bg-graphite-50 px-4 py-2.5 text-sm text-graphite-700"
+                  >
+                    <span className="font-medium">
+                      PCS/CTN {savedParts.length}/{index + 1}
+                    </span>{" "}
+                    — {part.floorId?.name ?? t("floor")}, {t("stock")}:{" "}
+                    {part.stock}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Draft part: only shown before the item is created */}
+            {!itemId && (
+              <div className="mt-3">
                 <AddItemPartForm
-                  key={part.id}
-                  part={part}
-                  index={index}
-                  totalParts={parts.length}
+                  part={draftPart}
+                  index={0}
+                  totalParts={totalPartsPreview}
                   floors={floors}
-                  onChange={handlePartChange}
-                  onLocationChange={handlePartLocationChange}
-                  onRemove={handleRemovePart}
+                  onChange={handleDraftChange}
+                  onLocationChange={handleDraftLocationChange}
+                  onRemove={() => {}}
                 />
-              ))}
-            </div>
-
-            <button
-              type="button"
-              onClick={handleAddPart}
-              className="mt-3 w-full rounded-lg border border-dashed border-graphite-300 py-2.5 text-sm font-medium text-primary-600 transition-colors hover:border-primary-400 hover:bg-primary-50"
-            >
-              {t("addPart")}
-            </button>
+              </div>
+            )}
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="mt-8 w-full rounded-lg bg-primary-600 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {loading ? t("saving") : t("submit")}
-          </button>
+          {!itemId && (
+            <button
+              type="submit"
+              disabled={loading}
+              className="mt-8 w-full rounded-lg bg-primary-600 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {loading ? t("saving") : t("submit")}
+            </button>
+          )}
         </form>
+
+        {/* Phase 2: item already exists — ask about more parts */}
+        {itemId && (
+          <div className="mt-6 border-t border-graphite-200 pt-6">
+            {addingAnother ? (
+              <>
+                <AddItemPartForm
+                  part={draftPart}
+                  index={savedParts.length}
+                  totalParts={savedParts.length + 1}
+                  floors={floors}
+                  onChange={handleDraftChange}
+                  onLocationChange={handleDraftLocationChange}
+                  onRemove={() => setAddingAnother(false)}
+                />
+                <button
+                  type="button"
+                  onClick={handleSavePart}
+                  disabled={loading}
+                  className="mt-3 w-full rounded-lg bg-primary-600 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {loading ? t("saving") : t("savePart")}
+                </button>
+              </>
+            ) : (
+              <>
+                <p className="mb-3 text-sm font-medium text-graphite-700">
+                  {t("anotherPartQuestion")}
+                </p>
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDraftPart(emptyPart(Date.now()));
+                      setAddingAnother(true);
+                    }}
+                    className="flex-1 rounded-lg border border-dashed border-graphite-300 py-2.5 text-sm font-medium text-primary-600 transition-colors hover:border-primary-400 hover:bg-primary-50"
+                  >
+                    {t("yesAnotherPart")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleFinish}
+                    className="flex-1 rounded-lg bg-primary-600 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-primary-700"
+                  >
+                    {t("noFinish")}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        )}
 
         <ToastContainer
           position="top-right"

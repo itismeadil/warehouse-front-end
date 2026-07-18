@@ -25,6 +25,11 @@
   "noFloorsWarning": "No floors yet — add one on the Floor Maps page",
   "addPart": "+ Add Part",
 
+  "anotherPartQuestion": "Is there another part for this item?",
+  "yesAnotherPart": "Yes, add another part",
+  "noFinish": "No, finish",
+  "savePart": "Save part",
+
   "saving": "Saving...",
   "submit": "Submit",
 

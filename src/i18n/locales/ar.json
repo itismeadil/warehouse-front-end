@@ -28,6 +28,11 @@
   "noFloorsWarning": "لا توجد أدوار بعد — أضف واحدة من صفحة خرائط الأدوار",
   "addPart": "+ إضافة جزء",
 
+  "anotherPartQuestion": "هل يوجد جزء آخر لهذا العنصر؟",
+  "yesAnotherPart": "نعم، أضف جزء آخر",
+  "noFinish": "لا، إنهاء",
+  "savePart": "حفظ الجزء",
+
   "saving": "جاري الحفظ...",
   "submit": "حفظ",
 
