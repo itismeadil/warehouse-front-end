@@ -5,6 +5,7 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { createItem, addPart } from "../api/items";
 import { getFloors } from "../api/floors";
+import { getUsers } from "../api/users";
 import AddItemPartForm from "./AddItemPartForm";
 
 const emptyPart = (id) => ({
@@ -21,6 +22,8 @@ export default function AddItemForm() {
   const [itemSerialNumber, setItemSerialNumber] = useState("");
   const [itemName, setItemName] = useState("");
   const [itemColor, setItemColor] = useState("");
+  const [itemSupplierId, setItemSupplierId] = useState("");
+  const [suppliers, setSuppliers] = useState([]);
 
   // The part currently being filled in (not yet saved to backend)
   const [draftPart, setDraftPart] = useState(emptyPart(1));
@@ -39,6 +42,10 @@ export default function AddItemForm() {
     getFloors()
       .then(setFloors)
       .catch((err) => console.error("Failed to load floors:", err));
+
+    getUsers()
+      .then((users) => setSuppliers(users.filter((u) => u.role === "supplier")))
+      .catch((err) => console.error("Failed to load suppliers:", err));
   }, []);
 
   const handleDraftChange = (id, field, value) => {
@@ -73,6 +80,7 @@ export default function AddItemForm() {
         serialNumber: itemSerialNumber,
         name: itemName,
         color: itemColor,
+        supplierId: itemSupplierId || null,
         parts: [buildPartPayload(draftPart)],
       });
 
@@ -191,6 +199,32 @@ export default function AddItemForm() {
                 required
                 className="mt-1.5 block w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm text-graphite-900 placeholder:text-graphite-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 disabled:bg-graphite-100 disabled:text-graphite-500"
               />
+            </div>
+
+            <div>
+              <label
+                htmlFor="itemSupplier"
+                className="block text-sm font-medium text-graphite-700"
+              >
+                {t("supplier")}{" "}
+                <span className="font-normal text-graphite-400">
+                  ({t("optional")})
+                </span>
+              </label>
+              <select
+                id="itemSupplier"
+                value={itemSupplierId}
+                disabled={Boolean(itemId)}
+                onChange={(e) => setItemSupplierId(e.target.value)}
+                className="mt-1.5 block w-full rounded-lg border border-graphite-300 bg-white px-3 py-2 text-sm text-graphite-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 disabled:bg-graphite-100 disabled:text-graphite-500"
+              >
+                <option value="">{t("noSupplier")}</option>
+                {suppliers.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 
