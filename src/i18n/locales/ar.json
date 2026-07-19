@@ -122,5 +122,12 @@
   "loading": "جارٍ التحميل...",
   "deleteUser": "حذف المستخدم",
   "cannotDeleteOwnAccount": "لا يمكنك حذف حسابك الخاص.",
-  "confirmDeleteUser": "هل تريد حذف هذا المستخدم؟"
+  "confirmDeleteUser": "هل تريد حذف هذا المستخدم؟",
+
+  "deleteItem": "حذف العنصر",
+  "deleting": "جارٍ الحذف...",
+  "confirmDeleteItem": "حذف هذا العنصر وجميع أجزائه؟ لا يمكن التراجع عن هذا الإجراء.",
+  "setLocation": "تحديد الموقع",
+  "clearLocation": "إزالة الموقع",
+  "confirmClearLocation": "هل تريد إزالة موقع هذا الجزء؟"
 }

@@ -60,6 +60,11 @@ export default function Home() {
     })();
   }, []);
 
+  const refresh = () => {
+    loadItems();
+    loadFloorStats();
+  };
+
   return (
     <div>
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
@@ -68,7 +73,7 @@ export default function Home() {
         </h1>
 
         <div className="relative w-full max-w-xs sm:w-64">
-          <span className="pointer-events-none absolute inset-y-0 inset-s-3 flex items-center text-graphite-400">
+          <span className="pointer-events-none absolute inset-y-0 start-3 flex items-center text-graphite-400">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 20 20"
@@ -113,7 +118,12 @@ export default function Home() {
         </div>
       </div>
 
-      <ItemList items={items} loading={itemsLoading} searchTerm={searchTerm} />
+      <ItemList
+        items={items}
+        loading={itemsLoading}
+        searchTerm={searchTerm}
+        onChanged={refresh}
+      />
     </div>
   );
 }

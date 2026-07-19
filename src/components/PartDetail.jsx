@@ -1,53 +1,75 @@
 import { useState, useEffect } from "react";
-import { Plus, Minus } from "lucide-react";
-import { getFloorOccupancy } from "../api/floors";
 import { useTranslation } from "react-i18next";
+import { ArrowLeft } from "lucide-react";
+import { getFloorOccupancy, getFloors } from "../api/floors";
+import { updatePart } from "../api/items";
 import { areaSize, decodeShape, expandArea } from "../lib/floorShape";
+import { partLabel } from "../lib/Partlabel";
+import { useAuth } from "../context/AuthContext";
 import FloorGrid from "./FloorGrid";
+import FloorPickerModal from "./FloorPickerModal";
 
 const STATS = [
   { key: "stock", label: "stock", editable: false },
+  { key: "damaged", label: "damaged", editable: true },
   { key: "reserved", label: "reserved", editable: true },
   { key: "sold", label: "sold", editable: true },
-  { key: "damaged", label: "damaged", editable: true },
 ];
 
-const StatCard = ({ label, value, editable, onDecrement, onIncrement }) => {
+function StatCard({ label, value, editable, onDecrement, onIncrement, t }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-        {label}
-      </p>
-      <div className="mt-3 flex items-end justify-between gap-4">
-        <span className="text-3xl font-bold text-slate-900">{value || 0}</span>
-        {editable && (
-          <div className="flex items-center gap-1.5">
-            <button
-              onClick={onDecrement}
-              aria-label={`decrease ${label}`}
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition-colors hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-300"
-            >
-              <Minus size={16} />
-            </button>
-            <button
-              onClick={onIncrement}
-              aria-label={`increase ${label}`}
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition-colors hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-300"
-            >
-              <Plus size={16} />
-            </button>
-          </div>
-        )}
-      </div>
+    <div className="rounded-lg border border-graphite-200 bg-white p-3">
+      <p className="text-xs text-graphite-500">{label}</p>
+      {editable ? (
+        <div className="mt-1.5 flex items-center justify-between">
+          <button
+            type="button"
+            onClick={onDecrement}
+            aria-label={t("decrease")}
+            className="flex h-7 w-7 items-center justify-center rounded-md border border-graphite-300 bg-white text-graphite-600 transition-colors hover:bg-graphite-100 focus:outline-none focus:ring-2 focus:ring-primary-500/30"
+          >
+            −
+          </button>
+          <span className="text-lg font-semibold text-graphite-900">
+            {value || 0}
+          </span>
+          <button
+            type="button"
+            onClick={onIncrement}
+            aria-label={t("increase")}
+            className="flex h-7 w-7 items-center justify-center rounded-md border border-graphite-300 bg-white text-graphite-600 transition-colors hover:bg-graphite-100 focus:outline-none focus:ring-2 focus:ring-primary-500/30"
+          >
+            +
+          </button>
+        </div>
+      ) : (
+        <p className="mt-1.5 text-lg font-semibold text-graphite-900">
+          {value ?? 0}
+        </p>
+      )}
     </div>
   );
-};
-const PartDetail = ({ item, part, onBack, onUpdateField }) => {
+}
+
+export default function PartDetail({
+  item,
+  part,
+  onBack,
+  onUpdateField,
+  onPartUpdated,
+}) {
+  const { t } = useTranslation();
+  const { user } = useAuth();
+  const canEdit = user?.role === "admin" || user?.role === "manager";
+
+  const [activeTab, setActiveTab] = useState("location");
   const [partFloorMap, setPartFloorMap] = useState(null);
   const [partFloorMapLoading, setPartFloorMapLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState("location");
+  const [floors, setFloors] = useState([]);
+  const [showPicker, setShowPicker] = useState(false);
+  const [savingLocation, setSavingLocation] = useState(false);
 
-  const { t } = useTranslation();
+  const hasLocation = Boolean(part.floorId && part.area);
 
   useEffect(() => {
     const floorId = part?.floorId?._id;
@@ -66,44 +88,77 @@ const PartDetail = ({ item, part, onBack, onUpdateField }) => {
       .finally(() => setPartFloorMapLoading(false));
   }, [part?.floorId?._id]);
 
-  if (!part) return null;
+  useEffect(() => {
+    if (!canEdit) return;
+    getFloors()
+      .then(setFloors)
+      .catch((err) => console.error("Failed to load floors:", err));
+  }, [canEdit]);
 
-  const hasLocation = part.floorId && part.area;
+  const handleLocationConfirm = async ({ floorId, area }) => {
+    setSavingLocation(true);
+    try {
+      const updated = await updatePart(item._id, part._id, {
+        floorId,
+        area,
+      });
+      onPartUpdated?.(updated);
+      setShowPicker(false);
+    } catch (error) {
+      alert(error.response?.data?.message || error.message);
+    } finally {
+      setSavingLocation(false);
+    }
+  };
+
+  const handleClearLocation = async () => {
+    if (!confirm(t("confirmClearLocation"))) return;
+
+    setSavingLocation(true);
+    try {
+      const updated = await updatePart(item._id, part._id, {
+        floorId: null,
+        area: null,
+      });
+      onPartUpdated?.(updated);
+    } catch (error) {
+      alert(error.response?.data?.message || error.message);
+    } finally {
+      setSavingLocation(false);
+    }
+  };
 
   return (
-    // Full-screen takeover: covers the entire viewport regardless of what
-    // Layout/navbar renders around it. If you'd rather this be a proper
-    // route without Layout at all, that's a change in App.jsx/Layout.jsx —
-    // send those over and I'll wire it there instead.
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-50">
-      <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 sm:py-10">
-        <button
-          onClick={onBack}
-          className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900"
-        >
-          ← {t("backTo")} {item?.name || t("item")}
-        </button>
+    <div className="mx-auto max-w-2xl">
+      <button
+        onClick={onBack}
+        className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-graphite-600 transition-colors hover:text-graphite-900"
+      >
+        <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+        {t("backTo")} {item?.name || t("item")}
+      </button>
 
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-[#613DC1]">
-              {item?.name}
-            </p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-primary-600">
+            {item?.name}
+          </p>
 
-            <h2 className="mt-0.5 text-2xl font-bold text-[#2C0735]">
-              {part.name}
-            </h2>
-          </div>
-
-          {hasLocation && (
-            <span className="mt-1 shrink-0 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm">
-              {part.floorId.name}
-            </span>
-          )}
+          <h2 className="mt-0.5 text-2xl font-bold text-graphite-900">
+            {partLabel(item, part)}
+          </h2>
         </div>
 
-        {/* Tabs */}
-        <div className="mt-6 inline-flex gap-1 rounded-full border border-slate-200 bg-white p-1 shadow-sm">
+        {hasLocation && (
+          <span className="mt-1 shrink-0 rounded-full border border-graphite-200 bg-graphite-200 px-3 py-1 text-xs font-semibold text-graphite-700">
+            {part.floorId.name}
+          </span>
+        )}
+      </div>
+
+      {/* Floor map */}
+      <div className="mt-6 rounded-xl border border-graphite-200 bg-graphite-50 p-1">
+        <div className="flex gap-2">
           {[
             { id: "location", label: t("location") },
             { id: "stats", label: t("stats") },
@@ -114,41 +169,42 @@ const PartDetail = ({ item, part, onBack, onUpdateField }) => {
               onClick={() => setActiveTab(tab.id)}
               className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
                 activeTab === tab.id
-                  ? "bg-[#613DC1] text-white shadow-sm"
-                  : "text-slate-500 hover:text-slate-900"
+                  ? "bg-white text-graphite-900 shadow-sm"
+                  : "text-graphite-500 hover:text-graphite-900"
               }`}
             >
               {tab.label}
             </button>
           ))}
         </div>
+      </div>
 
-        {activeTab === "location" ? (
-          <div className="mt-4 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-            <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
-              <h3 className="text-sm font-semibold text-slate-700">
-                {t("floorLocation")}
-              </h3>
+      {activeTab === "location" ? (
+        <div className="mt-4 overflow-hidden rounded-xl border border-graphite-200 bg-graphite-50 shadow-sm">
+          <div className="flex items-center justify-between border-b border-graphite-200 px-4 py-3">
+            <h3 className="text-sm font-semibold text-graphite-700">
+              {t("floorLocation")}
+            </h3>
 
-              {hasLocation && (
-                <span className="text-xs font-medium text-slate-500">
-                  {areaSize(part.area)}{" "}
-                  {areaSize(part.area) === 1 ? t("square") : t("squares")}
-                </span>
-              )}
-            </div>
+            {hasLocation && (
+              <span className="text-xs font-medium text-graphite-500">
+                {areaSize(part.area)}{" "}
+                {areaSize(part.area) === 1 ? t("square") : t("squares")}
+              </span>
+            )}
+          </div>
 
-            {/* Single box now — no nested wrapper around FloorGrid */}
-            <div className="flex justify-center p-6">
-              {!hasLocation ? (
-                <p className="py-8 text-center text-sm text-slate-500">
-                  {t("noLocationAssigned")}
-                </p>
-              ) : partFloorMapLoading || !partFloorMap ? (
-                <p className="py-8 text-center text-sm text-slate-500">
-                  {t("loadingMap")}
-                </p>
-              ) : (
+          <div className="p-4">
+            {!hasLocation ? (
+              <p className="py-8 text-center text-sm text-graphite-500">
+                {t("noLocationAssigned")}
+              </p>
+            ) : partFloorMapLoading || !partFloorMap ? (
+              <p className="py-8 text-center text-sm text-graphite-500">
+                {t("loadingMap")}
+              </p>
+            ) : (
+              <div className="flex justify-center rounded-lg bg-white p-3 shadow-inner">
                 <FloorGrid
                   rows={partFloorMap.floor.rows}
                   cols={partFloorMap.floor.cols}
@@ -160,41 +216,73 @@ const PartDetail = ({ item, part, onBack, onUpdateField }) => {
                   occupied={partFloorMap.occupied}
                   selectedCells={expandArea(part.area)}
                 />
-              )}
-            </div>
-          </div>
-        ) : (
-          <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-slate-700">
-                {t("inventory")}
-              </h3>
+              </div>
+            )}
 
-              <span className="text-xs text-slate-500">
-                {part.stock !== undefined
-                  ? t("stockCount", { count: part.stock })
-                  : ""}
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              {STATS.map(({ key, label, editable }) => (
-                <StatCard
-                  key={key}
-                  label={t(label)}
-                  value={part[key]}
-                  editable={editable}
-                  t={t}
-                  onDecrement={() => onUpdateField(part._id, key, -1)}
-                  onIncrement={() => onUpdateField(part._id, key, 1)}
-                />
-              ))}
-            </div>
+            {canEdit && (
+              <div className="mt-4 flex gap-2">
+                {hasLocation ? (
+                  <button
+                    type="button"
+                    onClick={handleClearLocation}
+                    disabled={savingLocation}
+                    className="flex-1 rounded-lg border border-red-200 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {t("clearLocation")}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setShowPicker(true)}
+                    disabled={savingLocation}
+                    className="flex-1 rounded-lg border border-graphite-300 py-2 text-sm font-medium text-graphite-700 transition-colors hover:bg-graphite-100 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {t("setLocation")}
+                  </button>
+                )}
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        </div>
+      ) : (
+        <div className="mt-4 rounded-xl border border-graphite-200 bg-graphite-50 p-4 shadow-sm">
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-graphite-700">
+              {t("inventory")}
+            </h3>
+
+            <span className="text-xs text-graphite-500">
+              {part.stock !== undefined
+                ? t("stockCount", { count: part.stock })
+                : ""}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            {STATS.map(({ key, label, editable }) => (
+              <StatCard
+                key={key}
+                label={t(label)}
+                value={part[key]}
+                editable={editable && canEdit}
+                t={t}
+                onDecrement={() => onUpdateField(part._id, key, -1)}
+                onIncrement={() => onUpdateField(part._id, key, 1)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {showPicker && (
+        <FloorPickerModal
+          floors={floors}
+          initialFloorId={part.floorId?._id}
+          initialArea={hasLocation ? part.area : null}
+          onClose={() => setShowPicker(false)}
+          onConfirm={handleLocationConfirm}
+        />
+      )}
     </div>
   );
-};
-
-export default PartDetail;
+}
