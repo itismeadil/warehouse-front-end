@@ -129,5 +129,10 @@
   "confirmDeleteItem": "حذف هذا العنصر وجميع أجزائه؟ لا يمكن التراجع عن هذا الإجراء.",
   "setLocation": "تحديد الموقع",
   "clearLocation": "إزالة الموقع",
-  "confirmClearLocation": "هل تريد إزالة موقع هذا الجزء؟"
+  "confirmClearLocation": "هل تريد إزالة موقع هذا الجزء؟",
+
+  "backToItems": "العودة إلى العناصر",
+  "itemNotFound": "العنصر غير موجود.",
+  "loadingItem": "جارٍ تحميل العنصر...",
+  "confirm": "تأكيد"
 }

@@ -125,5 +125,10 @@
   "confirmDeleteItem": "Delete this item and all its parts? This can't be undone.",
   "setLocation": "Set location",
   "clearLocation": "Clear location",
-  "confirmClearLocation": "Clear this part's location?"
+  "confirmClearLocation": "Clear this part's location?",
+
+  "backToItems": "Back to items",
+  "itemNotFound": "Item not found.",
+  "loadingItem": "Loading item...",
+  "confirm": "Confirm"
 }

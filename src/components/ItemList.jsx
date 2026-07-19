@@ -1,19 +1,10 @@
-import { useState, useMemo } from "react";
-import { X } from "lucide-react";
+import { useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { updatePart, deleteItem } from "../api/items";
-import { useAuth } from "../context/AuthContext";
-import { partLabel } from "../lib/Partlabel";
-import PartDetail from "./PartDetail";
 
 const ItemList = ({ items, loading, searchTerm = "", onChanged }) => {
   const { t } = useTranslation();
-  const { user } = useAuth();
-  const canEdit = user?.role === "admin" || user?.role === "manager";
-
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [selectedPart, setSelectedPart] = useState(null);
-  const [deleting, setDeleting] = useState(false);
+  const navigate = useNavigate();
 
   const filteredItems = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
@@ -26,184 +17,52 @@ const ItemList = ({ items, loading, searchTerm = "", onChanged }) => {
     );
   }, [items, searchTerm]);
 
-  const updatePartField = async (partId, field, change) => {
-    if (!selectedItem || !selectedPart) return;
-
-    try {
-      const updated = await updatePart(selectedItem._id, partId, {
-        field,
-        change,
-      });
-      setSelectedPart(updated);
-    } catch (error) {
-      alert(
-        "Update failed: " + (error.response?.data?.message || error.message),
-      );
-    }
-  };
-
-  // Called by PartDetail after it changes/clears a part's location
-  const handlePartUpdated = (updated) => {
-    setSelectedPart(updated);
-    onChanged?.();
-  };
-
   const handleItemClick = (item) => {
-    setSelectedItem(item);
-    setSelectedPart(null);
+    // Pass the item via navigation state so ItemDetail doesn't need to
+    // re-fetch it; ItemDetail falls back to fetching by id if this is
+    // missing (e.g. a direct page refresh).
+    navigate(`/items/${item._id}`, { state: { item } });
   };
 
-  const handlePartClick = (part) => setSelectedPart(part);
-  const handleCloseItemPopup = () => {
-    setSelectedItem(null);
-    setSelectedPart(null);
-  };
-  const handleClosePartPage = () => {
-    setSelectedPart(null);
-  };
+  if (loading) {
+    return (
+      <p className="text-sm text-graphite-500">{t("loading_inventory")}</p>
+    );
+  }
 
-  const handleDeleteItem = async () => {
-    if (!confirm(t("confirmDeleteItem"))) return;
-
-    setDeleting(true);
-    try {
-      await deleteItem(selectedItem._id);
-      setSelectedItem(null);
-      onChanged?.();
-    } catch (error) {
-      alert(error.response?.data?.message || error.message);
-    } finally {
-      setDeleting(false);
-    }
-  };
+  if (filteredItems.length === 0) {
+    return (
+      <div className="rounded-lg border border-dashed border-graphite-300 bg-white py-12 text-center">
+        <p className="text-sm text-graphite-500">
+          {items.length === 0 ? t("no_items_yet") : t("no_items_match_search")}
+        </p>
+      </div>
+    );
+  }
 
   return (
-    <div>
-      {selectedPart ? (
-        <div className="min-h-screen bg-graphite-50 p-4">
-          <div className="mx-auto max-w-4xl rounded-xl bg-white p-6 shadow-lg">
-            <PartDetail
-              item={selectedItem}
-              part={selectedPart}
-              onBack={handleClosePartPage}
-              onUpdateField={updatePartField}
-              onPartUpdated={handlePartUpdated}
+    <div className="flex flex-col gap-1.5">
+      {filteredItems.map((item) => (
+        <button
+          key={item._id}
+          onClick={() => handleItemClick(item)}
+          className="flex items-center justify-between rounded-lg border border-graphite-200 bg-white px-4 py-3 text-start shadow-sm transition-colors hover:border-primary-300 hover:bg-primary-50/40 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+        >
+          <div className="flex min-w-0 items-center gap-3">
+            <span
+              className="h-4 w-4 shrink-0 rounded-sm border border-graphite-300"
+              style={{ backgroundColor: item.color }}
+              title={item.color}
             />
+            <span className="truncate font-medium text-graphite-900">
+              {item.name}
+            </span>
           </div>
-        </div>
-      ) : (
-        <>
-          {loading ? (
-            <p className="text-sm text-graphite-500">
-              {t("loading_inventory")}
-            </p>
-          ) : filteredItems.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-graphite-300 bg-white py-12 text-center">
-              <p className="text-sm text-graphite-500">
-                {items.length === 0
-                  ? t("no_items_yet")
-                  : t("no_items_match_search")}
-              </p>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-1.5">
-              {filteredItems.map((item) => (
-                <button
-                  key={item._id}
-                  onClick={() => handleItemClick(item)}
-                  className="flex items-center justify-between rounded-lg border border-graphite-200 bg-white px-4 py-3 text-start shadow-sm transition-colors hover:border-primary-300 hover:bg-primary-50/40 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
-                >
-                  <div className="flex min-w-0 items-center gap-3">
-                    <span
-                      className="h-4 w-4 shrink-0 rounded-sm border border-graphite-300"
-                      style={{ backgroundColor: item.color }}
-                      title={item.color}
-                    />
-                    <span className="truncate font-medium text-graphite-900">
-                      {item.name}
-                    </span>
-                  </div>
-                  <span className="shrink-0 ps-3 text-sm text-graphite-500">
-                    {item.serialNumber}
-                  </span>
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* Item Details Popup */}
-          {selectedItem && !selectedPart && (
-            <div
-              className="fixed inset-0 z-50 flex items-center justify-center bg-graphite-900/50 p-4"
-              onClick={handleCloseItemPopup}
-            >
-              <div
-                className="relative w-full max-w-md rounded-xl bg-white p-6 shadow-lg"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <button
-                  onClick={handleCloseItemPopup}
-                  aria-label="Close"
-                  className="absolute end-4 top-4 rounded-md p-1 text-graphite-400 transition-colors hover:bg-graphite-100 hover:text-graphite-600 focus:outline-none focus:ring-2 focus:ring-primary-500/30"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-
-                <div className="flex items-center gap-3 pe-8">
-                  <span
-                    className="h-6 w-6 shrink-0 rounded-md border border-graphite-300"
-                    style={{ backgroundColor: selectedItem.color }}
-                    title={selectedItem.color}
-                  />
-                  <h2 className="text-lg font-semibold text-graphite-900">
-                    {selectedItem.name}
-                  </h2>
-                </div>
-                <p className="mt-1 text-sm text-graphite-500">
-                  <span className="font-medium text-graphite-700">
-                    {t("serialNumber")}:
-                  </span>{" "}
-                  {selectedItem.serialNumber}
-                  <span className="mx-1.5">·</span>
-                  <span className="font-medium text-graphite-700">
-                    {t("color")}:
-                  </span>{" "}
-                  {selectedItem.color}
-                </p>
-
-                <div className="mt-6 border-t border-graphite-200 pt-4">
-                  <h3 className="text-xs font-semibold uppercase tracking-wide text-graphite-500">
-                    {t("parts")}
-                  </h3>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {selectedItem.parts?.map((part) => (
-                      <button
-                        key={part._id}
-                        onClick={() => handlePartClick(part)}
-                        className="rounded-lg border border-graphite-200 bg-graphite-50 px-3 py-1.5 text-sm font-medium text-graphite-700 transition-colors hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700"
-                      >
-                        {partLabel(selectedItem, part)}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {canEdit && (
-                  <div className="mt-6 border-t border-graphite-200 pt-4">
-                    <button
-                      onClick={handleDeleteItem}
-                      disabled={deleting}
-                      className="w-full rounded-lg border border-red-200 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      {deleting ? t("deleting") : t("deleteItem")}
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-        </>
-      )}
+          <span className="shrink-0 ps-3 text-sm text-graphite-500">
+            {item.serialNumber}
+          </span>
+        </button>
+      ))}
     </div>
   );
 };

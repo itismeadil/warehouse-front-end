@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Plus, Minus } from "lucide-react";
 import { getFloorOccupancy, getFloors } from "../api/floors";
 import { updatePart } from "../api/items";
 import { areaSize, decodeShape, expandArea } from "../lib/floorShape";
@@ -28,7 +28,7 @@ function StatCard({ label, value, editable, onDecrement, onIncrement, t }) {
             aria-label={t("decrease")}
             className="flex h-7 w-7 items-center justify-center rounded-md border border-graphite-300 bg-white text-graphite-600 transition-colors hover:bg-graphite-100 focus:outline-none focus:ring-2 focus:ring-primary-500/30"
           >
-            −
+            <Minus className="h-3.5 w-3.5" />
           </button>
           <span className="text-lg font-semibold text-graphite-900">
             {value || 0}
@@ -39,7 +39,7 @@ function StatCard({ label, value, editable, onDecrement, onIncrement, t }) {
             aria-label={t("increase")}
             className="flex h-7 w-7 items-center justify-center rounded-md border border-graphite-300 bg-white text-graphite-600 transition-colors hover:bg-graphite-100 focus:outline-none focus:ring-2 focus:ring-primary-500/30"
           >
-            +
+            <Plus className="h-3.5 w-3.5" />
           </button>
         </div>
       ) : (
@@ -57,6 +57,7 @@ export default function PartDetail({
   onBack,
   onUpdateField,
   onPartUpdated,
+  embedded = false, // true when rendered inline inside an accordion card
 }) {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -129,35 +130,41 @@ export default function PartDetail({
   };
 
   return (
-    <div className="mx-auto max-w-2xl">
-      <button
-        onClick={onBack}
-        className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-graphite-600 transition-colors hover:text-graphite-900"
+    <div className={embedded ? "" : "mx-auto max-w-2xl"}>
+      {!embedded && (
+        <>
+          <button
+            onClick={onBack}
+            className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-graphite-600 transition-colors hover:text-graphite-900"
+          >
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+            {t("backTo")} {item?.name || t("item")}
+          </button>
+
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-primary-600">
+                {item?.name}
+              </p>
+
+              <h2 className="mt-0.5 text-2xl font-bold text-graphite-900">
+                {partLabel(item, part)}
+              </h2>
+            </div>
+
+            {hasLocation && (
+              <span className="mt-1 shrink-0 rounded-full border border-graphite-200 bg-graphite-200 px-3 py-1 text-xs font-semibold text-graphite-700">
+                {part.floorId.name}
+              </span>
+            )}
+          </div>
+        </>
+      )}
+
+      {/* Tab switcher */}
+      <div
+        className={`${embedded ? "" : "mt-6"} rounded-xl border border-graphite-200 bg-graphite-50 p-1`}
       >
-        <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-        {t("backTo")} {item?.name || t("item")}
-      </button>
-
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-primary-600">
-            {item?.name}
-          </p>
-
-          <h2 className="mt-0.5 text-2xl font-bold text-graphite-900">
-            {partLabel(item, part)}
-          </h2>
-        </div>
-
-        {hasLocation && (
-          <span className="mt-1 shrink-0 rounded-full border border-graphite-200 bg-graphite-200 px-3 py-1 text-xs font-semibold text-graphite-700">
-            {part.floorId.name}
-          </span>
-        )}
-      </div>
-
-      {/* Floor map */}
-      <div className="mt-6 rounded-xl border border-graphite-200 bg-graphite-50 p-1">
         <div className="flex gap-2">
           {[
             { id: "location", label: t("location") },

@@ -8,6 +8,7 @@ import ManageUsers from "./components/ManageUsers";
 import SupplierItems from "./components/SupplierItems";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import ItemDetail from "./components/ItemDetail";
 
 // "/" shows a different page depending on who's logged in.
 // admin and manager both get the normal Home; supplier gets their own view.
@@ -40,6 +41,17 @@ function App() {
               <ProtectedRoute roles={["admin", "manager"]}>
                 <Layout>
                   <AddItemForm />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/items/:id"
+            element={
+              <ProtectedRoute roles={["admin", "manager"]}>
+                <Layout>
+                  <ItemDetail />
                 </Layout>
               </ProtectedRoute>
             }
