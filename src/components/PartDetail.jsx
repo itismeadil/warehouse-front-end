@@ -251,9 +251,14 @@ export default function PartDetail({
                 {t("noLocationAssigned")}
               </p>
             ) : partFloorMapLoading || !partFloorMap ? (
-              <p className="py-8 text-center text-sm text-graphite-500">
-                {t("loadingMap")}
-              </p>
+              <div className="flex flex-col items-center gap-3 rounded-md bg-graphite-50 px-6 py-8 text-center">
+                <div
+                  className="h-8 w-8 animate-spin rounded-full border-4 border-current border-t-transparent"
+                  style={{ color: "#45a1a1" }}
+                  aria-hidden
+                />
+                <p className="text-sm text-graphite-600">{t("loading")}</p>
+              </div>
             ) : (
               <div className="flex justify-center rounded-lg bg-white p-3 shadow-inner">
                 <FloorGrid

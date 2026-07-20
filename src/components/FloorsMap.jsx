@@ -250,7 +250,16 @@ export default function FloorsMap() {
       )}
 
       {loading ? (
-        <p className="text-sm text-slate-500">{t("loadingFloors")}</p>
+        <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-slate-200 bg-slate-50 py-12">
+          <div className="flex flex-col items-center gap-3 rounded-md bg-graphite-50 px-6 py-8 text-center">
+            <div
+              className="h-8 w-8 animate-spin rounded-full border-4 border-current border-t-transparent"
+              style={{ color: "#45a1a1" }}
+              aria-hidden
+            />
+            <p className="text-sm text-graphite-600">{t("loading")}</p>
+          </div>
+        </div>
       ) : floors.length === 0 ? (
         <div className="rounded-lg border border-dashed border-slate-300 bg-white py-12 text-center">
           <p className="text-sm text-slate-500">{t("noFloors")}</p>

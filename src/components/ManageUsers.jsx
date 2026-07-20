@@ -137,7 +137,16 @@ export default function ManageUsers() {
 
       <div className="mt-6">
         {loading ? (
-          <p className="text-sm text-graphite-500">{t("loading")}</p>
+          <div className="flex items-center justify-center p-6">
+            <div className="flex flex-col items-center gap-3 rounded-md bg-graphite-50 px-6 py-8 text-center">
+              <div
+                className="h-8 w-8 animate-spin rounded-full border-4 border-current border-t-transparent"
+                style={{ color: "#45a1a1" }}
+                aria-hidden
+              />
+              <p className="text-sm text-graphite-600">{t("loading")}</p>
+            </div>
+          </div>
         ) : (
           <div className="divide-y divide-graphite-200 rounded-xl border border-graphite-200 bg-white">
             {users.map((u) => (

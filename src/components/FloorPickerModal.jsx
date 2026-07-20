@@ -219,9 +219,14 @@ export default function FloorPickerModal({
               {t("chooseFloorToSeeMap")}
             </p>
           ) : loading || !occupancy ? (
-            <p className="py-8 text-center text-sm text-slate-500">
-              {t("loadingFloor")}
-            </p>
+            <div className="flex flex-col items-center gap-3 rounded-md bg-graphite-50 px-6 py-8 text-center">
+              <div
+                className="h-8 w-8 animate-spin rounded-full border-4 border-current border-t-transparent"
+                style={{ color: "#45a1a1" }}
+                aria-hidden
+              />
+              <p className="text-sm text-graphite-600">{t("loading")}</p>
+            </div>
           ) : (
             <>
               <div className="mb-3 flex items-center justify-between">

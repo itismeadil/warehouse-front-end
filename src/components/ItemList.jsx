@@ -26,7 +26,13 @@ const ItemList = ({ items, loading, searchTerm = "", onChanged }) => {
 
   if (loading) {
     return (
-      <p className="text-sm text-graphite-500">{t("loading_inventory")}</p>
+      <div className="flex items-center gap-2">
+        <span
+          className="inline-flex h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent"
+          style={{ color: '#45a1a1' }}
+        />
+        <p className="text-sm text-graphite-500">{t("loading_inventory")}</p>
+      </div>
     );
   }
 

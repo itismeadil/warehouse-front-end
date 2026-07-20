@@ -22,9 +22,7 @@ export default function Login() {
       await login(email, password);
       navigate(from, { replace: true });
     } catch (err) {
-      setError(
-        err.response?.data?.message || "Invalid email or password",
-      );
+      setError(err.response?.data?.message || "Invalid email or password");
     } finally {
       setLoading(false);
     }
@@ -33,9 +31,7 @@ export default function Login() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-graphite-50 px-4">
       <div className="w-full max-w-sm rounded-xl border border-graphite-200 bg-white p-6 shadow-sm sm:p-8">
-        <h1 className="text-lg font-semibold text-graphite-900">
-          Warehouse
-        </h1>
+        <h1 className="text-lg font-semibold text-graphite-900">Warehouse</h1>
         <p className="mt-1 text-sm text-graphite-500">
           Sign in to your account.
         </p>
@@ -84,7 +80,18 @@ export default function Login() {
             disabled={loading}
             className="w-full rounded-lg bg-primary-600 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {loading ? "Signing in..." : "Sign in"}
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <div
+                  className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"
+                  style={{ color: "#45a1a1" }}
+                  aria-hidden="true"
+                />
+                <span className="text-sm">Signing in...</span>
+              </span>
+            ) : (
+              "Sign in"
+            )}
           </button>
         </form>
       </div>
