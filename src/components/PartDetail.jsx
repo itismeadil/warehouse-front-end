@@ -360,7 +360,7 @@ export default function PartDetail({
                         type="button"
                         onClick={() => handleRemovePhoto(photo.id)}
                         aria-label={t("removePhoto")}
-                        className="absolute end-1 top-1 rounded-full bg-graphite-900/60 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100 hover:bg-red-600"
+                        className="absolute inset-e-1 top-1 rounded-full bg-graphite-900/60 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100 hover:bg-red-600"
                       >
                         <X className="h-3.5 w-3.5" />
                       </button>
