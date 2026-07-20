@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { ArrowLeft, Plus, Minus, ImagePlus, X } from "lucide-react";
 import { getFloorOccupancy, getFloors } from "../api/floors";
-import { updatePart } from "../api/items";
+import { updatePart, uploadPartPhotos, deletePartPhoto } from "../api/items";
 import { areaSize, decodeShape, expandArea } from "../lib/floorShape";
 import { partLabel } from "../lib/Partlabel";
 import { useAuth } from "../context/AuthContext";
@@ -70,50 +70,77 @@ export default function PartDetail({
   const [showPicker, setShowPicker] = useState(false);
   const [savingLocation, setSavingLocation] = useState(false);
 
-  // Damage photos — front-end only for now (no backend endpoint yet).
-  // Capped at part.damaged: if 20 items are marked damaged, at most 20
-  // photos can be attached, one per damaged unit.
-  const [photos, setPhotos] = useState([]); // [{ id, url, file }]
+  // Damage photos — capped at part.damaged (one photo per damaged unit).
+  const [uploadingPhotos, setUploadingPhotos] = useState(false);
+  const [deletingPhotoId, setDeletingPhotoId] = useState(null);
+  const [damageDescription, setDamageDescription] = useState(
+    part.damageDescription || "",
+  );
+  const [savingDescription, setSavingDescription] = useState(false);
   const fileInputRef = useRef(null);
 
+  const photos = (part.photos || []).map((p) => ({ id: p._id, url: p.url }));
   const hasLocation = Boolean(part.floorId && part.area);
   const maxPhotos = part.damaged || 0;
   const remainingSlots = Math.max(0, maxPhotos - photos.length);
 
-  // Revoke object URLs on unmount to avoid leaking memory
-  useEffect(() => {
-    return () => {
-      photos.forEach((p) => URL.revokeObjectURL(p.url));
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const handleFilesSelected = (e) => {
+  const handleFilesSelected = async (e) => {
     const files = Array.from(e.target.files || []);
+    e.target.value = "";
     if (files.length === 0) return;
 
     const accepted = files.slice(0, remainingSlots);
     if (files.length > accepted.length) {
       alert(t("photoLimitReached", { count: maxPhotos }));
     }
+    if (accepted.length === 0) return;
 
-    const newPhotos = accepted.map((file) => ({
-      id: `${file.name}-${file.lastModified}-${Math.random()}`,
-      url: URL.createObjectURL(file),
-      file,
-    }));
+    const formData = new FormData();
+    accepted.forEach((file) => formData.append("photos", file));
 
-    setPhotos((prev) => [...prev, ...newPhotos]);
-    e.target.value = ""; // allow re-selecting the same file later
+    setUploadingPhotos(true);
+    try {
+      const updated = await uploadPartPhotos(item._id, part._id, formData);
+      onPartUpdated?.(updated);
+    } catch (error) {
+      alert(error.response?.data?.message || error.message);
+    } finally {
+      setUploadingPhotos(false);
+    }
   };
 
-  const handleRemovePhoto = (id) => {
-    setPhotos((prev) => {
-      const target = prev.find((p) => p.id === id);
-      if (target) URL.revokeObjectURL(target.url);
-      return prev.filter((p) => p.id !== id);
-    });
+  const handleRemovePhoto = async (photoId) => {
+    setDeletingPhotoId(photoId);
+    try {
+      const updated = await deletePartPhoto(item._id, part._id, photoId);
+      onPartUpdated?.(updated);
+    } catch (error) {
+      alert(error.response?.data?.message || error.message);
+    } finally {
+      setDeletingPhotoId(null);
+    }
   };
+
+  useEffect(() => {
+    setDamageDescription(part.damageDescription || "");
+  }, [part._id, part.damageDescription]);
+
+  const handleSaveDescription = async () => {
+    setSavingDescription(true);
+    try {
+      const updated = await updatePart(item._id, part._id, {
+        damageDescription: damageDescription.trim() || null,
+      });
+      onPartUpdated?.(updated);
+    } catch (error) {
+      alert(error.response?.data?.message || error.message);
+    } finally {
+      setSavingDescription(false);
+    }
+  };
+
+  const descriptionDirty =
+    damageDescription.trim() !== (part.damageDescription || "").trim();
 
   useEffect(() => {
     const floorId = part?.floorId?._id;
@@ -349,6 +376,38 @@ export default function PartDetail({
             </p>
           ) : (
             <>
+              {canEdit && (
+                <div className="mb-4">
+                  <label
+                    htmlFor={`damage-desc-${part._id}`}
+                    className="mb-1.5 block text-xs font-medium text-graphite-600"
+                  >
+                    {t("damageDescription")}{" "}
+                    <span className="font-normal text-graphite-400">
+                      ({t("optional")})
+                    </span>
+                  </label>
+                  <textarea
+                    id={`damage-desc-${part._id}`}
+                    value={damageDescription}
+                    onChange={(e) => setDamageDescription(e.target.value)}
+                    rows={3}
+                    placeholder={t("damageDescriptionPlaceholder")}
+                    className="w-full resize-none rounded-lg border border-graphite-300 bg-white px-3 py-2 text-sm text-graphite-900 placeholder:text-graphite-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                  />
+                  {descriptionDirty && (
+                    <button
+                      type="button"
+                      onClick={handleSaveDescription}
+                      disabled={savingDescription}
+                      className="mt-2 rounded-lg bg-primary-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {savingDescription ? t("saving") : t("saveDescription")}
+                    </button>
+                  )}
+                </div>
+              )}
+
               <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
                 {photos.map((photo) => (
                   <div
@@ -364,10 +423,15 @@ export default function PartDetail({
                       <button
                         type="button"
                         onClick={() => handleRemovePhoto(photo.id)}
+                        disabled={deletingPhotoId === photo.id || uploadingPhotos}
                         aria-label={t("removePhoto")}
-                        className="absolute inset-e-1 top-1 rounded-full bg-graphite-900/60 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100 hover:bg-red-600"
+                        className="absolute inset-e-1 top-1 rounded-full bg-graphite-900/60 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100 hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50"
                       >
-                        <X className="h-3.5 w-3.5" />
+                        {deletingPhotoId === photo.id ? (
+                          <span className="block h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                        ) : (
+                          <X className="h-3.5 w-3.5" />
+                        )}
                       </button>
                     )}
                   </div>
@@ -377,10 +441,17 @@ export default function PartDetail({
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="flex aspect-square flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-graphite-300 text-graphite-400 transition-colors hover:border-primary-400 hover:bg-primary-50 hover:text-primary-600"
+                    disabled={uploadingPhotos || deletingPhotoId !== null}
+                    className="flex aspect-square flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-graphite-300 text-graphite-400 transition-colors hover:border-primary-400 hover:bg-primary-50 hover:text-primary-600 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    <ImagePlus className="h-5 w-5" />
-                    <span className="text-xs font-medium">{t("addPhoto")}</span>
+                    {uploadingPhotos ? (
+                      <span className="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    ) : (
+                      <ImagePlus className="h-5 w-5" />
+                    )}
+                    <span className="text-xs font-medium">
+                      {uploadingPhotos ? t("uploading") : t("addPhoto")}
+                    </span>
                   </button>
                 )}
               </div>
@@ -390,6 +461,7 @@ export default function PartDetail({
                 type="file"
                 accept="image/*"
                 multiple
+                disabled={uploadingPhotos}
                 onChange={handleFilesSelected}
                 className="hidden"
               />

@@ -137,7 +137,17 @@
   "photoCount": "{{count}} / {{max}} photos",
   "noDamagedItems": "No damaged items — mark items as damaged to add photos.",
   "addPhoto": "Add photo",
+  "uploading": "Uploading…",
   "removePhoto": "Remove photo",
   "photoSlotsRemaining": "{{count}} more photo(s) can be added",
-  "photoLimitReached": "Limit reached — only {{count}} photo(s) allowed"
+  "photoLimitReached": "Limit reached — only {{count}} photo(s) allowed",
+
+  "damageDescription": "Damage description",
+  "damageDescriptionPlaceholder": "Describe the damage (visible to the supplier)",
+  "saveDescription": "Save description",
+
+  "supplierDamagedTitle": "Damaged parts",
+  "supplierDamagedDescription": "Photos and notes for damaged parts on your assigned items.",
+  "supplierNoDamagedParts": "No damaged parts on your assigned items right now.",
+  "supplierNoPhotosYet": "No photos uploaded yet."
 }

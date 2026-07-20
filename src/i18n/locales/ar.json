@@ -141,7 +141,17 @@
   "photoCount": "{{count}} / {{max}} صور",
   "noDamagedItems": "لا توجد عناصر تالفة — حدد العناصر كتالفة لإضافة صور.",
   "addPhoto": "إضافة صورة",
+  "uploading": "جارٍ الرفع…",
   "removePhoto": "إزالة الصورة",
   "photoSlotsRemaining": "يمكن إضافة {{count}} صورة إضافية",
-  "photoLimitReached": "تم الوصول للحد الأقصى — {{count}} صورة فقط مسموح بها"
+  "photoLimitReached": "تم الوصول للحد الأقصى — {{count}} صورة فقط مسموح بها",
+
+  "damageDescription": "وصف التلف",
+  "damageDescriptionPlaceholder": "صف التلف (يظهر للمورد)",
+  "saveDescription": "حفظ الوصف",
+
+  "supplierDamagedTitle": "الأجزاء التالفة",
+  "supplierDamagedDescription": "صور وملاحظات للأجزاء التالفة في العناصر المخصصة لك.",
+  "supplierNoDamagedParts": "لا توجد أجزاء تالفة في العناصر المخصصة لك حالياً.",
+  "supplierNoPhotosYet": "لم يتم رفع صور بعد."
 }
