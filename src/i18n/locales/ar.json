@@ -134,5 +134,14 @@
   "backToItems": "العودة إلى العناصر",
   "itemNotFound": "العنصر غير موجود.",
   "loadingItem": "جارٍ تحميل العنصر...",
-  "confirm": "تأكيد"
+  "confirm": "تأكيد",
+
+  "pictures": "الصور",
+  "damagePhotos": "صور التلف",
+  "photoCount": "{{count}} / {{max}} صور",
+  "noDamagedItems": "لا توجد عناصر تالفة — حدد العناصر كتالفة لإضافة صور.",
+  "addPhoto": "إضافة صورة",
+  "removePhoto": "إزالة الصورة",
+  "photoSlotsRemaining": "يمكن إضافة {{count}} صورة إضافية",
+  "photoLimitReached": "تم الوصول للحد الأقصى — {{count}} صورة فقط مسموح بها"
 }

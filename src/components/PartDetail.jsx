@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, Plus, Minus } from "lucide-react";
+import { ArrowLeft, Plus, Minus, ImagePlus, X } from "lucide-react";
 import { getFloorOccupancy, getFloors } from "../api/floors";
 import { updatePart } from "../api/items";
 import { areaSize, decodeShape, expandArea } from "../lib/floorShape";
@@ -70,7 +70,50 @@ export default function PartDetail({
   const [showPicker, setShowPicker] = useState(false);
   const [savingLocation, setSavingLocation] = useState(false);
 
+  // Damage photos — front-end only for now (no backend endpoint yet).
+  // Capped at part.damaged: if 20 items are marked damaged, at most 20
+  // photos can be attached, one per damaged unit.
+  const [photos, setPhotos] = useState([]); // [{ id, url, file }]
+  const fileInputRef = useRef(null);
+
   const hasLocation = Boolean(part.floorId && part.area);
+  const maxPhotos = part.damaged || 0;
+  const remainingSlots = Math.max(0, maxPhotos - photos.length);
+
+  // Revoke object URLs on unmount to avoid leaking memory
+  useEffect(() => {
+    return () => {
+      photos.forEach((p) => URL.revokeObjectURL(p.url));
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleFilesSelected = (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    const accepted = files.slice(0, remainingSlots);
+    if (files.length > accepted.length) {
+      alert(t("photoLimitReached", { count: maxPhotos }));
+    }
+
+    const newPhotos = accepted.map((file) => ({
+      id: `${file.name}-${file.lastModified}-${Math.random()}`,
+      url: URL.createObjectURL(file),
+      file,
+    }));
+
+    setPhotos((prev) => [...prev, ...newPhotos]);
+    e.target.value = ""; // allow re-selecting the same file later
+  };
+
+  const handleRemovePhoto = (id) => {
+    setPhotos((prev) => {
+      const target = prev.find((p) => p.id === id);
+      if (target) URL.revokeObjectURL(target.url);
+      return prev.filter((p) => p.id !== id);
+    });
+  };
 
   useEffect(() => {
     const floorId = part?.floorId?._id;
@@ -169,6 +212,7 @@ export default function PartDetail({
           {[
             { id: "location", label: t("location") },
             { id: "stats", label: t("stats") },
+            { id: "pictures", label: t("pictures") },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -186,7 +230,7 @@ export default function PartDetail({
         </div>
       </div>
 
-      {activeTab === "location" ? (
+      {activeTab === "location" && (
         <div className="mt-4 overflow-hidden rounded-xl border border-graphite-200 bg-graphite-50 shadow-sm">
           <div className="flex items-center justify-between border-b border-graphite-200 px-4 py-3">
             <h3 className="text-sm font-semibold text-graphite-700">
@@ -251,7 +295,9 @@ export default function PartDetail({
             )}
           </div>
         </div>
-      ) : (
+      )}
+
+      {activeTab === "stats" && (
         <div className="mt-4 rounded-xl border border-graphite-200 bg-graphite-50 p-4 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
             <h3 className="text-sm font-semibold text-graphite-700">
@@ -278,6 +324,78 @@ export default function PartDetail({
               />
             ))}
           </div>
+        </div>
+      )}
+
+      {activeTab === "pictures" && (
+        <div className="mt-4 rounded-xl border border-graphite-200 bg-graphite-50 p-4 shadow-sm">
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-graphite-700">
+              {t("damagePhotos")}
+            </h3>
+            <span className="text-xs text-graphite-500">
+              {t("photoCount", { count: photos.length, max: maxPhotos })}
+            </span>
+          </div>
+
+          {maxPhotos === 0 ? (
+            <p className="py-8 text-center text-sm text-graphite-500">
+              {t("noDamagedItems")}
+            </p>
+          ) : (
+            <>
+              <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
+                {photos.map((photo) => (
+                  <div
+                    key={photo.id}
+                    className="group relative aspect-square overflow-hidden rounded-lg border border-graphite-200 bg-white"
+                  >
+                    <img
+                      src={photo.url}
+                      alt=""
+                      className="h-full w-full object-cover"
+                    />
+                    {canEdit && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemovePhoto(photo.id)}
+                        aria-label={t("removePhoto")}
+                        className="absolute end-1 top-1 rounded-full bg-graphite-900/60 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100 hover:bg-red-600"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+
+                {canEdit && remainingSlots > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex aspect-square flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-graphite-300 text-graphite-400 transition-colors hover:border-primary-400 hover:bg-primary-50 hover:text-primary-600"
+                  >
+                    <ImagePlus className="h-5 w-5" />
+                    <span className="text-xs font-medium">{t("addPhoto")}</span>
+                  </button>
+                )}
+              </div>
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleFilesSelected}
+                className="hidden"
+              />
+
+              <p className="mt-3 text-xs text-graphite-400">
+                {remainingSlots > 0
+                  ? t("photoSlotsRemaining", { count: remainingSlots })
+                  : t("photoLimitReached", { count: maxPhotos })}
+              </p>
+            </>
+          )}
         </div>
       )}
 
