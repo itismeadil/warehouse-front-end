@@ -105,7 +105,7 @@ export default function ItemDetail() {
         {canEdit && (
           <button
             onClick={() => setShowDeleteConfirm(true)}
-            className="absolute end-3 top-3 inline-flex items-center gap-1.5 rounded-lg border border-red-200 px-3 py-1.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
+            className="absolute inset-e-3 top-1/2 -translate-y-1/2 inline-flex items-center gap-1.5 rounded-lg border border-red-200 px-3 py-1.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
           >
             <Trash2 className="h-4 w-4" />
             {t("deleteItem")}
@@ -150,8 +150,11 @@ export default function ItemDetail() {
                   }
                   className="flex w-full items-center justify-between px-4 py-3 text-start"
                 >
-                  <span className="text-sm font-semibold text-graphite-900">
-                    {partLabel(item, part)}
+                  <span className="text-sm font-semibold text-graphite-900 truncate">
+                    PCS/CTN: {partLabel(item, part)}
+                  </span>
+                  <span className="ml-auto shrink-0 text-sm text-graphite-500 mr-3">
+                    {`Stock: ${item.parts[0].stock}`}
                   </span>
                   {isExpanded ? (
                     <ChevronUp className="h-4 w-4 shrink-0 text-graphite-400" />
