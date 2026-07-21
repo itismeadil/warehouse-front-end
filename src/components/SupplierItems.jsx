@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Newspaper, ImageOff, ZoomIn } from "lucide-react";
 import { getItems } from "../api/items";
 import { partLabel } from "../lib/Partlabel";
-import PhotoLightBox from "./PhotoLightBox";
+import PhotoLightbox from "./PhotoLightbox";
 
 // A single clickable photo tile, used by PhotoGrid below.
 function Tile({ photo, className = "", overlay = null, onOpen }) {
@@ -197,7 +197,7 @@ export default function SupplierItems() {
       )}
 
       {openPhoto && (
-        <PhotoLightBox url={openPhoto} onClose={() => setOpenPhoto(null)} />
+        <PhotoLightbox url={openPhoto} onClose={() => setOpenPhoto(null)} />
       )}
     </div>
   );
