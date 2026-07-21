@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useMemo } from "react";
 import { expandArea } from "../lib/floorShape";
 
 const PITCH = 6;
@@ -11,6 +11,10 @@ const SELECTED_COLOR = "#10b981"; // emerald-500
 // Renders a floor's drawn shape as dots. Only cells the person actually
 // painted in (shapeCells — already decoded from the floor's bitmap) are
 // drawn; everything else is left blank.
+//
+// The canvas is cropped to the bounding box of shapeCells, not the full
+// rows x cols grid — a floor created with a large grid but a small painted
+// shape would otherwise render a mostly-empty canvas with scrollbars.
 //
 // `occupied` is a list of parts, each with a rectangular `area` — this
 // component expands those into individual dots itself, so nothing upstream
@@ -30,6 +34,26 @@ export default function FloorGrid({
   const canvasRef = useRef(null);
   const [hover, setHover] = useState(null);
 
+  // Bounding box of the actual painted shape — falls back to the full
+  // rows/cols grid if there's no shape yet (e.g. still being drawn).
+  const bounds = useMemo(() => {
+    if (shapeCells.length === 0) {
+      return { minRow: 0, minCol: 0, maxRow: rows - 1, maxCol: cols - 1 };
+    }
+    const rowsArr = shapeCells.map((c) => c.row);
+    const colsArr = shapeCells.map((c) => c.col);
+    return {
+      minRow: Math.min(...rowsArr),
+      maxRow: Math.max(...rowsArr),
+      minCol: Math.min(...colsArr),
+      maxCol: Math.max(...colsArr),
+    };
+  }, [shapeCells, rows, cols]);
+
+  const { minRow, minCol, maxRow, maxCol } = bounds;
+  const gridRows = maxRow - minRow + 1;
+  const gridCols = maxCol - minCol + 1;
+
   const shapeSet = new Set(shapeCells.map((c) => `${c.row}-${c.col}`));
 
   const occupiedMap = new Map();
@@ -41,8 +65,8 @@ export default function FloorGrid({
 
   const selectedSet = new Set(selectedCells.map((c) => `${c.row}-${c.col}`));
 
-  const width = cols * PITCH;
-  const height = rows * PITCH;
+  const width = gridCols * PITCH;
+  const height = gridRows * PITCH;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -52,8 +76,8 @@ export default function FloorGrid({
 
     shapeCells.forEach(({ row, col }) => {
       const key = `${row}-${col}`;
-      const cx = col * PITCH + PITCH / 2;
-      const cy = row * PITCH + PITCH / 2;
+      const cx = (col - minCol) * PITCH + PITCH / 2;
+      const cy = (row - minRow) * PITCH + PITCH / 2;
 
       const isSelected = selectedSet.has(key);
       const isOccupied = occupiedMap.has(key);
@@ -68,15 +92,15 @@ export default function FloorGrid({
       ctx.fill();
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rows, cols, shapeCells, occupied, selectedCells]);
+  }, [rows, cols, shapeCells, occupied, selectedCells, minRow, minCol]);
 
   const cellFromEvent = (e) => {
     const rect = canvasRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     return {
-      row: Math.floor(y / PITCH),
-      col: Math.floor(x / PITCH),
+      row: Math.floor(y / PITCH) + minRow,
+      col: Math.floor(x / PITCH) + minCol,
     };
   };
 
@@ -105,8 +129,8 @@ export default function FloorGrid({
 
     setHover({
       entry,
-      x: col * PITCH + PITCH / 2,
-      y: row * PITCH + PITCH / 2,
+      x: (col - minCol) * PITCH + PITCH / 2,
+      y: (row - minRow) * PITCH + PITCH / 2,
     });
   };
 

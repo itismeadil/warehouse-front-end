@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { getFloors, createFloor, getFloorOccupancy } from "../api/floors";
 import { FLOOR_SIZE_PRESETS } from "../floorSizePresets";
 import { encodeShape, decodeShape, areaSize } from "../lib/floorShape";
@@ -23,9 +24,6 @@ function FloorCard({ floor, occupancy }) {
     <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
       <div className="mb-4 flex items-center justify-between">
         <h2 className="font-semibold text-slate-900">{floor.name}</h2>
-        <span className="text-sm text-slate-500">
-          {occupiedCount} / {shapeCells.length} occupied
-        </span>
       </div>
       {occupancy && (
         <FloorGrid
@@ -48,7 +46,11 @@ export default function FloorsMap() {
   const [name, setName] = useState("");
   const [preset, setPreset] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState(null);
   const editorRef = useRef(null);
+  const toastTimeoutRef = useRef(null);
+
+  const { t } = useTranslation();
 
   const loadFloors = async () => {
     setLoading(true);
@@ -80,19 +82,25 @@ export default function FloorsMap() {
     setShowForm(false);
   };
 
+  const showToast = (message) => {
+    setToast(message);
+    window.clearTimeout(toastTimeoutRef.current);
+    toastTimeoutRef.current = window.setTimeout(() => setToast(null), 3500);
+  };
+
   const handleCreateFloor = async () => {
     if (!name) {
-      alert("Give the floor a name first");
+      showToast("Give the floor a name first");
       return;
     }
     if (!preset) {
-      alert("Pick a size first");
+      showToast("Pick a size first");
       return;
     }
 
     const cells = editorRef.current?.getCells() || [];
     if (cells.length === 0) {
-      alert("Draw the floor's shape by tapping the dots");
+      showToast("Draw the floor's shape by tapping the dots");
       return;
     }
 
@@ -109,7 +117,7 @@ export default function FloorsMap() {
       resetForm();
       loadFloors();
     } catch (error) {
-      alert("Error: " + (error.response?.data?.message || error.message));
+      showToast("Error: " + (error.response?.data?.message || error.message));
     } finally {
       setSaving(false);
     }
@@ -117,44 +125,58 @@ export default function FloorsMap() {
 
   return (
     <div>
+      <div className="fixed inset-x-0 top-4 z-50 flex justify-center pointer-events-none">
+        {toast && (
+          <div className="pointer-events-auto rounded-xl bg-slate-900 px-4 py-2 text-sm text-white shadow-lg">
+            {toast}
+          </div>
+        )}
+      </div>
+
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Floor Maps</h1>
+          <h1 className="text-2xl font-bold text-slate-900">
+            {t("floorMaps")}
+          </h1>
           <p className="mt-1 text-sm text-slate-500">
-            Dark squares are occupied, light squares are empty.
+            {t("floorMapsDescription")}
           </p>
         </div>
 
         <button
           onClick={() => setShowForm((v) => !v)}
-          className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
         >
           <span className="text-base leading-none">+</span>
-          Add Floor
+          {t("addFloor")}
         </button>
       </div>
 
       {showForm && (
         <div className="mb-8 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-sm font-semibold text-slate-900">New Floor</h2>
+          <h2 className="text-sm font-semibold text-slate-900">
+            {t("newFloor")}
+          </h2>
 
           <div className="mt-4">
             <label className="block text-sm font-medium text-slate-700">
-              Name
+              {t("name")}
             </label>
+
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Floor 1"
+              placeholder={t("floorNamePlaceholder")}
               className="mt-1.5 block w-full max-w-xs rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
             />
           </div>
 
           <div className="mt-5">
             <label className="block text-sm font-medium text-slate-700">
-              Size
+              {t("size")}
             </label>
+
             <div className="mt-2 flex items-end gap-4">
               {FLOOR_SIZE_PRESETS.map((p) => (
                 <button
@@ -184,8 +206,9 @@ export default function FloorsMap() {
           {preset && (
             <div className="mt-5">
               <label className="block text-sm font-medium text-slate-700">
-                Draw the shape — tap or drag over the dots
+                {t("drawFloorShape")}
               </label>
+
               <div className="mt-2">
                 <FloorShapeEditor
                   key={preset.id}
@@ -194,12 +217,13 @@ export default function FloorsMap() {
                   cols={preset.cols}
                 />
               </div>
+
               <button
                 type="button"
                 onClick={() => editorRef.current?.clear()}
                 className="mt-2 text-sm text-slate-500 transition-colors hover:text-red-600"
               >
-                Clear drawing
+                {t("clearDrawing")}
               </button>
             </div>
           )}
@@ -210,27 +234,35 @@ export default function FloorsMap() {
               onClick={resetForm}
               className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
             >
-              Cancel
+              {t("cancel")}
             </button>
+
             <button
               type="button"
               onClick={handleCreateFloor}
               disabled={saving}
-              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {saving ? "Saving..." : "Create Floor"}
+              {saving ? t("saving") : t("createFloor")}
             </button>
           </div>
         </div>
       )}
 
       {loading ? (
-        <p className="text-sm text-slate-500">Loading floors...</p>
+        <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-slate-200 bg-slate-50 py-12">
+          <div className="flex flex-col items-center gap-3 rounded-md bg-graphite-50 px-6 py-8 text-center">
+            <div
+              className="h-8 w-8 animate-spin rounded-full border-4 border-current border-t-transparent"
+              style={{ color: "#45a1a1" }}
+              aria-hidden
+            />
+            <p className="text-sm text-graphite-600">{t("loading")}</p>
+          </div>
+        </div>
       ) : floors.length === 0 ? (
         <div className="rounded-lg border border-dashed border-slate-300 bg-white py-12 text-center">
-          <p className="text-sm text-slate-500">
-            No floors yet. Add one to start mapping locations.
-          </p>
+          <p className="text-sm text-slate-500">{t("noFloors")}</p>
         </div>
       ) : (
         <div className="space-y-6">
