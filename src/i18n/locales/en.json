@@ -149,5 +149,8 @@
   "supplierDamagedTitle": "Damaged parts",
   "supplierDamagedDescription": "Photos and notes for damaged parts on your assigned items.",
   "supplierNoDamagedParts": "No damaged parts on your assigned items right now.",
-  "supplierNoPhotosYet": "No photos uploaded yet."
+  "supplierNoPhotosYet": "No photos uploaded yet.",
+
+  "feed": "Feed",
+  "damagedCount": "{{count}} damaged"
 }

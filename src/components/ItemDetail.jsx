@@ -154,7 +154,7 @@ export default function ItemDetail() {
                     PCS/CTN: {partLabel(item, part)}
                   </span>
                   <span className="ml-auto shrink-0 text-sm text-graphite-500 mr-3">
-                    {`Stock: ${item.parts[0].stock}`}
+                    {`Stock: ${part.stock}`}
                   </span>
                   {isExpanded ? (
                     <ChevronUp className="h-4 w-4 shrink-0 text-graphite-400" />

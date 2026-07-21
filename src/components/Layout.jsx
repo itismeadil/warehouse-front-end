@@ -1,6 +1,14 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Home, Plus, Map, Users, Languages, LogOut } from "lucide-react";
+import {
+  Home,
+  Plus,
+  Map,
+  Users,
+  Languages,
+  LogOut,
+  Newspaper,
+} from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 const ALL_NAV_ITEMS = [
@@ -9,7 +17,14 @@ const ALL_NAV_ITEMS = [
     label: "home",
     icon: Home,
     match: (path) => path === "/",
-    roles: ["admin", "manager", "supplier"],
+    roles: ["admin", "manager"],
+  },
+  {
+    to: "/",
+    label: "feed",
+    icon: Newspaper,
+    match: (path) => path === "/",
+    roles: ["supplier"],
   },
   {
     to: "/add",
@@ -98,7 +113,7 @@ export default function Layout({ children }) {
             const active = item.match(pathname);
             return (
               <Link
-                key={item.to}
+                key={`${item.to}-${item.label}`}
                 to={item.to}
                 className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
                   active

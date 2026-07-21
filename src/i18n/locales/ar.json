@@ -153,5 +153,8 @@
   "supplierDamagedTitle": "الأجزاء التالفة",
   "supplierDamagedDescription": "صور وملاحظات للأجزاء التالفة في العناصر المخصصة لك.",
   "supplierNoDamagedParts": "لا توجد أجزاء تالفة في العناصر المخصصة لك حالياً.",
-  "supplierNoPhotosYet": "لم يتم رفع صور بعد."
+  "supplierNoPhotosYet": "لم يتم رفع صور بعد.",
+
+  "feed": "التغذية",
+  "damagedCount": "{{count}} تالف"
 }
