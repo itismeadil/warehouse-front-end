@@ -156,5 +156,7 @@
   "supplierNoPhotosYet": "لم يتم رفع صور بعد.",
 
   "feed": "التغذية",
-  "damagedCount": "{{count}} تالف"
+  "damagedCount": "{{count}} تالف",
+
+  "brandName": "القصور"
 }

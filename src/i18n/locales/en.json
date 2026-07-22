@@ -152,5 +152,7 @@
   "supplierNoPhotosYet": "No photos uploaded yet.",
 
   "feed": "Feed",
-  "damagedCount": "{{count}} damaged"
+  "damagedCount": "{{count}} damaged",
+
+  "brandName": "Al Qusor"
 }

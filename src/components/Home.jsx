@@ -67,12 +67,12 @@ export default function Home() {
 
   return (
     <div>
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <h1 className="text-lg font-semibold text-graphite-900">
           {t("overview")}
         </h1>
 
-        <div className="relative w-full max-w-xs sm:w-64">
+        <div className="relative w-full sm:max-w-xs sm:w-64">
           <span className="pointer-events-none absolute inset-y-0 inset-s-3 flex items-center text-graphite-400">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -97,22 +97,22 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="mb-5 grid grid-cols-3 gap-3">
-        <div className="rounded-lg bg-graphite-100 p-4">
+      <div className="mb-5 grid grid-cols-3 gap-2 sm:gap-3">
+        <div className="rounded-lg bg-graphite-100 p-3 sm:p-4">
           <p className="text-xs text-graphite-500">{t("items")}</p>
-          <p className="mt-0.5 text-2xl font-medium text-graphite-900">
+          <p className="mt-0.5 text-lg font-medium text-graphite-900 sm:text-2xl">
             {items.length}
           </p>
         </div>
-        <div className="rounded-lg bg-graphite-100 p-4">
+        <div className="rounded-lg bg-graphite-100 p-3 sm:p-4">
           <p className="text-xs text-graphite-500">{t("floors")}</p>
-          <p className="mt-0.5 text-2xl font-medium text-graphite-900">
+          <p className="mt-0.5 text-lg font-medium text-graphite-900 sm:text-2xl">
             {stats.floors}
           </p>
         </div>
-        <div className="rounded-lg bg-graphite-100 p-4">
+        <div className="rounded-lg bg-graphite-100 p-3 sm:p-4">
           <p className="text-xs text-graphite-500">{t("occupied")}</p>
-          <p className="mt-0.5 text-2xl font-medium text-graphite-900">
+          <p className="mt-0.5 text-lg font-medium text-graphite-900 sm:text-2xl">
             {stats.occupiedPct}%
           </p>
         </div>
