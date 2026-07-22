@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
-  const { login } = useAuth();
+  const { login, user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -13,6 +13,12 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
 
   const from = location.state?.from?.pathname || "/";
+
+  // Already logged in? Don't show the login form — bounce straight to
+  // wherever they were headed (or "/" if they landed here directly).
+  if (!authLoading && user) {
+    return <Navigate to={from} replace />;
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
