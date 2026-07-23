@@ -1,12 +1,46 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Newspaper, ImageOff, ZoomIn } from "lucide-react";
+import { Newspaper, ImageOff, ZoomIn, Download, Loader2 } from "lucide-react";
 import { getItems } from "../api/items";
 import { partLabel } from "../lib/Partlabel";
 import PhotoLightbox from "./PhotoLightbox";
 
+// Fetches the image as a blob and forces a real download, instead of just
+// opening it in a new tab (which is what a plain <a download> does for
+// cross-origin images like ones served from cloud storage).
+async function downloadPhoto(url) {
+  const response = await fetch(url);
+  const blob = await response.blob();
+  const blobUrl = window.URL.createObjectURL(blob);
+
+  const filename = url.split("/").pop()?.split("?")[0] || "photo.jpg";
+
+  const link = document.createElement("a");
+  link.href = blobUrl;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(blobUrl);
+}
+
 // A single clickable photo tile, used by PhotoGrid below.
 function Tile({ photo, className = "", overlay = null, onOpen }) {
+  const [downloading, setDownloading] = useState(false);
+
+  const handleDownload = async (e) => {
+    e.stopPropagation();
+    if (downloading) return;
+    setDownloading(true);
+    try {
+      await downloadPhoto(photo.url);
+    } catch (err) {
+      console.error("Download failed:", err);
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   return (
     <button
       type="button"
@@ -21,6 +55,21 @@ function Tile({ photo, className = "", overlay = null, onOpen }) {
       <div className="absolute inset-0 flex items-center justify-center bg-graphite-900/0 transition-colors group-hover:bg-graphite-900/30">
         <ZoomIn className="h-5 w-5 text-white opacity-0 transition-opacity group-hover:opacity-100" />
       </div>
+
+      <button
+        type="button"
+        onClick={handleDownload}
+        disabled={downloading}
+        aria-label="Download photo"
+        className="absolute end-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-graphite-900/60 text-white opacity-0 transition-opacity hover:bg-graphite-900/80 group-hover:opacity-100 disabled:cursor-wait sm:opacity-100 sm:bg-graphite-900/40"
+      >
+        {downloading ? (
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+        ) : (
+          <Download className="h-3.5 w-3.5" />
+        )}
+      </button>
+
       {overlay}
     </button>
   );
