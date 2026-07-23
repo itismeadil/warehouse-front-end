@@ -152,5 +152,14 @@
   "supplierNoPhotosYet": "No photos uploaded yet.",
 
   "feed": "Feed",
-  "damagedCount": "{{count}} damaged"
+  "damagedCount": "{{count}} damaged",
+
+  "brandName": "Al Qusor",
+
+  "title": "Warehouse",
+  "loginSubtitle": "Sign in to your account.",
+  "signIn": "Sign in",
+  "signingIn": "Signing in...",
+  "invalidCredentials": "Invalid email or password",
+  "genericError": "Something went wrong. Please try again."
 }

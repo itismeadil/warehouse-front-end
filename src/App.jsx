@@ -1,4 +1,9 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 import AddItemForm from "./components/AddItemForm";
 import Home from "./components/Home";
 import FloorsMap from "./components/FloorsMap";
@@ -78,6 +83,10 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          {/* Any unmatched path (typo, stale bookmark, etc.) falls back to
+              the root, which itself redirects to /login if unauthenticated */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
     </AuthProvider>
