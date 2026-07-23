@@ -178,7 +178,7 @@ export default function Layout({ children }) {
                 to={item.to}
                 className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
                   active
-                    ? "bg-primary-50 text-primary-700"
+                    ? "bg-primary-600 text-white"
                     : "text-graphite-600 hover:bg-graphite-100 hover:text-graphite-900"
                 }`}
               >
@@ -200,7 +200,7 @@ export default function Layout({ children }) {
               to={item.to}
               className={`flex flex-1 flex-col items-center gap-0.5 rounded-lg px-2 py-1.5 text-[11px] font-medium transition-colors ${
                 active
-                  ? "text-primary-700"
+                  ? "bg-primary-600 text-white"
                   : "text-graphite-500 hover:text-graphite-900"
               }`}
             >
