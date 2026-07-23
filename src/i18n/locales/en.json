@@ -154,5 +154,12 @@
   "feed": "Feed",
   "damagedCount": "{{count}} damaged",
 
-  "brandName": "Al Qusor"
+  "brandName": "Al Qusor",
+
+  "title": "Warehouse",
+  "loginSubtitle": "Sign in to your account.",
+  "signIn": "Sign in",
+  "signingIn": "Signing in...",
+  "invalidCredentials": "Invalid email or password",
+  "genericError": "Something went wrong. Please try again."
 }

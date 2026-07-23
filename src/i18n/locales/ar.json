@@ -158,5 +158,13 @@
   "feed": "التغذية",
   "damagedCount": "{{count}} تالف",
 
-  "brandName": "القصور"
+  "brandName": "القصور",
+
+  "title": "المستودع",
+  "subtitle": "سجّل الدخول إلى حسابك.",
+  "loginSubtitle": "سجّل الدخول إلى حسابك.",
+  "signIn": "تسجيل الدخول",
+  "signingIn": "جارٍ تسجيل الدخول...",
+  "invalidCredentials": "البريد الإلكتروني أو كلمة المرور غير صحيحة",
+  "genericError": "حدث خطأ ما. حاول مرة أخرى."
 }
