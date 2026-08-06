@@ -9,12 +9,10 @@ import { useAuth } from "../context/AuthContext";
 import FloorGrid from "./FloorGrid";
 import FloorPickerModal from "./FloorPickerModal";
 
-const STATS = [
-  { key: "stock", label: "stock", editable: false },
-  { key: "damaged", label: "damaged", editable: true },
-  { key: "reserved", label: "reserved", editable: true },
-  { key: "sold", label: "sold", editable: true },
-];
+// Parts only track damage now — stock/reserved/sold live on the item and
+// are read-only here (editable up in ItemDetail instead). Damaged is the
+// only thing this component ever writes, and it never touches stock.
+const STATS = [{ key: "damaged", label: "damaged", editable: true }];
 
 function StatCard({ label, value, editable, onDecrement, onIncrement, t }) {
   return (
@@ -331,18 +329,13 @@ export default function PartDetail({
 
       {activeTab === "stats" && (
         <div className="mt-4 rounded-xl border border-graphite-200 bg-graphite-50 p-4 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
+          {/* Damaged — the only thing this component edits, and it's
+              part-level. Changing it never touches stock/sold/reserved. */}
+          <div className="mb-4">
             <h3 className="text-sm font-semibold text-graphite-700">
-              {t("inventory")}
+              {t("damage")}
             </h3>
-
-            <span className="text-xs text-graphite-500">
-              {part.stock !== undefined
-                ? t("stockCount", { count: part.stock })
-                : ""}
-            </span>
           </div>
-
           <div className="grid grid-cols-2 gap-3">
             {STATS.map(({ key, label, editable }) => (
               <StatCard
@@ -423,7 +416,9 @@ export default function PartDetail({
                       <button
                         type="button"
                         onClick={() => handleRemovePhoto(photo.id)}
-                        disabled={deletingPhotoId === photo.id || uploadingPhotos}
+                        disabled={
+                          deletingPhotoId === photo.id || uploadingPhotos
+                        }
                         aria-label={t("removePhoto")}
                         className="absolute inset-e-1 top-1 rounded-full bg-graphite-900/60 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100 hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50"
                       >

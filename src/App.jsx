@@ -14,6 +14,7 @@ import SupplierItems from "./components/SupplierItems";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import ItemDetail from "./components/ItemDetail";
+import Accounting from "./components/Accounting";
 
 // "/" shows a different page depending on who's logged in.
 // admin and manager both get the normal Home; supplier gets their own view.
@@ -68,6 +69,17 @@ function App() {
               <ProtectedRoute roles={["admin", "manager"]}>
                 <Layout>
                   <FloorsMap />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/accounting"
+            element={
+              <ProtectedRoute roles={["admin", "accountant"]}>
+                <Layout>
+                  <Accounting />
                 </Layout>
               </ProtectedRoute>
             }

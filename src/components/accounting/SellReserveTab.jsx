@@ -1,0 +1,373 @@
+import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
+import { ShoppingCart, BookmarkPlus, X } from "lucide-react";
+import { getItems } from "../../api/items";
+import {
+  createSalesInvoice,
+  createReservation,
+  getReservations,
+  cancelReservation,
+  fulfillReservation,
+} from "../../api/accountant";
+
+const Spinner = () => (
+  <div
+    className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent"
+    style={{ color: "#45a1a1" }}
+    aria-hidden
+  />
+);
+
+// Small modal asking for a cancellation reason before subtracting a
+// reservation back into stock.
+function CancelReasonModal({ reservation, onClose, onConfirm, submitting }) {
+  const { t } = useTranslation();
+  const [reason, setReason] = useState("");
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-graphite-900/40 p-4">
+      <div className="w-full max-w-sm rounded-xl bg-white p-5 shadow-lg">
+        <h3 className="text-sm font-semibold text-graphite-900">
+          {t("cancelReservation")}
+        </h3>
+        <p className="mt-1 text-xs text-graphite-500">
+          {reservation.itemName} — {reservation.quantity} {t("units")}
+          {reservation.unitPrice != null && (
+            <> · {reservation.unitPrice} {t("perUnit")}</>
+          )}
+        </p>
+
+        <label className="mt-4 block text-sm font-medium text-graphite-700">
+          {t("cancelReason")}
+        </label>
+        <textarea
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          rows={3}
+          placeholder={t("cancelReasonPlaceholder")}
+          className="mt-1.5 w-full resize-none rounded-lg border border-graphite-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+        />
+
+        <div className="mt-4 flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg border border-graphite-300 px-3 py-1.5 text-sm font-medium text-graphite-700 hover:bg-graphite-100"
+          >
+            {t("cancel")}
+          </button>
+          <button
+            type="button"
+            disabled={!reason.trim() || submitting}
+            onClick={() => onConfirm(reason.trim())}
+            className="flex items-center gap-2 rounded-lg bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {submitting && <Spinner />}
+            {t("confirmCancellation")}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function SellReserveTab() {
+  const { t } = useTranslation();
+
+  const [items, setItems] = useState([]);
+  const [itemId, setItemId] = useState("");
+  const [quantity, setQuantity] = useState(1);
+  const [price, setPrice] = useState("");
+  const [customerName, setCustomerName] = useState("");
+
+  const [saving, setSaving] = useState(false); // "sale" | "reservation" | false
+  const [formError, setFormError] = useState("");
+  const [formSuccess, setFormSuccess] = useState("");
+
+  const [reservations, setReservations] = useState([]);
+  const [reservationsLoading, setReservationsLoading] = useState(true);
+  const [cancelTarget, setCancelTarget] = useState(null);
+  const [cancelling, setCancelling] = useState(false);
+  const [fulfillingId, setFulfillingId] = useState(null);
+
+  const loadReservations = () => {
+    setReservationsLoading(true);
+    getReservations({ status: "active" })
+      .then((data) => setReservations(Array.isArray(data) ? data : []))
+      .catch((err) => console.error(err))
+      .finally(() => setReservationsLoading(false));
+  };
+
+  useEffect(() => {
+    getItems()
+      .then((data) => setItems(Array.isArray(data) ? data : []))
+      .catch((err) => console.error(err));
+    loadReservations();
+  }, []);
+
+  const selectedItem = items.find((i) => i._id === itemId);
+
+  const resetForm = () => {
+    setQuantity(1);
+    setPrice("");
+    setCustomerName("");
+  };
+
+  const validate = () => {
+    if (!itemId) return t("selectItemFirst");
+    if (!quantity || quantity < 1) return t("quantityRequired");
+    return "";
+  };
+
+  const handleSell = async (e) => {
+    e.preventDefault();
+    const error = validate();
+    if (!price) return setFormError(t("priceRequired"));
+    if (error) return setFormError(error);
+
+    setFormError("");
+    setFormSuccess("");
+    setSaving("sale");
+    try {
+      await createSalesInvoice({
+        invoiceNumber: `SALE-${Date.now()}`,
+        customerName: customerName || undefined,
+        lines: [
+          {
+            itemId,
+            itemName: selectedItem?.name,
+            quantity: Number(quantity),
+            unitPrice: Number(price),
+          },
+        ],
+      });
+      setFormSuccess(t("saleRecorded"));
+      resetForm();
+    } catch (err) {
+      setFormError(err.response?.data?.message || err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleReserve = async (e) => {
+    e.preventDefault();
+    const error = validate();
+    if (error) return setFormError(error);
+
+    setFormError("");
+    setFormSuccess("");
+    setSaving("reservation");
+    try {
+      await createReservation({
+        itemId,
+        itemName: selectedItem?.name,
+        quantity: Number(quantity),
+        unitPrice: price ? Number(price) : undefined,
+        customerName: customerName || undefined,
+      });
+      setFormSuccess(t("reservationCreated"));
+      resetForm();
+      loadReservations();
+    } catch (err) {
+      setFormError(err.response?.data?.message || err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleConfirmCancel = async (reason) => {
+    setCancelling(true);
+    try {
+      await cancelReservation(cancelTarget._id, reason);
+      setCancelTarget(null);
+      loadReservations();
+    } catch (err) {
+      alert(err.response?.data?.message || err.message);
+    } finally {
+      setCancelling(false);
+    }
+  };
+
+  const handleFulfill = async (reservation) => {
+    setFulfillingId(reservation._id);
+    try {
+      await fulfillReservation(reservation._id);
+      loadReservations();
+    } catch (err) {
+      alert(err.response?.data?.message || err.message);
+    } finally {
+      setFulfillingId(null);
+    }
+  };
+
+  return (
+    <div>
+      {/* Form */}
+      <div className="rounded-xl border border-graphite-200 bg-white p-6 shadow-sm">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <label className="block text-sm font-medium text-graphite-700">
+              {t("item")}
+            </label>
+            <select
+              value={itemId}
+              onChange={(e) => setItemId(e.target.value)}
+              className="mt-1.5 block w-full rounded-lg border border-graphite-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+            >
+              <option value="">{t("selectItem")}</option>
+              {items.map((item) => (
+                <option key={item._id} value={item._id}>
+                  {item.name} — {item.serialNumber}{" "}
+                  {typeof item.stock === "number" &&
+                    `(${item.stock} ${t("inStock")})`}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-graphite-700">
+              {t("customerName")}{" "}
+              <span className="text-graphite-400">({t("optional")})</span>
+            </label>
+            <input
+              type="text"
+              value={customerName}
+              onChange={(e) => setCustomerName(e.target.value)}
+              className="mt-1.5 block w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-graphite-700">
+              {t("quantity")}
+            </label>
+            <input
+              type="number"
+              min="1"
+              value={quantity}
+              onChange={(e) => setQuantity(e.target.value)}
+              className="mt-1.5 block w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-graphite-700">
+              {t("unitPrice")}
+            </label>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              placeholder={t("unitPricePlaceholder")}
+              className="mt-1.5 block w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+            />
+          </div>
+        </div>
+
+        {formError && <p className="mt-3 text-sm text-red-600">{formError}</p>}
+        {formSuccess && (
+          <p className="mt-3 text-sm text-green-600">{formSuccess}</p>
+        )}
+
+        <div className="mt-4 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={handleSell}
+            disabled={saving !== false}
+            className="flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {saving === "sale" ? <Spinner /> : <ShoppingCart className="h-4 w-4" />}
+            {t("recordSale")}
+          </button>
+          <button
+            type="button"
+            onClick={handleReserve}
+            disabled={saving !== false}
+            className="flex items-center gap-2 rounded-lg border border-graphite-300 px-4 py-2 text-sm font-medium text-graphite-700 transition-colors hover:bg-graphite-100 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {saving === "reservation" ? (
+              <Spinner />
+            ) : (
+              <BookmarkPlus className="h-4 w-4" />
+            )}
+            {t("reserveStock")}
+          </button>
+        </div>
+        <p className="mt-2 text-xs text-graphite-400">{t("sellReserveHint")}</p>
+      </div>
+
+      {/* Active reservations */}
+      <div className="mt-8">
+        <h2 className="text-sm font-semibold text-graphite-900">
+          {t("activeReservations")}
+        </h2>
+
+        <div className="mt-3">
+          {reservationsLoading ? (
+            <div className="flex items-center gap-2">
+              <Spinner />
+              <p className="text-sm text-graphite-500">{t("loading")}</p>
+            </div>
+          ) : reservations.length === 0 ? (
+            <p className="text-sm text-graphite-500">{t("noActiveReservations")}</p>
+          ) : (
+            <div className="divide-y divide-graphite-200 rounded-xl border border-graphite-200 bg-white">
+              {reservations.map((res) => (
+                <div
+                  key={res._id}
+                  className="flex flex-wrap items-center justify-between gap-3 px-4 py-3"
+                >
+                  <div>
+                    <p className="text-sm font-medium text-graphite-900">
+                      {res.itemName} · {res.quantity} {t("units")}
+                    </p>
+                    <p className="text-xs text-graphite-500">
+                      {res.customerName || t("noCustomerName")}
+                      {res.unitPrice != null && (
+                        <> · {res.unitPrice} {t("perUnit")}</>
+                      )}
+                      {" · "}
+                      {new Date(res.createdAt).toLocaleString()}
+                    </p>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleFulfill(res)}
+                      disabled={fulfillingId === res._id}
+                      className="rounded-lg border border-graphite-300 px-3 py-1.5 text-xs font-medium text-graphite-700 transition-colors hover:bg-graphite-100 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {fulfillingId === res._id ? t("saving") : t("markSold")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCancelTarget(res)}
+                      className="flex items-center gap-1 rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 transition-colors hover:bg-red-50"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                      {t("cancel")}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {cancelTarget && (
+        <CancelReasonModal
+          reservation={cancelTarget}
+          submitting={cancelling}
+          onClose={() => setCancelTarget(null)}
+          onConfirm={handleConfirmCancel}
+        />
+      )}
+    </div>
+  );
+}

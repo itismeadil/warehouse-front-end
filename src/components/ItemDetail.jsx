@@ -129,6 +129,33 @@ export default function ItemDetail() {
         </div>
       </div>
 
+      {/* Item-level stock/sold/reserved - read-only, synced from accountant */}
+      <div className="mt-6 rounded-xl border border-graphite-200 bg-graphite-50 p-4 shadow-sm">
+        <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-graphite-500">
+          {t("stock")}
+        </h3>
+        <div className="grid grid-cols-3 gap-3">
+          {[
+            { key: "stock", label: t("stock") },
+            { key: "sold", label: t("sold") },
+            { key: "reserved", label: t("reserved") },
+          ].map(({ key, label }) => (
+            <div
+              key={key}
+              className="rounded-lg border border-graphite-200 bg-white p-3"
+            >
+              <p className="text-xs text-graphite-500">{label}</p>
+              <p className="mt-1.5 text-lg font-semibold text-graphite-900">
+                {item[key] ?? 0}
+              </p>
+            </div>
+          ))}
+        </div>
+        <p className="mt-3 text-xs text-graphite-400">
+          {t("stockSyncedFromAccountant")}
+        </p>
+      </div>
+
       {/* Parts: each is a card; clicking expands Location/Stats tabs inline */}
       <div className="mt-6">
         <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-graphite-500">
@@ -154,7 +181,7 @@ export default function ItemDetail() {
                     PCS/CTN: {partLabel(item, part)}
                   </span>
                   <span className="ml-auto shrink-0 text-sm text-graphite-500 mr-3">
-                    {`Stock: ${part.stock}`}
+                    {`Damaged: ${part.damaged}`}
                   </span>
                   {isExpanded ? (
                     <ChevronUp className="h-4 w-4 shrink-0 text-graphite-400" />

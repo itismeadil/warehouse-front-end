@@ -13,7 +13,6 @@ const emptyPart = (id) => ({
   floorId: null,
   floorName: null,
   area: null,
-  stock: "",
 });
 
 export default function AddItemForm() {
@@ -23,6 +22,7 @@ export default function AddItemForm() {
   const [itemName, setItemName] = useState("");
   const [itemColor, setItemColor] = useState("");
   const [itemSupplierId, setItemSupplierId] = useState("");
+  const [itemStock, setItemStock] = useState("");
   const [suppliers, setSuppliers] = useState([]);
 
   // The part currently being filled in (not yet saved to backend)
@@ -59,17 +59,16 @@ export default function AddItemForm() {
   const buildPartPayload = (part) => ({
     floorId: part.floorId || null,
     area: part.area || null,
-    stock: parseInt(part.stock) || 0,
   });
 
   // Phase 1: create the item with Part 1
   const handleCreateItem = async (e) => {
     e.preventDefault();
-    if (!itemSerialNumber || !itemName || !itemColor) {
+    if (!itemSerialNumber || !itemName || !itemColor || itemStock === "") {
       toast.error(t("requiredFieldsError"));
       return;
     }
-    if (!draftPart.floorId || !draftPart.area || draftPart.stock === "") {
+    if (!draftPart.floorId || !draftPart.area) {
       toast.error(t("completeCurrentPartError"));
       return;
     }
@@ -81,6 +80,7 @@ export default function AddItemForm() {
         name: itemName,
         color: itemColor,
         supplierId: itemSupplierId || null,
+        stock: parseInt(itemStock) || 0,
         parts: [buildPartPayload(draftPart)],
       });
 
@@ -100,7 +100,7 @@ export default function AddItemForm() {
 
   // Phase 2: save an additional part to the existing item
   const handleSavePart = async () => {
-    if (!draftPart.floorId || !draftPart.area || draftPart.stock === "") {
+    if (!draftPart.floorId || !draftPart.area) {
       toast.error(t("completeCurrentPartError"));
       return;
     }
@@ -226,6 +226,27 @@ export default function AddItemForm() {
                 ))}
               </select>
             </div>
+
+            <div>
+              <label
+                htmlFor="itemStock"
+                className="block text-sm font-medium text-graphite-700"
+              >
+                {t("stock")}
+              </label>
+              <input
+                type="number"
+                id="itemStock"
+                value={itemStock}
+                autoComplete="off"
+                disabled={Boolean(itemId)}
+                onChange={(e) => setItemStock(e.target.value)}
+                placeholder="0"
+                min="0"
+                required
+                className="mt-1.5 block w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm text-graphite-900 placeholder:text-graphite-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 disabled:bg-graphite-100 disabled:text-graphite-500"
+              />
+            </div>
           </div>
 
           <div className="mt-8 border-t border-graphite-200 pt-6">
@@ -244,8 +265,7 @@ export default function AddItemForm() {
                     <span className="font-medium">
                       PCS/CTN {savedParts.length}/{index + 1}
                     </span>{" "}
-                    — {part.floorId?.name ?? t("floor")}, {t("stock")}:{" "}
-                    {part.stock}
+                    — {part.floorId?.name ?? t("floor")}
                   </div>
                 ))}
               </div>

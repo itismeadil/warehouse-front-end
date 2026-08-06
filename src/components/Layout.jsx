@@ -10,6 +10,7 @@ import {
   LogOut,
   Newspaper,
   ChevronDown,
+  Calculator,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
@@ -41,6 +42,13 @@ const ALL_NAV_ITEMS = [
     icon: Map,
     match: (path) => path === "/floors",
     roles: ["admin", "manager"],
+  },
+  {
+    to: "/accounting",
+    label: "accounting",
+    icon: Calculator,
+    match: (path) => path === "/accounting",
+    roles: ["admin", "accountant"], // manager is deliberately excluded here
   },
   {
     to: "/users",

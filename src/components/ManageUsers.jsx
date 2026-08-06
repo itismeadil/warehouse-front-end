@@ -121,6 +121,7 @@ export default function ManageUsers() {
             >
               <option value="supplier">{t("roleSupplier")}</option>
               <option value="manager">{t("roleManager")}</option>
+              <option value="accountant">{t("roleAccountant")}</option>
               <option value="admin">{t("roleAdmin")}</option>
             </select>
           </div>
