@@ -3,7 +3,9 @@ import {
   Routes,
   Route,
   Navigate,
+  useLocation,
 } from "react-router-dom";
+import { useEffect } from "react";
 import AddItemForm from "./components/AddItemForm";
 import Home from "./components/Home";
 import FloorsMap from "./components/FloorsMap";
@@ -15,6 +17,34 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import ItemDetail from "./components/ItemDetail";
 import Accounting from "./components/Accounting";
+import { useTranslation } from "react-i18next";
+
+// Component to update document title based on route
+function PageTitle() {
+  const { t } = useTranslation();
+  const location = useLocation();
+
+  useEffect(() => {
+    const titles = {
+      "/": t("home"),
+      "/login": t("login"),
+      "/add": t("addItem"),
+      "/floors": t("floorMaps"),
+      "/accounting": t("accounting"),
+      "/users": t("manageUsers"),
+    };
+
+    // Check for dynamic routes
+    if (location.pathname.startsWith("/items/")) {
+      document.title = `${t("itemDetails")} - ${t("brandName")}`;
+    } else {
+      const title = titles[location.pathname] || t("brandName");
+      document.title = `${title} - ${t("brandName")}`;
+    }
+  }, [location.pathname, t]);
+
+  return null;
+}
 
 // "/" shows a different page depending on who's logged in.
 // admin and manager both get the normal Home; supplier gets their own view.
@@ -27,6 +57,7 @@ function App() {
   return (
     <AuthProvider>
       <Router>
+        <PageTitle />
         <Routes>
           <Route path="/login" element={<Login />} />
 

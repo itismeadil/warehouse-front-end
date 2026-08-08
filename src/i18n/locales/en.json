@@ -156,6 +156,9 @@
   "damagedCount": "{{count}} damaged",
 
   "brandName": "Al Qusor",
+  "login": "Login",
+  "itemDetails": "Item Details",
+  "stockSyncedFromAccountant": "Stock synced from accountant",
 
   "title": "Warehouse",
   "loginSubtitle": "Sign in to your account.",

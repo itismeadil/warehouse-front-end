@@ -10,7 +10,11 @@ export default function ProtectedRoute({ children, roles }) {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-graphite-50">
-        <p className="text-sm text-graphite-500">Loading...</p>
+        <div className="flex gap-1.5">
+          <div className="h-8 w-1.5 animate-pulse rounded-full bg-primary-600" style={{ animationDelay: '0ms' }}></div>
+          <div className="h-8 w-1.5 animate-pulse rounded-full bg-primary-600" style={{ animationDelay: '150ms' }}></div>
+          <div className="h-8 w-1.5 animate-pulse rounded-full bg-primary-600" style={{ animationDelay: '300ms' }}></div>
+        </div>
       </div>
     );
   }

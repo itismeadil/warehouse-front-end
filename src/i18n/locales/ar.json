@@ -160,6 +160,9 @@
   "damagedCount": "{{count}} تالف",
 
   "brandName": "القصور",
+  "login": "تسجيل الدخول",
+  "itemDetails": "تفاصيل العنصر",
+  "stockSyncedFromAccountant": "المخزون متزامن من المحاسب",
 
   "title": "المستودع",
   "loginSubtitle": "سجّل الدخول إلى حسابك.",
