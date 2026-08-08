@@ -87,7 +87,15 @@ export default function SalesInvoicesTab() {
           invoiceDate.getDate() === filterDate.getDate()
         );
       })
-    : invoices;
+    : invoices.filter((inv) => {
+        const invoiceDate = new Date(inv.date || inv.createdAt);
+        const today = new Date();
+        return (
+          invoiceDate.getFullYear() === today.getFullYear() &&
+          invoiceDate.getMonth() === today.getMonth() &&
+          invoiceDate.getDate() === today.getDate()
+        );
+      });
 
   const resetForm = () => {
     setInvoiceNumber("");
