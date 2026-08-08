@@ -10,11 +10,27 @@ export default function ProtectedRoute({ children, roles }) {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-graphite-50">
-        <div className="flex gap-1.5">
-          <div className="h-8 w-1.5 animate-pulse rounded-full bg-primary-600" style={{ animationDelay: '0ms' }}></div>
-          <div className="h-8 w-1.5 animate-pulse rounded-full bg-primary-600" style={{ animationDelay: '150ms' }}></div>
-          <div className="h-8 w-1.5 animate-pulse rounded-full bg-primary-600" style={{ animationDelay: '300ms' }}></div>
-        </div>
+        <div className="loader"></div>
+        <style>{`
+          .loader {
+            width: 45px;
+            aspect-ratio: 1;
+            --c: no-repeat linear-gradient(#317272 0 0);
+            background: 
+              var(--c) 0%   50%,
+              var(--c) 50%  50%,
+              var(--c) 100% 50%;
+            background-size: 20% 100%;
+            animation: l1 1s infinite linear;
+          }
+          @keyframes l1 {
+            0%  {background-size: 20% 100%,20% 100%,20% 100%}
+            33% {background-size: 20% 10% ,20% 100%,20% 100%}
+            50% {background-size: 20% 100%,20% 10% ,20% 100%}
+            66% {background-size: 20% 100%,20% 100%,20% 10% }
+            100%{background-size: 20% 100%,20% 100%,20% 100%}
+          }
+        `}</style>
       </div>
     );
   }

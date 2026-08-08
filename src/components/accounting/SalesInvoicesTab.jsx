@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Plus, Trash2 } from "lucide-react";
 import { getItems } from "../../api/items";
 import { getSalesInvoices, createSalesInvoice } from "../../api/accountant";
+import DatePicker, { toLocalDateString } from "../DatePicker";
 
 const Spinner = () => (
   <div
@@ -21,6 +22,7 @@ export default function SalesInvoicesTab() {
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [customerName, setCustomerName] = useState("");
   const [lines, setLines] = useState([emptyLine()]);
+  const [vatRate, setVatRate] = useState(15); // KSA standard VAT rate is 15%
 
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
@@ -28,6 +30,7 @@ export default function SalesInvoicesTab() {
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [listError, setListError] = useState("");
+  const [selectedDate, setSelectedDate] = useState("");
 
   const loadInvoices = () => {
     setLoading(true);
@@ -62,10 +65,35 @@ export default function SalesInvoicesTab() {
     0,
   );
 
+  const vatAmount = total * (vatRate / 100);
+  const totalAfterTax = total - vatAmount;
+
+  // Distinct calendar days that have at least one sales invoice, for highlighting
+  const salesDates = useMemo(() => {
+    const dates = invoices
+      .map((inv) => inv.date || inv.createdAt)
+      .filter(Boolean)
+      .map((d) => toLocalDateString(new Date(d)));
+    return Array.from(new Set(dates));
+  }, [invoices]);
+
+  const filteredInvoices = selectedDate
+    ? invoices.filter((inv) => {
+        const invoiceDate = new Date(inv.date || inv.createdAt);
+        const filterDate = new Date(selectedDate);
+        return (
+          invoiceDate.getFullYear() === filterDate.getFullYear() &&
+          invoiceDate.getMonth() === filterDate.getMonth() &&
+          invoiceDate.getDate() === filterDate.getDate()
+        );
+      })
+    : invoices;
+
   const resetForm = () => {
     setInvoiceNumber("");
     setCustomerName("");
     setLines([emptyLine()]);
+    setVatRate(15);
   };
 
   const handleSubmit = async (e) => {
@@ -87,6 +115,10 @@ export default function SalesInvoicesTab() {
       await createSalesInvoice({
         invoiceNumber: invoiceNumber.trim(),
         customerName: customerName.trim() || undefined,
+        vatRate: vatRate,
+        subtotal: total,
+        vatAmount: vatAmount,
+        totalAmount: totalAfterTax,
         lines: validLines.map((l) => ({
           itemId: l.itemId,
           itemName: items.find((i) => i._id === l.itemId)?.name,
@@ -109,7 +141,7 @@ export default function SalesInvoicesTab() {
         onSubmit={handleSubmit}
         className="rounded-xl border border-graphite-200 bg-white p-6 shadow-sm"
       >
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div>
             <label className="block text-sm font-medium text-graphite-700">
               {t("invoiceNumber")}
@@ -131,6 +163,20 @@ export default function SalesInvoicesTab() {
               type="text"
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
+              className="mt-1.5 block w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-graphite-700">
+              {t("vatRate")} (%)
+            </label>
+            <input
+              type="number"
+              min="0"
+              max="100"
+              step="0.01"
+              value={vatRate}
+              onChange={(e) => setVatRate(Number(e.target.value))}
               className="mt-1.5 block w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
             />
           </div>
@@ -192,9 +238,20 @@ export default function SalesInvoicesTab() {
           </button>
         </div>
 
-        <p className="mt-4 text-sm text-graphite-700">
-          {t("total")}: <span className="font-semibold">{total.toFixed(2)}</span>
-        </p>
+        <div className="mt-4 space-y-2 rounded-lg bg-graphite-50 p-4">
+          <div className="flex justify-between text-sm text-graphite-700">
+            <span>{t("subtotal")}</span>
+            <span className="font-semibold">{total.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between text-sm text-graphite-700">
+            <span>{t("vatDeduction")} ({vatRate}%)</span>
+            <span className="font-semibold text-red-600">-{vatAmount.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between text-sm font-medium text-graphite-900 border-t border-graphite-200 pt-2">
+            <span>{t("totalAfterTax")}</span>
+            <span className="font-semibold">{totalAfterTax.toFixed(2)}</span>
+          </div>
+        </div>
 
         {formError && <p className="mt-2 text-sm text-red-600">{formError}</p>}
 
@@ -209,9 +266,30 @@ export default function SalesInvoicesTab() {
       </form>
 
       <div className="mt-8">
-        <h2 className="text-sm font-semibold text-graphite-900">
-          {t("salesInvoiceHistory")}
-        </h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-graphite-900">
+            {t("salesInvoiceHistory")}
+          </h2>
+          <div className="flex items-center gap-2">
+            <label className="text-sm text-graphite-600">{t("filterByDate")}</label>
+            <DatePicker
+              value={selectedDate}
+              onChange={setSelectedDate}
+              placeholder={t("selectDate")}
+              markedDates={salesDates}
+              markedLabel={t("salesDay", { defaultValue: "Sales day" })}
+            />
+            {selectedDate && (
+              <button
+                type="button"
+                onClick={() => setSelectedDate("")}
+                className="rounded-lg px-2 py-1.5 text-xs font-medium text-primary-600 hover:bg-primary-50 hover:text-primary-700 transition-colors"
+              >
+                {t("clear")}
+              </button>
+            )}
+          </div>
+        </div>
         <div className="mt-3">
           {loading ? (
             <div className="flex items-center gap-2">
@@ -220,23 +298,41 @@ export default function SalesInvoicesTab() {
             </div>
           ) : listError ? (
             <p className="text-sm text-red-600">{listError}</p>
-          ) : invoices.length === 0 ? (
-            <p className="text-sm text-graphite-500">{t("noInvoicesYet")}</p>
+          ) : filteredInvoices.length === 0 ? (
+            <p className="text-sm text-graphite-500">
+              {selectedDate ? t("noInvoicesForDate") : t("noInvoicesYet")}
+            </p>
           ) : (
             <div className="divide-y divide-graphite-200 rounded-xl border border-graphite-200 bg-white">
-              {invoices.map((inv) => (
+              {filteredInvoices.map((inv) => (
                 <div key={inv._id} className="px-4 py-3">
                   <div className="flex items-center justify-between">
                     <p className="text-sm font-medium text-graphite-900">
                       {inv.invoiceNumber} · {inv.customerName || t("noCustomerName")}
                     </p>
                     <p className="text-sm font-semibold text-graphite-900">
-                      {inv.totalAmount}
+                      {inv.totalAmount || inv.total}
                     </p>
                   </div>
                   <p className="mt-0.5 text-xs text-graphite-500">
                     {new Date(inv.date || inv.createdAt).toLocaleString()}
                   </p>
+                  {(inv.vatAmount !== undefined || inv.vatRate !== undefined) && (
+                    <div className="mt-2 flex items-center gap-3 text-xs text-graphite-600">
+                      {inv.vatRate !== undefined && (
+                        <span>{t("vat")}: {inv.vatRate}%</span>
+                      )}
+                      {inv.subtotal !== undefined && (
+                        <span>{t("subtotal")}: {inv.subtotal.toFixed(2)}</span>
+                      )}
+                      {inv.vatAmount !== undefined && (
+                        <span className="text-red-600">{t("vatDeduction")}: -{inv.vatAmount.toFixed(2)}</span>
+                      )}
+                      {inv.totalAmount !== undefined && (
+                        <span className="font-medium">{t("totalAfterTax")}: {inv.totalAmount.toFixed(2)}</span>
+                      )}
+                    </div>
+                  )}
                   <ul className="mt-1.5 space-y-0.5">
                     {inv.lines.map((line, i) => (
                       <li key={i} className="text-xs text-graphite-600">
