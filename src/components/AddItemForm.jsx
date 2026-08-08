@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { Package, Plus, Check, ArrowRight, Box } from "lucide-react";
 import { createItem, addPart } from "../api/items";
 import { getFloors } from "../api/floors";
 import { getUsers } from "../api/users";
@@ -130,142 +131,175 @@ export default function AddItemForm() {
   const totalPartsPreview = savedParts.length + (itemId ? 0 : 1);
 
   return (
-    <div className="mx-auto max-w-2xl">
-      <div className="rounded-xl border border-graphite-200 bg-white p-6 shadow-sm sm:p-8">
-        <h2 className="text-xl font-semibold text-graphite-900">
-          {t("addNewItem")}
-        </h2>
-        <p className="mt-1 text-sm text-graphite-500">
-          {t("addItemDescription")}
-        </p>
+    <div className="mx-auto max-w-3xl">
+      <div className="mb-6">
+        <div className="flex items-center gap-3">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 text-white shadow-lg">
+            <Package className="h-6 w-6" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-graphite-900">
+              {t("addNewItem")}
+            </h1>
+            <p className="text-sm text-graphite-500">
+              {t("addItemDescription")}
+            </p>
+          </div>
+        </div>
+      </div>
 
-        <form onSubmit={handleCreateItem} className="mt-6">
-          <div className="space-y-4">
-            <div>
-              <label
-                htmlFor="serialNumber"
-                className="block text-sm font-medium text-graphite-700"
-              >
-                {t("serialNumber")}
-              </label>
-              <input
-                type="text"
-                id="serialNumber"
-                value={itemSerialNumber}
-                autoComplete="off"
-                disabled={Boolean(itemId)}
-                onChange={(e) => setItemSerialNumber(e.target.value)}
-                placeholder={t("serialNumberPlaceholder")}
-                required
-                className="mt-1.5 block w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm text-graphite-900 placeholder:text-graphite-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 disabled:bg-graphite-100 disabled:text-graphite-500"
-              />
-            </div>
+      <div className="rounded-2xl border border-graphite-200 bg-white p-6 shadow-lg sm:p-8">
+        <form onSubmit={handleCreateItem}>
+          {/* Item Details Section */}
+          <div className="mb-8">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <label
+                  htmlFor="serialNumber"
+                  className="block text-sm font-medium text-graphite-700 mb-1.5"
+                >
+                  {t("serialNumber")}
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    id="serialNumber"
+                    value={itemSerialNumber}
+                    autoComplete="off"
+                    disabled={Boolean(itemId)}
+                    onChange={(e) => setItemSerialNumber(e.target.value)}
+                    placeholder={t("serialNumberPlaceholder")}
+                    required
+                    className="block w-full rounded-xl border border-graphite-300 px-4 py-3 text-sm text-graphite-900 placeholder:text-graphite-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 disabled:bg-graphite-50 disabled:text-graphite-500 transition-all"
+                  />
+                </div>
+              </div>
 
-            <div>
-              <label
-                htmlFor="itemName"
-                className="block text-sm font-medium text-graphite-700"
-              >
-                {t("itemName")}
-              </label>
-              <input
-                type="text"
-                id="itemName"
-                value={itemName}
-                autoComplete="off"
-                disabled={Boolean(itemId)}
-                onChange={(e) => setItemName(e.target.value)}
-                placeholder={t("itemNamePlaceholder")}
-                required
-                className="mt-1.5 block w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm text-graphite-900 placeholder:text-graphite-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 disabled:bg-graphite-100 disabled:text-graphite-500"
-              />
-            </div>
+              <div className="sm:col-span-2">
+                <label
+                  htmlFor="itemName"
+                  className="block text-sm font-medium text-graphite-700 mb-1.5"
+                >
+                  {t("itemName")}
+                </label>
+                <input
+                  type="text"
+                  id="itemName"
+                  value={itemName}
+                  autoComplete="off"
+                  disabled={Boolean(itemId)}
+                  onChange={(e) => setItemName(e.target.value)}
+                  placeholder={t("itemNamePlaceholder")}
+                  required
+                  className="block w-full rounded-xl border border-graphite-300 px-4 py-3 text-sm text-graphite-900 placeholder:text-graphite-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 disabled:bg-graphite-50 disabled:text-graphite-500 transition-all"
+                />
+              </div>
 
-            <div>
-              <label
-                htmlFor="itemColor"
-                className="block text-sm font-medium text-graphite-700"
-              >
-                {t("color")}
-              </label>
-              <input
-                type="text"
-                id="itemColor"
-                autoComplete="off"
-                value={itemColor}
-                disabled={Boolean(itemId)}
-                onChange={(e) => setItemColor(e.target.value)}
-                placeholder={t("colorPlaceholder")}
-                required
-                className="mt-1.5 block w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm text-graphite-900 placeholder:text-graphite-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 disabled:bg-graphite-100 disabled:text-graphite-500"
-              />
-            </div>
+              <div>
+                <label
+                  htmlFor="itemColor"
+                  className="block text-sm font-medium text-graphite-700 mb-1.5"
+                >
+                  {t("color")}
+                </label>
+                <input
+                  type="text"
+                  id="itemColor"
+                  autoComplete="off"
+                  value={itemColor}
+                  disabled={Boolean(itemId)}
+                  onChange={(e) => setItemColor(e.target.value)}
+                  placeholder={t("colorPlaceholder")}
+                  required
+                  className="block w-full rounded-xl border border-graphite-300 px-4 py-3 text-sm text-graphite-900 placeholder:text-graphite-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 disabled:bg-graphite-50 disabled:text-graphite-500 transition-all"
+                />
+              </div>
 
-            <div>
-              <label
-                htmlFor="itemSupplier"
-                className="block text-sm font-medium text-graphite-700"
-              >
-                {t("supplier")}{" "}
-                <span className="font-normal text-graphite-400">
-                  ({t("optional")})
-                </span>
-              </label>
-              <select
-                id="itemSupplier"
-                value={itemSupplierId}
-                disabled={Boolean(itemId)}
-                onChange={(e) => setItemSupplierId(e.target.value)}
-                className="mt-1.5 block w-full rounded-lg border border-graphite-300 bg-white px-3 py-2 text-sm text-graphite-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 disabled:bg-graphite-100 disabled:text-graphite-500"
-              >
-                <option value="">{t("noSupplier")}</option>
-                {suppliers.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+              <div>
+                <label
+                  htmlFor="itemStock"
+                  className="block text-sm font-medium text-graphite-700 mb-1.5"
+                >
+                  {t("stock")}
+                </label>
+                <input
+                  type="number"
+                  id="itemStock"
+                  value={itemStock}
+                  autoComplete="off"
+                  disabled={Boolean(itemId)}
+                  onChange={(e) => setItemStock(e.target.value)}
+                  placeholder="0"
+                  min="0"
+                  required
+                  className="block w-full rounded-xl border border-graphite-300 px-4 py-3 text-sm text-graphite-900 placeholder:text-graphite-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 disabled:bg-graphite-50 disabled:text-graphite-500 transition-all"
+                />
+              </div>
 
-            <div>
-              <label
-                htmlFor="itemStock"
-                className="block text-sm font-medium text-graphite-700"
-              >
-                {t("stock")}
-              </label>
-              <input
-                type="number"
-                id="itemStock"
-                value={itemStock}
-                autoComplete="off"
-                disabled={Boolean(itemId)}
-                onChange={(e) => setItemStock(e.target.value)}
-                placeholder="0"
-                min="0"
-                required
-                className="mt-1.5 block w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm text-graphite-900 placeholder:text-graphite-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 disabled:bg-graphite-100 disabled:text-graphite-500"
-              />
+              <div className="sm:col-span-2">
+                <label
+                  htmlFor="itemSupplier"
+                  className="block text-sm font-medium text-graphite-700 mb-1.5"
+                >
+                  {t("supplier")}{" "}
+                  <span className="font-normal text-graphite-400">
+                    ({t("optional")})
+                  </span>
+                </label>
+                <select
+                  id="itemSupplier"
+                  value={itemSupplierId}
+                  disabled={Boolean(itemId)}
+                  onChange={(e) => setItemSupplierId(e.target.value)}
+                  className="block w-full rounded-xl border border-graphite-300 bg-white px-4 py-3 text-sm text-graphite-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 disabled:bg-graphite-50 disabled:text-graphite-500 transition-all"
+                >
+                  <option value="">{t("noSupplier")}</option>
+                  {suppliers.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
 
-          <div className="mt-8 border-t border-graphite-200 pt-6">
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-graphite-500">
-              {t("parts")}
-            </h3>
+          {/* Parts Section */}
+          <div className="border-t border-graphite-200 pt-8">
+            <div className="mb-4 flex items-center gap-2">
+              <Box className="h-5 w-5 text-primary-600" />
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-graphite-900">
+                {t("parts")}
+              </h3>
+              {savedParts.length > 0 && (
+                <span className="ml-auto flex items-center gap-1.5 rounded-full bg-primary-50 px-3 py-1 text-xs font-medium text-primary-700">
+                  <Check className="h-3.5 w-3.5" />
+                  {savedParts.length} {savedParts.length === 1 ? t("part") : t("parts")}
+                </span>
+              )}
+            </div>
 
             {/* Already-saved parts: read-only summaries */}
             {savedParts.length > 0 && (
-              <div className="mt-3 space-y-2">
+              <div className="mb-4 space-y-2">
                 {savedParts.map((part, index) => (
                   <div
                     key={part._id}
-                    className="rounded-lg border border-graphite-200 bg-graphite-50 px-4 py-2.5 text-sm text-graphite-700"
+                    className="flex items-center gap-3 rounded-xl border border-primary-200 bg-primary-50 px-4 py-3 text-sm text-primary-900"
                   >
-                    <span className="font-medium">
-                      PCS/CTN {savedParts.length}/{index + 1}
-                    </span>{" "}
-                    — {part.floorId?.name ?? t("floor")}
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-600 text-xs font-bold text-white">
+                      {index + 1}
+                    </div>
+                    <div className="flex-1">
+                      <span className="font-medium">
+                        PCS/CTN {index + 1}
+                      </span>
+                      <span className="mx-2 text-primary-400">•</span>
+                      <span className="text-primary-700">
+                        {part.floorId?.name ?? t("floor")}
+                      </span>
+                    </div>
+                    <Check className="h-5 w-5 text-primary-600" />
                   </div>
                 ))}
               </div>
@@ -273,7 +307,7 @@ export default function AddItemForm() {
 
             {/* Draft part: only shown before the item is created */}
             {!itemId && (
-              <div className="mt-3">
+              <div className="rounded-xl border-2 border-dashed border-graphite-300 bg-graphite-50/50 p-4">
                 <AddItemPartForm
                   part={draftPart}
                   index={0}
@@ -291,9 +325,19 @@ export default function AddItemForm() {
             <button
               type="submit"
               disabled={loading}
-              className="mt-8 w-full rounded-lg bg-primary-600 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className="mt-8 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary-600 to-primary-700 py-3.5 text-sm font-semibold text-white shadow-lg transition-all hover:from-primary-700 hover:to-primary-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
             >
-              {loading ? t("saving") : t("submit")}
+              {loading ? (
+                <>
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  {t("saving")}
+                </>
+              ) : (
+                <>
+                  <Plus className="h-4 w-4" />
+                  {t("submit")}
+                </>
+              )}
             </button>
           )}
         </form>
@@ -303,29 +347,43 @@ export default function AddItemForm() {
           <div className="mt-6 border-t border-graphite-200 pt-6">
             {addingAnother ? (
               <>
-                <AddItemPartForm
-                  part={draftPart}
-                  index={savedParts.length}
-                  totalParts={savedParts.length + 1}
-                  floors={floors}
-                  onChange={handleDraftChange}
-                  onLocationChange={handleDraftLocationChange}
-                  onRemove={() => setAddingAnother(false)}
-                />
+                <div className="rounded-xl border-2 border-dashed border-primary-300 bg-primary-50/50 p-4">
+                  <AddItemPartForm
+                    part={draftPart}
+                    index={savedParts.length}
+                    totalParts={savedParts.length + 1}
+                    floors={floors}
+                    onChange={handleDraftChange}
+                    onLocationChange={handleDraftLocationChange}
+                    onRemove={() => setAddingAnother(false)}
+                  />
+                </div>
                 <button
                   type="button"
                   onClick={handleSavePart}
                   disabled={loading}
-                  className="mt-3 w-full rounded-lg bg-primary-600 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary-600 to-primary-700 py-3.5 text-sm font-semibold text-white shadow-lg transition-all hover:from-primary-700 hover:to-primary-800 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {loading ? t("saving") : t("savePart")}
+                  {loading ? (
+                    <>
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                      {t("saving")}
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="h-4 w-4" />
+                      {t("savePart")}
+                    </>
+                  )}
                 </button>
               </>
             ) : (
               <>
-                <p className="mb-3 text-sm font-medium text-graphite-700">
-                  {t("anotherPartQuestion")}
-                </p>
+                <div className="mb-4 rounded-xl bg-gradient-to-r from-primary-50 to-primary-100/50 p-4">
+                  <p className="text-sm font-medium text-primary-900">
+                    {t("anotherPartQuestion")}
+                  </p>
+                </div>
                 <div className="flex flex-col gap-3 sm:flex-row">
                   <button
                     type="button"
@@ -333,16 +391,18 @@ export default function AddItemForm() {
                       setDraftPart(emptyPart(Date.now()));
                       setAddingAnother(true);
                     }}
-                    className="flex-1 rounded-lg border border-dashed border-graphite-300 py-2.5 text-sm font-medium text-primary-600 transition-colors hover:border-primary-400 hover:bg-primary-50"
+                    className="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-dashed border-primary-300 py-3.5 text-sm font-semibold text-primary-600 transition-all hover:border-primary-400 hover:bg-primary-50"
                   >
+                    <Plus className="h-4 w-4" />
                     {t("yesAnotherPart")}
                   </button>
                   <button
                     type="button"
                     onClick={handleFinish}
-                    className="flex-1 rounded-lg bg-primary-600 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-primary-700"
+                    className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary-600 to-primary-700 py-3.5 text-sm font-semibold text-white shadow-lg transition-all hover:from-primary-700 hover:to-primary-800"
                   >
                     {t("noFinish")}
+                    <ArrowRight className="h-4 w-4" />
                   </button>
                 </div>
               </>

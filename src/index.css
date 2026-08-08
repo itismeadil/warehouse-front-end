@@ -40,3 +40,7 @@ body {
   --color-primary-800: #1c4040;
   --color-primary-900: #153131;
 }
+
+html {
+  scrollbar-gutter: stable;
+}
