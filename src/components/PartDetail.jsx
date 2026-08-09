@@ -258,9 +258,16 @@ export default function PartDetail({
       {activeTab === "location" && (
         <div className="mt-4 overflow-hidden rounded-xl border border-graphite-200 bg-graphite-50 shadow-sm">
           <div className="flex items-center justify-between border-b border-graphite-200 px-4 py-3">
-            <h3 className="text-sm font-semibold text-graphite-700">
-              {t("floorLocation")}
-            </h3>
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-semibold text-graphite-700">
+                {t("floorLocation")}
+              </h3>
+              {hasLocation && (
+                <span className="rounded-full border border-graphite-200 bg-graphite-100 px-2 py-0.5 text-xs font-medium text-graphite-600">
+                  {part.floorId.name}
+                </span>
+              )}
+            </div>
 
             {hasLocation && (
               <span className="text-xs font-medium text-graphite-500">

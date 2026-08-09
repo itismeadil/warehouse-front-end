@@ -1,8 +1,9 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { RefreshCw } from "lucide-react";
 
-const ItemList = ({ items, loading, searchTerm = "" }) => {
+const ItemList = ({ items, loading, searchTerm = "", onChanged }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
@@ -49,13 +50,16 @@ const ItemList = ({ items, loading, searchTerm = "" }) => {
   return (
     <div className="overflow-hidden rounded-xl border border-graphite-200 bg-white shadow-sm">
       {/* Header row - hidden on mobile */}
-      <div className="hidden border-b border-graphite-200 bg-graphite-50 px-4 py-2.5 sm:grid sm:grid-cols-[auto_1fr_auto_auto] sm:items-center sm:gap-4">
+      <div className="hidden border-b border-graphite-200 bg-graphite-50 px-4 py-2.5 sm:grid sm:grid-cols-[auto_1fr_auto_auto_auto] sm:items-center sm:gap-4">
         <span className="w-4" />
         <span className="text-xs font-medium uppercase tracking-wide text-graphite-400">
           {t("item")}
         </span>
         <span className="text-right text-xs font-medium uppercase tracking-wide text-graphite-400">
           {t("serialNumber")}
+        </span>
+        <span className="text-right text-xs font-medium uppercase tracking-wide text-graphite-400">
+          Stock
         </span>
         <span className="w-4" />
       </div>
@@ -65,7 +69,7 @@ const ItemList = ({ items, loading, searchTerm = "" }) => {
           <button
             key={item._id}
             onClick={() => handleItemClick(item)}
-            className="group flex w-full items-center gap-3 px-4 py-3 text-start transition-colors hover:bg-primary-50/40 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500 sm:grid sm:grid-cols-[auto_1fr_auto_auto] sm:items-center sm:gap-4"
+            className="group flex w-full items-center gap-3 px-4 py-3 text-start transition-colors hover:bg-primary-50/40 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500 sm:grid sm:grid-cols-[auto_1fr_auto_auto_auto] sm:items-center sm:gap-4"
           >
             <span
               className="h-4 w-4 shrink-0 rounded-sm border border-graphite-300"
@@ -81,10 +85,17 @@ const ItemList = ({ items, loading, searchTerm = "" }) => {
               <p className="truncate text-xs text-graphite-500 sm:hidden">
                 {item.serialNumber}
               </p>
+              <p className="truncate text-xs text-primary-600 sm:hidden">
+                Stock: {item.stock || 0}
+              </p>
             </div>
 
             <span className="hidden truncate text-sm text-graphite-600 sm:block">
               {item.serialNumber}
+            </span>
+
+            <span className="hidden truncate text-sm font-medium text-primary-600 sm:block">
+              {item.stock || 0}
             </span>
 
             <svg
