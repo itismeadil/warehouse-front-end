@@ -1,7 +1,33 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { RefreshCw } from "lucide-react";
+import { ChevronRight } from "lucide-react";
+
+const StockBadge = ({ stock }) => {
+  const qty = stock || 0;
+
+  if (qty === 0) {
+    return (
+      <span className="inline-flex items-center rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700 ring-1 ring-inset ring-red-200">
+        Out of stock
+      </span>
+    );
+  }
+
+  if (qty <= 5) {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700 ring-1 ring-inset ring-amber-200">
+        {qty} left
+      </span>
+    );
+  }
+
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-50 px-2.5 py-1 text-xs font-semibold text-primary-700 ring-1 ring-inset ring-primary-200">
+      {qty} in stock
+    </span>
+  );
+};
 
 const ItemList = ({ items, loading, searchTerm = "", onChanged }) => {
   const { t } = useTranslation();
@@ -50,18 +76,18 @@ const ItemList = ({ items, loading, searchTerm = "", onChanged }) => {
   return (
     <div className="overflow-hidden rounded-xl border border-graphite-200 bg-white shadow-sm">
       {/* Header row - hidden on mobile */}
-      <div className="hidden border-b border-graphite-200 bg-graphite-50 px-4 py-2.5 sm:grid sm:grid-cols-[auto_1fr_auto_auto_auto] sm:items-center sm:gap-4">
-        <span className="w-4" />
+      <div className="hidden border-b border-graphite-200 bg-graphite-50 px-4 py-2.5 sm:grid sm:grid-cols-[1.5rem_1fr_10rem_9rem_1.25rem] sm:items-center sm:gap-4">
+        <span />
         <span className="text-xs font-medium uppercase tracking-wide text-graphite-400">
           {t("item")}
         </span>
-        <span className="text-right text-xs font-medium uppercase tracking-wide text-graphite-400">
+        <span className="text-xs font-medium uppercase tracking-wide text-graphite-400">
           {t("serialNumber")}
         </span>
         <span className="text-right text-xs font-medium uppercase tracking-wide text-graphite-400">
           Stock
         </span>
-        <span className="w-4" />
+        <span />
       </div>
 
       <div className="divide-y divide-graphite-100">
@@ -69,7 +95,7 @@ const ItemList = ({ items, loading, searchTerm = "", onChanged }) => {
           <button
             key={item._id}
             onClick={() => handleItemClick(item)}
-            className="group flex w-full items-center gap-3 px-4 py-3 text-start transition-colors hover:bg-primary-50/40 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500 sm:grid sm:grid-cols-[auto_1fr_auto_auto_auto] sm:items-center sm:gap-4"
+            className="group flex w-full items-center gap-3 px-4 py-3 text-start transition-colors hover:bg-primary-50/40 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500 sm:grid sm:grid-cols-[1.5rem_1fr_10rem_9rem_1.25rem] sm:items-center sm:gap-4"
           >
             <span
               className="h-4 w-4 shrink-0 rounded-sm border border-graphite-300"
@@ -81,19 +107,12 @@ const ItemList = ({ items, loading, searchTerm = "", onChanged }) => {
               <p className="truncate text-sm font-medium text-graphite-900">
                 {item.name}
               </p>
-              {/* Serial shows under name on mobile only */}
+              {/* Serial + stock show under name on mobile only */}
               <p className="truncate text-xs text-graphite-500 sm:hidden">
                 {item.serialNumber}
               </p>
-              <div className="flex items-center gap-2 sm:hidden">
-                <p className="truncate text-xs text-primary-600">
-                  Stock: {item.stock || 0}
-                </p>
-                {(item.stock || 0) === 0 && (
-                  <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800">
-                    OUT OF STOCK
-                  </span>
-                )}
+              <div className="mt-1 sm:hidden">
+                <StockBadge stock={item.stock} />
               </div>
             </div>
 
@@ -101,29 +120,11 @@ const ItemList = ({ items, loading, searchTerm = "", onChanged }) => {
               {item.serialNumber}
             </span>
 
-            <div className="hidden items-center gap-2 sm:flex">
-              <span className="truncate text-sm font-medium text-primary-600">
-                {item.stock || 0}
-              </span>
-              {(item.stock || 0) === 0 && (
-                <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800">
-                  OUT OF STOCK
-                </span>
-              )}
+            <div className="hidden justify-end sm:flex">
+              <StockBadge stock={item.stock} />
             </div>
 
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-              className="hidden h-4 w-4 shrink-0 text-graphite-300 transition-transform group-hover:translate-x-0.5 group-hover:text-primary-400 sm:block"
-            >
-              <path
-                fillRule="evenodd"
-                d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"
-                clipRule="evenodd"
-              />
-            </svg>
+            <ChevronRight className="hidden h-4 w-4 shrink-0 text-graphite-300 transition-transform group-hover:translate-x-0.5 group-hover:text-primary-400 sm:block" />
           </button>
         ))}
       </div>
