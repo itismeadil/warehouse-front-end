@@ -85,18 +85,32 @@ const ItemList = ({ items, loading, searchTerm = "", onChanged }) => {
               <p className="truncate text-xs text-graphite-500 sm:hidden">
                 {item.serialNumber}
               </p>
-              <p className="truncate text-xs text-primary-600 sm:hidden">
-                Stock: {item.stock || 0}
-              </p>
+              <div className="flex items-center gap-2 sm:hidden">
+                <p className="truncate text-xs text-primary-600">
+                  Stock: {item.stock || 0}
+                </p>
+                {(item.stock || 0) === 0 && (
+                  <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800">
+                    OUT OF STOCK
+                  </span>
+                )}
+              </div>
             </div>
 
             <span className="hidden truncate text-sm text-graphite-600 sm:block">
               {item.serialNumber}
             </span>
 
-            <span className="hidden truncate text-sm font-medium text-primary-600 sm:block">
-              {item.stock || 0}
-            </span>
+            <div className="hidden items-center gap-2 sm:flex">
+              <span className="truncate text-sm font-medium text-primary-600">
+                {item.stock || 0}
+              </span>
+              {(item.stock || 0) === 0 && (
+                <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800">
+                  OUT OF STOCK
+                </span>
+              )}
+            </div>
 
             <svg
               xmlns="http://www.w3.org/2000/svg"

@@ -48,7 +48,6 @@ export default function SalesInvoicesTab() {
     const loadItems = () => {
       getItems()
         .then((data) => {
-          console.log('Loaded items:', data);
           setItems(Array.isArray(data) ? data : []);
         })
         .catch((err) => console.error(err));
@@ -255,9 +254,14 @@ export default function SalesInvoicesTab() {
               >
                 <option value="">{t("selectItem")}</option>
                 {items.map((item) => {
+                  const isOutOfStock = (item.stock || 0) === 0;
                   return (
-                    <option key={item._id} value={item._id}>
-                      {item.name} — {item.serialNumber} (Stock: {item.stock || 0})
+                    <option 
+                      key={item._id} 
+                      value={item._id}
+                      disabled={isOutOfStock}
+                    >
+                      {item.name} — {item.serialNumber} (Stock: {item.stock || 0}){isOutOfStock ? ' - OUT OF STOCK' : ''}
                     </option>
                   );
                 })}

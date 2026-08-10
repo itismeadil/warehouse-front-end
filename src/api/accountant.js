@@ -42,5 +42,5 @@ export const cancelReservation = (id, reason) =>
     .post(`/reservations/${id}/cancel`, { reason })
     .then((res) => res.data);
 
-export const fulfillReservation = (id) =>
-  accountantApi.post(`/reservations/${id}/fulfill`).then((res) => res.data);
+export const fulfillReservation = (id, payload) =>
+  accountantApi.post(`/reservations/${id}/fulfill`, payload).then((res) => res.data);

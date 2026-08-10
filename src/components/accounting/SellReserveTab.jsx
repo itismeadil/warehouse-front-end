@@ -71,6 +71,79 @@ function CancelReasonModal({ reservation, onClose, onConfirm, submitting }) {
   );
 }
 
+// Modal for fulfilling a reservation with VAT rate
+function FulfillModal({ reservation, onClose, onConfirm, submitting }) {
+  const { t } = useTranslation();
+  const [vatRate, setVatRate] = useState(15);
+
+  const subtotal = (reservation.quantity || 0) * (reservation.unitPrice || 0);
+  const vatAmount = subtotal * (vatRate / 100);
+  const totalAfterTax = subtotal - vatAmount;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-graphite-900/40 p-4">
+      <div className="w-full max-w-sm rounded-xl bg-white p-5 shadow-lg">
+        <h3 className="text-sm font-semibold text-graphite-900">
+          {t("markSold")}
+        </h3>
+        <p className="mt-1 text-xs text-graphite-500">
+          {reservation.itemName} — {reservation.quantity} {t("units")}
+          {reservation.unitPrice != null && (
+            <> · {reservation.unitPrice} {t("perUnit")}</>
+          )}
+        </p>
+
+        <label className="mt-4 block text-sm font-medium text-graphite-700">
+          {t("vatRate")} (%)
+        </label>
+        <input
+          type="number"
+          min="0"
+          max="100"
+          step="0.01"
+          value={vatRate}
+          onChange={(e) => setVatRate(Number(e.target.value))}
+          className="mt-1.5 w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+        />
+
+        <div className="mt-4 space-y-2 rounded-lg bg-graphite-50 p-3">
+          <div className="flex justify-between text-xs text-graphite-700">
+            <span>{t("subtotal")}</span>
+            <span className="font-semibold">{subtotal.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between text-xs text-graphite-700">
+            <span>{t("vatDeduction")} ({vatRate}%)</span>
+            <span className="font-semibold text-red-600">-{vatAmount.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between text-xs font-medium text-graphite-900 border-t border-graphite-200 pt-2">
+            <span>{t("totalAfterTax")}</span>
+            <span className="font-semibold">{totalAfterTax.toFixed(2)}</span>
+          </div>
+        </div>
+
+        <div className="mt-4 flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg border border-graphite-300 px-3 py-1.5 text-sm font-medium text-graphite-700 hover:bg-graphite-100"
+          >
+            {t("cancel")}
+          </button>
+          <button
+            type="button"
+            disabled={submitting}
+            onClick={() => onConfirm({ vatRate, subtotal, vatAmount, totalAfterTax })}
+            className="flex items-center gap-2 rounded-lg bg-primary-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {submitting && <Spinner />}
+            {t("confirm")}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function SellReserveTab() {
   const { t } = useTranslation();
 
@@ -79,6 +152,7 @@ export default function SellReserveTab() {
   const [quantity, setQuantity] = useState(1);
   const [price, setPrice] = useState("");
   const [customerName, setCustomerName] = useState("");
+  const [vatRate, setVatRate] = useState(15);
 
   const [saving, setSaving] = useState(false); // "sale" | "reservation" | false
   const [formError, setFormError] = useState("");
@@ -89,6 +163,7 @@ export default function SellReserveTab() {
   const [cancelTarget, setCancelTarget] = useState(null);
   const [cancelling, setCancelling] = useState(false);
   const [fulfillingId, setFulfillingId] = useState(null);
+  const [fulfillTarget, setFulfillTarget] = useState(null);
 
   const loadReservations = () => {
     setReservationsLoading(true);
@@ -111,6 +186,7 @@ export default function SellReserveTab() {
     setQuantity(1);
     setPrice("");
     setCustomerName("");
+    setVatRate(15);
   };
 
   const validate = () => {
@@ -129,9 +205,17 @@ export default function SellReserveTab() {
     setFormSuccess("");
     setSaving("sale");
     try {
+      const subtotal = Number(quantity) * Number(price);
+      const vatAmount = subtotal * (vatRate / 100);
+      const totalAfterTax = subtotal - vatAmount;
+      
       await createSalesInvoice({
         invoiceNumber: `SALE-${Date.now()}`,
         customerName: customerName || undefined,
+        vatRate: vatRate,
+        subtotal: subtotal,
+        vatAmount: vatAmount,
+        totalAmount: totalAfterTax,
         lines: [
           {
             itemId,
@@ -190,9 +274,19 @@ export default function SellReserveTab() {
   };
 
   const handleFulfill = async (reservation) => {
-    setFulfillingId(reservation._id);
+    setFulfillTarget(reservation);
+  };
+
+  const handleConfirmFulfill = async (vatData) => {
+    setFulfillingId(fulfillTarget._id);
     try {
-      await fulfillReservation(reservation._id);
+      await fulfillReservation(fulfillTarget._id, {
+        vatRate: vatData.vatRate,
+        subtotal: vatData.subtotal,
+        vatAmount: vatData.vatAmount,
+        totalAmount: vatData.totalAfterTax,
+      });
+      setFulfillTarget(null);
       loadReservations();
     } catch (err) {
       alert(err.response?.data?.message || err.message);
@@ -205,7 +299,7 @@ export default function SellReserveTab() {
     <div>
       {/* Form */}
       <div className="rounded-xl border border-graphite-200 bg-white p-6 shadow-sm">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div>
             <label className="block text-sm font-medium text-graphite-700">
               {t("item")}
@@ -216,13 +310,21 @@ export default function SellReserveTab() {
               className="mt-1.5 block w-full rounded-lg border border-graphite-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
             >
               <option value="">{t("selectItem")}</option>
-              {items.map((item) => (
-                <option key={item._id} value={item._id}>
-                  {item.name} — {item.serialNumber}{" "}
-                  {typeof item.stock === "number" &&
-                    `(${item.stock} ${t("inStock")})`}
-                </option>
-              ))}
+              {items.map((item) => {
+                const isOutOfStock = (item.stock || 0) === 0;
+                return (
+                  <option 
+                    key={item._id} 
+                    value={item._id}
+                    disabled={isOutOfStock}
+                  >
+                    {item.name} — {item.serialNumber}{" "}
+                    {typeof item.stock === "number" &&
+                      `(${item.stock} ${t("inStock")})`}
+                    {isOutOfStock ? ' - OUT OF STOCK' : ''}
+                  </option>
+                );
+              })}
             </select>
           </div>
 
@@ -266,11 +368,43 @@ export default function SellReserveTab() {
               className="mt-1.5 block w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
             />
           </div>
+
+          <div>
+            <label className="block text-sm font-medium text-graphite-700">
+              {t("vatRate")} (%)
+            </label>
+            <input
+              type="number"
+              min="0"
+              max="100"
+              step="0.01"
+              value={vatRate}
+              onChange={(e) => setVatRate(Number(e.target.value))}
+              className="mt-1.5 block w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+            />
+          </div>
         </div>
 
         {formError && <p className="mt-3 text-sm text-red-600">{formError}</p>}
         {formSuccess && (
           <p className="mt-3 text-sm text-green-600">{formSuccess}</p>
+        )}
+
+        {quantity && price && (
+          <div className="mt-4 space-y-2 rounded-lg bg-graphite-50 p-4">
+            <div className="flex justify-between text-sm text-graphite-700">
+              <span>{t("subtotal")}</span>
+              <span className="font-semibold">{(Number(quantity) * Number(price)).toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between text-sm text-graphite-700">
+              <span>{t("vatDeduction")} ({vatRate}%)</span>
+              <span className="font-semibold text-red-600">-{((Number(quantity) * Number(price)) * (vatRate / 100)).toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between text-sm font-medium text-graphite-900 border-t border-graphite-200 pt-2">
+              <span>{t("totalAfterTax")}</span>
+              <span className="font-semibold">{((Number(quantity) * Number(price)) - ((Number(quantity) * Number(price)) * (vatRate / 100))).toFixed(2)}</span>
+            </div>
+          </div>
         )}
 
         <div className="mt-4 flex flex-wrap gap-2">
@@ -366,6 +500,15 @@ export default function SellReserveTab() {
           submitting={cancelling}
           onClose={() => setCancelTarget(null)}
           onConfirm={handleConfirmCancel}
+        />
+      )}
+
+      {fulfillTarget && (
+        <FulfillModal
+          reservation={fulfillTarget}
+          submitting={fulfillingId === fulfillTarget._id}
+          onClose={() => setFulfillTarget(null)}
+          onConfirm={handleConfirmFulfill}
         />
       )}
     </div>
