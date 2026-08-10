@@ -17,6 +17,8 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import ItemDetail from "./components/ItemDetail";
 import Accounting from "./components/Accounting";
+import InvoiceSummary from "./components/accounting/InvoiceSummary";
+import NotFound from "./components/NotFound";
 import { useTranslation } from "react-i18next";
 
 // Component to update document title based on route
@@ -31,6 +33,7 @@ function PageTitle() {
       "/add": t("addItem"),
       "/floors": t("floorMaps"),
       "/accounting": t("accounting"),
+      "/accounting/summary": "Invoice Summary",
       "/users": t("manageUsers"),
     };
 
@@ -117,6 +120,17 @@ function App() {
           />
 
           <Route
+            path="/accounting/summary"
+            element={
+              <ProtectedRoute roles={["admin", "accountant"]}>
+                <Layout>
+                  <InvoiceSummary />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
             path="/users"
             element={
               <ProtectedRoute roles={["admin"]}>
@@ -127,9 +141,8 @@ function App() {
             }
           />
 
-          {/* Any unmatched path (typo, stale bookmark, etc.) falls back to
-              the root, which itself redirects to /login if unauthenticated */}
-          <Route path="*" element={<Navigate to="/" replace />} />
+          {/* Any unmatched path (typo, stale bookmark, etc.) shows 404 */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </Router>
     </AuthProvider>

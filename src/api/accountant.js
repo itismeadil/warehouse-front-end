@@ -30,6 +30,11 @@ export const getSalesInvoices = () =>
 export const createSalesInvoice = (payload) =>
   accountantApi.post("/sales-invoices", payload).then((res) => res.data);
 
+export const getSalesInvoiceAggregate = (params) =>
+  accountantApi
+    .get("/sales-invoices/aggregate", { params })
+    .then((res) => res.data);
+
 // Reservations — stock held for a customer, no money changed hands yet.
 export const getReservations = (params) =>
   accountantApi.get("/reservations", { params }).then((res) => res.data);
@@ -43,4 +48,6 @@ export const cancelReservation = (id, reason) =>
     .then((res) => res.data);
 
 export const fulfillReservation = (id, payload) =>
-  accountantApi.post(`/reservations/${id}/fulfill`, payload).then((res) => res.data);
+  accountantApi
+    .post(`/reservations/${id}/fulfill`, payload)
+    .then((res) => res.data);
