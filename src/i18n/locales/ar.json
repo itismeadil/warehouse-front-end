@@ -246,5 +246,26 @@
   "noInvoicesYet": "لا توجد فواتير بعد.",
   "clearHistory": "مسح السجل",
   "invoiceFieldsRequired": "املأ رقم الفاتورة والحقول المطلوبة الأخرى.",
-  "atLeastOneLine": "أضف بندًا واحدًا مكتملاً على الأقل."
+  "atLeastOneLine": "أضف بندًا واحدًا مكتملاً على الأقل.",
+
+  "invoiceSummary": "ملخص الفواتير",
+  "summaryType": "نوع الملخص",
+  "daily": "يومي",
+  "weekly": "أسبوعي",
+  "monthly": "شهري",
+  "startDate": "تاريخ البدء",
+  "selectMonth": "اختر الشهر",
+  "selectStartDate": "اختر تاريخ البدء",
+  "generateSummary": "إنشاء الملخص",
+  "pleaseSelectDate": "يرجى اختيار تاريخ",
+  "dailySummary": "الملخص اليومي",
+  "weeklySummary": "الملخص الأسبوعي",
+  "monthlySummary": "الملخص الشهري",
+  "starting": "بدءًا من",
+  "print": "طباعة",
+  "weeklyBreakdown": "تفصيل أسبوعي",
+  "week": "أسبوع",
+  "allInvoices": "جميع الفواتير",
+  "noInvoicesForPeriod": "لا توجد فواتير لهذه الفترة",
+  "noCustomer": "بدون عميل"
 }

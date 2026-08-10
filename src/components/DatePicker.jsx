@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Calendar, ChevronLeft, ChevronRight, X } from "lucide-react";
 
-const WEEKDAYS = ["S", "M", "T", "W", "T", "F", "S"];
+const WEEKDAYS_EN = ["S", "M", "T", "W", "T", "F", "S"];
+const WEEKDAYS_AR = ["ح", "ن", "ث", "ر", "خ", "ج", "س"];
 
 export const toLocalDateString = (date) => {
   const y = date.getFullYear();
@@ -30,9 +32,13 @@ export default function DatePicker({
   markedDates = [],
   markedLabel = "Sales day",
 }) {
+  const { i18n } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [closing, setClosing] = useState(false);
   const containerRef = useRef(null);
+
+  const isArabic = i18n.language === "ar";
+  const WEEKDAYS = isArabic ? WEEKDAYS_AR : WEEKDAYS_EN;
 
   const selectedDate = parseLocalDate(value);
   const today = new Date();
@@ -76,20 +82,22 @@ export default function DatePicker({
   const formatDate = (dateString) => {
     if (!dateString) return placeholder;
     const date = parseLocalDate(dateString);
-    return date.toLocaleDateString("en-US", {
+    return date.toLocaleDateString(isArabic ? "ar-SA" : "en-US", {
       month: "short",
       day: "numeric",
       year: "numeric",
     });
   };
 
-  const monthLabel = viewDate.toLocaleDateString("en-US", {
+  const monthLabel = viewDate.toLocaleDateString(isArabic ? "ar-SA" : "en-US", {
     month: "long",
     year: "numeric",
   });
 
   const goToMonth = (offset) => {
-    setViewDate((prev) => new Date(prev.getFullYear(), prev.getMonth() + offset, 1));
+    setViewDate(
+      (prev) => new Date(prev.getFullYear(), prev.getMonth() + offset, 1),
+    );
   };
 
   const handleSelectDay = (day) => {
@@ -132,10 +140,14 @@ export default function DatePicker({
       >
         <Calendar
           className={`h-4 w-4 shrink-0 transition-colors ${
-            value ? "text-primary-600" : "text-graphite-400 group-hover:text-primary-500"
+            value
+              ? "text-primary-600"
+              : "text-graphite-400 group-hover:text-primary-500"
           }`}
         />
-        <span className={`flex-1 truncate text-left ${!value ? "text-graphite-400" : ""}`}>
+        <span
+          className={`flex-1 truncate text-left ${!value ? "text-graphite-400" : ""}`}
+        >
           {formatDate(value)}
         </span>
         {value && (
@@ -152,7 +164,7 @@ export default function DatePicker({
 
       {isOpen && (
         <div
-          className={`absolute right-0 top-full z-50 mt-2 w-72 origin-top-right rounded-2xl border border-graphite-200 bg-white p-4 shadow-lg transition-all duration-150 ${
+          className={`absolute ${isArabic ? "right-0 origin-top-right" : "left-0 origin-top-left"} top-full z-50 mt-2 w-72 rounded-2xl border border-graphite-200 bg-white p-4 shadow-lg transition-all duration-150 ${
             closing ? "scale-95 opacity-0" : "scale-100 opacity-100"
           }`}
           style={{ animation: closing ? undefined : "dp-pop 120ms ease-out" }}
@@ -165,21 +177,33 @@ export default function DatePicker({
               className="rounded-lg p-1.5 text-graphite-500 transition-colors hover:bg-graphite-100 hover:text-graphite-900"
               aria-label="Previous month"
             >
-              <ChevronLeft className="h-4 w-4" />
+              {isArabic ? (
+                <ChevronRight className="h-4 w-4" />
+              ) : (
+                <ChevronLeft className="h-4 w-4" />
+              )}
             </button>
-            <p className="text-sm font-semibold text-graphite-900">{monthLabel}</p>
+            <p className="text-sm font-semibold text-graphite-900">
+              {monthLabel}
+            </p>
             <button
               type="button"
               onClick={() => goToMonth(1)}
               className="rounded-lg p-1.5 text-graphite-500 transition-colors hover:bg-graphite-100 hover:text-graphite-900"
               aria-label="Next month"
             >
-              <ChevronRight className="h-4 w-4" />
+              {isArabic ? (
+                <ChevronLeft className="h-4 w-4" />
+              ) : (
+                <ChevronRight className="h-4 w-4" />
+              )}
             </button>
           </div>
 
           {/* Weekday labels */}
-          <div className="mt-3 grid grid-cols-7 gap-y-1">
+          <div
+            className={`mt-3 grid grid-cols-7 gap-y-1 ${isArabic ? "rtl" : ""}`}
+          >
             {WEEKDAYS.map((wd, i) => (
               <div
                 key={i}
@@ -197,7 +221,8 @@ export default function DatePicker({
                 const inMonth = day.getMonth() === viewDate.getMonth();
                 const isToday = isSameDay(day, today);
                 const isSelected = isSameDay(day, selectedDate);
-                const isMarked = inMonth && markedSet.has(toLocalDateString(day));
+                const isMarked =
+                  inMonth && markedSet.has(toLocalDateString(day));
                 return (
                   <button
                     type="button"
@@ -213,7 +238,9 @@ export default function DatePicker({
                           : inMonth
                             ? "text-graphite-700 hover:bg-primary-50 hover:text-primary-700"
                             : "text-graphite-300 hover:bg-graphite-50",
-                      isToday && !isSelected ? "ring-1 ring-inset ring-primary-400" : "",
+                      isToday && !isSelected
+                        ? "ring-1 ring-inset ring-primary-400"
+                        : "",
                     ].join(" ")}
                   >
                     {day.getDate()}
@@ -231,11 +258,15 @@ export default function DatePicker({
             <div className="mt-3 flex items-center gap-4 border-t border-graphite-100 pt-3">
               <div className="flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-primary-500" />
-                <span className="text-[11px] font-medium text-graphite-500">{markedLabel}</span>
+                <span className="text-[11px] font-medium text-graphite-500">
+                  {markedLabel}
+                </span>
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full ring-1 ring-inset ring-primary-400" />
-                <span className="text-[11px] font-medium text-graphite-500">Today</span>
+                <span className="text-[11px] font-medium text-graphite-500">
+                  Today
+                </span>
               </div>
             </div>
           )}

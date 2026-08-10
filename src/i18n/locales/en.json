@@ -250,5 +250,26 @@
   "itemCount": "Item count",
   "clearHistory": "Clear history",
   "confirmClearHistory": "Clear all calculation history? This cannot be undone.",
-  "clearingHistory": "Clearing..."
+  "clearingHistory": "Clearing...",
+
+  "invoiceSummary": "Invoice Summary",
+  "summaryType": "Summary Type",
+  "daily": "Daily",
+  "weekly": "Weekly",
+  "monthly": "Monthly",
+  "startDate": "Start Date",
+  "selectMonth": "Select Month",
+  "selectStartDate": "Select start date",
+  "generateSummary": "Generate Summary",
+  "pleaseSelectDate": "Please select a date",
+  "dailySummary": "Daily Summary",
+  "weeklySummary": "Weekly Summary",
+  "monthlySummary": "Monthly Summary",
+  "starting": "Starting",
+  "print": "Print",
+  "weeklyBreakdown": "Weekly Breakdown",
+  "week": "Week",
+  "allInvoices": "All Invoices",
+  "noInvoicesForPeriod": "No invoices found for this period",
+  "noCustomer": "No customer"
 }

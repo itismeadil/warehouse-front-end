@@ -36,7 +36,7 @@ export default function InvoiceSummary() {
     if (type === "monthly" && month) params.month = month;
 
     if (!params.date && !params.startDate && !params.month) {
-      setError("Please select a date");
+      setError(t("pleaseSelectDate"));
       setLoading(false);
       return;
     }
@@ -73,20 +73,19 @@ export default function InvoiceSummary() {
       <div className="rounded-xl border border-graphite-200 bg-white p-6 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-lg font-semibold text-graphite-900">
-            Invoice Summary
+            {t("invoiceSummary")}
           </h1>
           <button
             onClick={() => navigate("/accounting")}
-            className="flex items-center gap-2 rounded-lg border border-graphite-300 px-3 py-1.5 text-sm font-medium text-graphite-700 hover:bg-graphite-100 transition-colors"
+            className="rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-100 transition-colors"
           >
             <X className="h-4 w-4" />
-            Close
           </button>
         </div>
 
         <div className="mb-4">
           <label className="block text-sm font-medium text-graphite-700 mb-2">
-            Summary Type
+            {t("summaryType")}
           </label>
           <select
             value={type}
@@ -97,21 +96,21 @@ export default function InvoiceSummary() {
             }}
             className="block w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
           >
-            <option value="daily">Daily</option>
-            <option value="weekly">Weekly</option>
-            <option value="monthly">Monthly</option>
+            <option value="daily">{t("daily")}</option>
+            <option value="weekly">{t("weekly")}</option>
+            <option value="monthly">{t("monthly")}</option>
           </select>
         </div>
 
         {type === "daily" && (
           <div className="mb-4">
             <label className="block text-sm font-medium text-graphite-700 mb-2">
-              Select Date
+              {t("selectDate")}
             </label>
             <DatePicker
               value={date}
               onChange={setDate}
-              placeholder="Select date"
+              placeholder={t("selectDate")}
             />
           </div>
         )}
@@ -119,12 +118,12 @@ export default function InvoiceSummary() {
         {type === "weekly" && (
           <div className="mb-4">
             <label className="block text-sm font-medium text-graphite-700 mb-2">
-              Start Date
+              {t("startDate")}
             </label>
             <DatePicker
               value={startDate}
               onChange={setStartDate}
-              placeholder="Select start date"
+              placeholder={t("selectStartDate")}
             />
           </div>
         )}
@@ -132,7 +131,7 @@ export default function InvoiceSummary() {
         {type === "monthly" && (
           <div className="mb-4">
             <label className="block text-sm font-medium text-graphite-700 mb-2">
-              Select Month
+              {t("selectMonth")}
             </label>
             <input
               type="month"
@@ -149,7 +148,7 @@ export default function InvoiceSummary() {
           className="flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loading && <Spinner />}
-          {loading ? "Loading..." : "Generate Summary"}
+          {loading ? t("loading") : t("generateSummary")}
         </button>
 
         {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
@@ -163,33 +162,34 @@ export default function InvoiceSummary() {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-graphite-900">
               {type === "daily" &&
-                `Daily Summary - ${new Date(date).toLocaleDateString()}`}
+                `${t("dailySummary")} - ${new Date(date).toLocaleDateString()}`}
               {type === "weekly" &&
-                `Weekly Summary - Starting ${new Date(startDate).toLocaleDateString()}`}
-              {type === "monthly" && `Monthly Summary - ${getMonthName(month)}`}
+                `${t("weeklySummary")} - ${t("starting")} ${new Date(startDate).toLocaleDateString()}`}
+              {type === "monthly" &&
+                `${t("monthlySummary")} - ${getMonthName(month)}`}
             </h2>
             <button
               onClick={handlePrint}
               className="flex items-center gap-2 rounded-lg border border-graphite-300 px-3 py-1.5 text-sm font-medium text-graphite-700 hover:bg-graphite-100"
             >
               <Printer className="h-4 w-4" />
-              Print
+              {t("print")}
             </button>
           </div>
 
           <div className="mb-4 space-y-2 rounded-lg bg-graphite-50 p-4">
             <div className="flex justify-between text-sm text-graphite-700">
-              <span>Subtotal</span>
+              <span>{t("subtotal")}</span>
               <span className="font-semibold">{data.subtotal.toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-sm text-graphite-700">
-              <span>VAT Deduction</span>
+              <span>{t("vatDeduction")}</span>
               <span className="font-semibold text-red-600">
                 -{data.vatAmount.toFixed(2)}
               </span>
             </div>
             <div className="flex justify-between text-sm font-medium text-graphite-900 border-t border-graphite-200 pt-2">
-              <span>Total After Tax</span>
+              <span>{t("totalAfterTax")}</span>
               <span className="font-semibold">{data.total.toFixed(2)}</span>
             </div>
           </div>
@@ -197,7 +197,7 @@ export default function InvoiceSummary() {
           {type === "monthly" && data.weeks && (
             <div className="mt-6">
               <h3 className="text-sm font-semibold text-graphite-900 mb-3">
-                Weekly Breakdown
+                {t("weeklyBreakdown")}
               </h3>
               {data.weeks.map((week, index) => (
                 <div
@@ -211,7 +211,7 @@ export default function InvoiceSummary() {
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4 text-graphite-500" />
                       <span className="text-sm font-medium text-graphite-900">
-                        Week {week.weekNumber}:{" "}
+                        {t("week")} {week.weekNumber}:{" "}
                         {new Date(week.startDate).toLocaleDateString()} -{" "}
                         {new Date(week.endDate).toLocaleDateString()}
                       </span>
@@ -232,19 +232,19 @@ export default function InvoiceSummary() {
                     <div className="p-4 bg-white">
                       <div className="mb-3 space-y-2 rounded-lg bg-graphite-50 p-3">
                         <div className="flex justify-between text-xs text-graphite-700">
-                          <span>Subtotal</span>
+                          <span>{t("subtotal")}</span>
                           <span className="font-semibold">
                             {week.subtotal.toFixed(2)}
                           </span>
                         </div>
                         <div className="flex justify-between text-xs text-graphite-700">
-                          <span>VAT Deduction</span>
+                          <span>{t("vatDeduction")}</span>
                           <span className="font-semibold text-red-600">
                             -{week.vatAmount.toFixed(2)}
                           </span>
                         </div>
                         <div className="flex justify-between text-xs font-medium text-graphite-900 border-t border-graphite-200 pt-2">
-                          <span>Total After Tax</span>
+                          <span>{t("totalAfterTax")}</span>
                           <span className="font-semibold">
                             {week.total.toFixed(2)}
                           </span>
@@ -263,7 +263,7 @@ export default function InvoiceSummary() {
                                   {invoice.invoiceNumber}
                                 </p>
                                 <p className="text-xs text-graphite-500">
-                                  {invoice.customerName || "No customer"}
+                                  {invoice.customerName || t("noCustomer")}
                                 </p>
                                 <p className="text-xs text-graphite-500">
                                   {new Date(
@@ -278,7 +278,7 @@ export default function InvoiceSummary() {
                                 </p>
                                 {invoice.vatAmount !== undefined && (
                                   <p className="text-xs text-red-600">
-                                    VAT: -{invoice.vatAmount.toFixed(2)}
+                                    {t("vat")}: -{invoice.vatAmount.toFixed(2)}
                                   </p>
                                 )}
                               </div>
@@ -306,11 +306,11 @@ export default function InvoiceSummary() {
 
           <div className="mt-6">
             <h3 className="text-sm font-semibold text-graphite-900 mb-3">
-              All Invoices
+              {t("allInvoices")}
             </h3>
             {data.invoices.length === 0 ? (
               <p className="text-sm text-graphite-500">
-                No invoices found for this period
+                {t("noInvoicesForPeriod")}
               </p>
             ) : (
               <div className="space-y-2">
@@ -325,7 +325,7 @@ export default function InvoiceSummary() {
                           {invoice.invoiceNumber}
                         </p>
                         <p className="text-xs text-graphite-500">
-                          {invoice.customerName || "No customer"}
+                          {invoice.customerName || t("noCustomer")}
                         </p>
                         <p className="text-xs text-graphite-500">
                           {new Date(
@@ -340,7 +340,7 @@ export default function InvoiceSummary() {
                         </p>
                         {invoice.vatAmount !== undefined && (
                           <p className="text-xs text-red-600">
-                            VAT: -{invoice.vatAmount.toFixed(2)}
+                            {t("vat")}: -{invoice.vatAmount.toFixed(2)}
                           </p>
                         )}
                       </div>
