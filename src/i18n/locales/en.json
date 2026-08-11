@@ -46,6 +46,7 @@
   "choose": "Choose",
   "stock": "Stock",
   "stockPlaceholder": "Enter stock quantity",
+  "partAddedSuccess": "Part added successfully.",
 
   "floorMapsDescription": "Dark squares are occupied, light squares are empty.",
   "addFloor": "Add Floor",
@@ -122,6 +123,11 @@
   "confirmDeleteUser": "Delete this user?",
 
   "deleteItem": "Delete item",
+  "editItem": "Edit item",
+  "saveChanges": "Save changes",
+  "cancelEdit": "Cancel edit",
+  "itemUpdatedSuccess": "Item updated successfully.",
+  "itemUpdatedError": "Failed to update item. Please try again.",
   "deleting": "Deleting...",
   "confirmDeleteItem": "Delete this item and all its parts? This can't be undone.",
   "setLocation": "Set location",

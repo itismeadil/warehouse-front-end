@@ -1,8 +1,17 @@
 import { useState, useEffect } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
-import { getItems, updatePart, deleteItem } from "../api/items";
+import {
+  ArrowLeft,
+  ChevronDown,
+  ChevronUp,
+  Trash2,
+  Edit2,
+  Save,
+  X,
+} from "lucide-react";
+import { getItems, updatePart, updateItem, deleteItem } from "../api/items";
+import { getUsers } from "../api/users";
 import { useAuth } from "../context/AuthContext";
 import { partLabel } from "../lib/Partlabel";
 import PartDetail from "./PartDetail";
@@ -24,6 +33,16 @@ export default function ItemDetail() {
   const [expandedPartId, setExpandedPartId] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState({
+    serialNumber: "",
+    name: "",
+    color: "",
+    supplierId: "",
+    stock: "",
+  });
+  const [saving, setSaving] = useState(false);
+  const [suppliers, setSuppliers] = useState([]);
 
   const fetchItem = () => {
     setLoading(true);
@@ -40,6 +59,26 @@ export default function ItemDetail() {
     fetchItem();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  useEffect(() => {
+    // Load suppliers for the edit form
+    getUsers()
+      .then((users) => setSuppliers(users.filter((u) => u.role === "supplier")))
+      .catch((err) => console.error("Failed to load suppliers:", err));
+  }, []);
+
+  useEffect(() => {
+    // Sync edit form with current item data
+    if (item) {
+      setEditForm({
+        serialNumber: item.serialNumber || "",
+        name: item.name || "",
+        color: item.color || "",
+        supplierId: item.supplierId?._id || "",
+        stock: item.stock || "",
+      });
+    }
+  }, [item]);
 
   const updatePartField = async (partId, field, change) => {
     try {
@@ -74,6 +113,50 @@ export default function ItemDetail() {
     }
   };
 
+  const handleEditStart = () => {
+    setIsEditing(true);
+    setEditForm({
+      serialNumber: item.serialNumber || "",
+      name: item.name || "",
+      color: item.color || "",
+      supplierId: item.supplierId?._id || "",
+      stock: item.stock || "",
+    });
+  };
+
+  const handleEditCancel = () => {
+    setIsEditing(false);
+  };
+
+  const handleEditSave = async () => {
+    if (!editForm.serialNumber || !editForm.name || !editForm.color) {
+      alert(t("requiredFieldsError"));
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const updated = await updateItem(id, {
+        serialNumber: editForm.serialNumber,
+        name: editForm.name,
+        color: editForm.color,
+        supplierId: editForm.supplierId || null,
+        stock: parseInt(editForm.stock) || 0,
+      });
+      setItem(updated);
+      setIsEditing(false);
+      alert(t("itemUpdatedSuccess"));
+    } catch (error) {
+      alert(
+        t("itemUpdatedError") +
+          ": " +
+          (error.response?.data?.message || error.message),
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="mx-auto max-w-2xl py-12 text-center">
@@ -101,31 +184,125 @@ export default function ItemDetail() {
       </button>
 
       {/* Item summary card */}
-      <div className="relative rounded-lg border border-graphite-200 bg-white p-4 shadow-sm">
-        {canEdit && (
-          <button
-            onClick={() => setShowDeleteConfirm(true)}
-            className="absolute end-3 top-1/2 -translate-y-1/2 inline-flex items-center gap-1.5 rounded-lg border border-red-200 px-3 py-1.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
-          >
-            <Trash2 className="h-4 w-4" />
-            <span className="hidden sm:inline">{t("deleteItem")}</span>
-          </button>
-        )}
-
-        <div className="flex items-center gap-3 pe-8">
-          <span
-            className="h-9 w-9 shrink-0 rounded-lg border border-graphite-300"
-            style={{ backgroundColor: item.color }}
-            title={item.color}
-          />
-          <div className="min-w-0">
-            <h1 className="truncate text-base font-semibold text-graphite-900">
-              {item.name}
-            </h1>
-            <p className="mt-0.5 font-mono text-xs text-graphite-500">
-              {item.serialNumber}
-            </p>
+      <div className="rounded-lg border border-graphite-200 bg-white p-4 shadow-sm">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-center gap-3 flex-1">
+            <span
+              className="h-9 w-9 shrink-0 rounded-lg border border-graphite-300"
+              style={{ backgroundColor: item.color }}
+              title={item.color}
+            />
+            <div className="min-w-0 flex-1">
+              {isEditing ? (
+                <div className="space-y-2">
+                  <input
+                    type="text"
+                    value={editForm.name}
+                    onChange={(e) =>
+                      setEditForm({ ...editForm, name: e.target.value })
+                    }
+                    className="block w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm text-graphite-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                    placeholder={t("itemNamePlaceholder")}
+                  />
+                  <input
+                    type="text"
+                    value={editForm.serialNumber}
+                    onChange={(e) =>
+                      setEditForm({ ...editForm, serialNumber: e.target.value })
+                    }
+                    className="block w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm font-mono text-graphite-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                    placeholder={t("serialNumberPlaceholder")}
+                  />
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={editForm.color}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, color: e.target.value })
+                      }
+                      className="flex-1 rounded-lg border border-graphite-300 px-3 py-2 text-sm text-graphite-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                      placeholder={t("colorPlaceholder")}
+                    />
+                    <input
+                      type="number"
+                      value={editForm.stock}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, stock: e.target.value })
+                      }
+                      className="w-24 rounded-lg border border-graphite-300 px-3 py-2 text-sm text-graphite-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                      placeholder={t("stock")}
+                      min="0"
+                    />
+                  </div>
+                  <select
+                    value={editForm.supplierId}
+                    onChange={(e) =>
+                      setEditForm({ ...editForm, supplierId: e.target.value })
+                    }
+                    className="block w-full rounded-lg border border-graphite-300 bg-white px-3 py-2 text-sm text-graphite-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                  >
+                    <option value="">{t("noSupplier")}</option>
+                    {suppliers.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <>
+                  <h1 className="truncate text-base font-semibold text-graphite-900">
+                    {item.name}
+                  </h1>
+                  <p className="mt-0.5 font-mono text-xs text-graphite-500">
+                    {item.serialNumber}
+                  </p>
+                </>
+              )}
+            </div>
           </div>
+
+          {canEdit && (
+            <div className="flex items-center gap-2 shrink-0">
+              {isEditing ? (
+                <>
+                  <button
+                    onClick={handleEditSave}
+                    disabled={saving}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-primary-200 px-3 py-1.5 text-sm font-medium text-primary-600 transition-colors hover:bg-primary-50 disabled:opacity-50"
+                  >
+                    <Save className="h-4 w-4" />
+                    <span className="hidden sm:inline">{t("saveChanges")}</span>
+                  </button>
+                  <button
+                    onClick={handleEditCancel}
+                    disabled={saving}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-graphite-200 px-3 py-1.5 text-sm font-medium text-graphite-600 transition-colors hover:bg-graphite-50 disabled:opacity-50"
+                  >
+                    <X className="h-4 w-4" />
+                    <span className="hidden sm:inline">{t("cancelEdit")}</span>
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={handleEditStart}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-primary-200 px-3 py-1.5 text-sm font-medium text-primary-600 transition-colors hover:bg-primary-50"
+                  >
+                    <Edit2 className="h-4 w-4" />
+                    <span className="hidden sm:inline">{t("editItem")}</span>
+                  </button>
+                  <button
+                    onClick={() => setShowDeleteConfirm(true)}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 px-3 py-1.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    <span className="hidden sm:inline">{t("deleteItem")}</span>
+                  </button>
+                </>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

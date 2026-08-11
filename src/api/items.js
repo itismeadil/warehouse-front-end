@@ -5,6 +5,9 @@ export const getItems = () => api.get("/items").then((res) => res.data);
 export const createItem = (payload) =>
   api.post("/items", payload).then((res) => res.data);
 
+export const updateItem = (itemId, payload) =>
+  api.patch(`/items/${itemId}`, payload).then((res) => res.data);
+
 export const addPart = (itemId, payload) =>
   api.post(`/items/${itemId}/parts`, payload).then((res) => res.data);
 

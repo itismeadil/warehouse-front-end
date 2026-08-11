@@ -102,6 +102,7 @@
   "areaCols": "أعمدة",
   "floorMapAriaLabel": "خريطة {{floor}}",
   "removePart": "إزالة الجزء",
+  "partAddedSuccess": "تم إضافة الجزء بنجاح.",
 
   "supplier": "المورّد",
   "optional": "اختياري",
@@ -126,6 +127,11 @@
   "confirmDeleteUser": "هل تريد حذف هذا المستخدم؟",
 
   "deleteItem": "حذف العنصر",
+  "editItem": "تعديل العنصر",
+  "saveChanges": "حفظ التغييرات",
+  "cancelEdit": "إلغاء التعديل",
+  "itemUpdatedSuccess": "تم تحديث العنصر بنجاح.",
+  "itemUpdatedError": "فشل تحديث العنصر. يرجى المحاولة مرة أخرى.",
   "deleting": "جارٍ الحذف...",
   "confirmDeleteItem": "حذف هذا العنصر وجميع أجزائه؟ لا يمكن التراجع عن هذا الإجراء.",
   "setLocation": "تحديد الموقع",

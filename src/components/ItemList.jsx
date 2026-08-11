@@ -85,7 +85,7 @@ const ItemList = ({ items, loading, searchTerm = "", onChanged }) => {
           {t("serialNumber")}
         </span>
         <span className="text-right text-xs font-medium uppercase tracking-wide text-graphite-400">
-          Stock
+          {t("stock")}
         </span>
         <span />
       </div>
