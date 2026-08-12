@@ -10,12 +10,20 @@ import {
   Save,
   X,
 } from "lucide-react";
-import { getItems, updatePart, updateItem, deleteItem } from "../api/items";
+import {
+  getItems,
+  updatePart,
+  updateItem,
+  deleteItem,
+  addPart,
+} from "../api/items";
 import { getUsers } from "../api/users";
+import { getFloors } from "../api/floors";
 import { useAuth } from "../context/AuthContext";
 import { partLabel } from "../lib/Partlabel";
 import PartDetail from "./PartDetail";
 import ConfirmDialog from "./ConfirmDialog";
+import AddItemPartForm from "./AddItemPartForm";
 
 export default function ItemDetail() {
   const { id } = useParams();
@@ -43,6 +51,10 @@ export default function ItemDetail() {
   });
   const [saving, setSaving] = useState(false);
   const [suppliers, setSuppliers] = useState([]);
+  const [floors, setFloors] = useState([]);
+  const [showAddPart, setShowAddPart] = useState(false);
+  const [draftPart, setDraftPart] = useState(null);
+  const [addingPart, setAddingPart] = useState(false);
 
   const fetchItem = () => {
     setLoading(true);
@@ -65,6 +77,11 @@ export default function ItemDetail() {
     getUsers()
       .then((users) => setSuppliers(users.filter((u) => u.role === "supplier")))
       .catch((err) => console.error("Failed to load suppliers:", err));
+
+    // Load floors for part addition
+    getFloors()
+      .then(setFloors)
+      .catch((err) => console.error("Failed to load floors:", err));
   }, []);
 
   useEffect(() => {
@@ -155,6 +172,50 @@ export default function ItemDetail() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleAddPartClick = () => {
+    setDraftPart({
+      id: Date.now(),
+      floorId: null,
+      floorName: null,
+      area: null,
+    });
+    setShowAddPart(true);
+  };
+
+  const handleAddPartSave = async () => {
+    if (!draftPart.floorId || !draftPart.area) {
+      alert(t("requiredFieldsError"));
+      return;
+    }
+
+    setAddingPart(true);
+    try {
+      const newPart = await addPart(id, {
+        floorId: draftPart.floorId,
+        area: draftPart.area,
+      });
+      setItem((prev) => ({
+        ...prev,
+        parts: [...prev.parts, newPart],
+      }));
+      setShowAddPart(false);
+      setDraftPart(null);
+      alert(t("partAddedSuccess"));
+    } catch (error) {
+      alert(
+        "Failed to add part: " +
+          (error.response?.data?.message || error.message),
+      );
+    } finally {
+      setAddingPart(false);
+    }
+  };
+
+  const handleAddPartCancel = () => {
+    setShowAddPart(false);
+    setDraftPart(null);
   };
 
   if (loading) {
@@ -335,11 +396,53 @@ export default function ItemDetail() {
 
       {/* Parts: each is a card; clicking expands Location/Stats tabs inline */}
       <div className="mt-6">
-        <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-graphite-500">
-          {t("parts")}
-        </h3>
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-graphite-500">
+            {t("parts")}
+          </h3>
+          {canEdit && (
+            <button
+              onClick={handleAddPartClick}
+              className="text-xs font-medium text-primary-600 hover:text-primary-700 transition-colors"
+            >
+              {t("addPart")}
+            </button>
+          )}
+        </div>
 
         <div className="space-y-3">
+          {showAddPart && draftPart && (
+            <div className="rounded-xl border-2 border-dashed border-primary-300 bg-primary-50/50 p-4">
+              <AddItemPartForm
+                part={draftPart}
+                index={item.parts?.length || 0}
+                totalParts={(item.parts?.length || 0) + 1}
+                floors={floors}
+                onChange={() => {}}
+                onLocationChange={(id, location) => {
+                  setDraftPart((prev) => ({ ...prev, ...location }));
+                }}
+                onRemove={handleAddPartCancel}
+              />
+              <div className="mt-3 flex gap-2">
+                <button
+                  onClick={handleAddPartSave}
+                  disabled={addingPart}
+                  className="flex-1 rounded-lg bg-primary-600 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700 disabled:opacity-50"
+                >
+                  {addingPart ? t("saving") : t("savePart")}
+                </button>
+                <button
+                  onClick={handleAddPartCancel}
+                  disabled={addingPart}
+                  className="rounded-lg border border-graphite-300 bg-white px-4 py-2 text-sm font-medium text-graphite-700 transition-colors hover:bg-graphite-50 disabled:opacity-50"
+                >
+                  {t("cancel")}
+                </button>
+              </div>
+            </div>
+          )}
+
           {item.parts?.map((part) => {
             const isExpanded = expandedPartId === part._id;
             return (
