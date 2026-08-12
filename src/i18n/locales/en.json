@@ -40,6 +40,7 @@
   "location": "Location",
   "floor": "Floor",
   "square": "square",
+  "refresh": "Refresh",
   "squares": "squares",
   "noLocationSet": "No location set",
   "change": "Change",

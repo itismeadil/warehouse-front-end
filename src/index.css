@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=El+Messiri:wght@400;500;600;700&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap");
 @import "tailwindcss";
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
@@ -43,4 +43,8 @@ body {
 
 html {
   scrollbar-gutter: stable;
+}
+
+html[lang="ar"] .font-display {
+  font-family: "El Messiri", sans-serif;
 }

@@ -101,7 +101,7 @@ export default function Home() {
             className="flex items-center gap-2 rounded-lg border border-graphite-300 bg-white px-3 py-2 text-sm text-graphite-700 hover:bg-graphite-50 transition-colors"
           >
             <RefreshCw className="h-4 w-4" />
-            Refresh
+            {t("refresh")}
           </button>
         </div>
       </div>
