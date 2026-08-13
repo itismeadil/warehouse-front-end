@@ -1,13 +1,14 @@
 import { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, RefreshCw } from "lucide-react";
 import { getItems } from "../../api/items";
 import { getSalesInvoices, createSalesInvoice } from "../../api/accountant";
 import DatePicker, { toLocalDateString } from "../DatePicker";
 
 const Spinner = () => (
   <div
-    className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent text-primary-500"
+    className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent"
+    style={{ color: "#45a1a1" }}
     aria-hidden
   />
 );
@@ -21,9 +22,11 @@ export default function SalesInvoicesTab() {
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [customerName, setCustomerName] = useState("");
   const [lines, setLines] = useState([emptyLine()]);
+  const [vatRate, setVatRate] = useState(15); // KSA standard VAT rate is 15%
 
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
+  const [refreshingItems, setRefreshingItems] = useState(false);
 
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -72,6 +75,9 @@ export default function SalesInvoicesTab() {
     0,
   );
 
+  const vatAmount = total * (vatRate / 100);
+  const totalAfterTax = total - vatAmount;
+
   // Distinct calendar days that have at least one sales invoice, for highlighting
   const salesDates = useMemo(() => {
     const dates = invoices
@@ -105,6 +111,7 @@ export default function SalesInvoicesTab() {
     setInvoiceNumber("");
     setCustomerName("");
     setLines([emptyLine()]);
+    setVatRate(15);
   };
 
   const handleSubmit = async (e) => {
@@ -123,6 +130,10 @@ export default function SalesInvoicesTab() {
       await createSalesInvoice({
         invoiceNumber: invoiceNumber.trim() || undefined,
         customerName: customerName.trim() || undefined,
+        vatRate: vatRate,
+        subtotal: total,
+        vatAmount: vatAmount,
+        totalAmount: totalAfterTax,
         lines: validLines.map((l) => ({
           itemId: l.itemId,
           itemName: items.find((i) => i._id === l.itemId)?.name,
@@ -169,10 +180,11 @@ export default function SalesInvoicesTab() {
         onSubmit={handleSubmit}
         className="rounded-xl border border-graphite-200 bg-white p-6 shadow-sm"
       >
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div>
             <label className="block text-sm font-medium text-graphite-700">
-              {t("invoiceNumber")}
+              {t("invoiceNumber")}{" "}
+              <span className="text-graphite-400">({t("optional")})</span>
             </label>
             <input
               type="text"
@@ -182,9 +194,11 @@ export default function SalesInvoicesTab() {
               className="mt-1.5 block w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
             />
           </div>
+
           <div>
             <label className="block text-sm font-medium text-graphite-700">
-              {t("customerName")}
+              {t("customerName")}{" "}
+              <span className="text-graphite-400">({t("optional")})</span>
             </label>
             <input
               type="text"
@@ -193,12 +207,51 @@ export default function SalesInvoicesTab() {
               className="mt-1.5 block w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
             />
           </div>
+
+          <div>
+            <label className="block text-sm font-medium text-graphite-700">
+              {t("vatRate")} (%)
+            </label>
+            <input
+              type="number"
+              min="0"
+              max="100"
+              step="0.01"
+              value={vatRate}
+              onChange={(e) => setVatRate(Number(e.target.value))}
+              className="mt-1.5 block w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+            />
+          </div>
         </div>
 
         <div className="mt-4 space-y-2">
-          <label className="block text-sm font-medium text-graphite-700">
-            {t("lines")}
-          </label>
+          <div className="flex items-center justify-between">
+            <label className="block text-sm font-medium text-graphite-700">
+              {t("lines")}
+            </label>
+
+            <button
+              type="button"
+              onClick={() => {
+                setRefreshingItems(true);
+                getItems()
+                  .then((data) => {
+                    console.log("Manually refreshed items:", data);
+                    setItems(Array.isArray(data) ? data : []);
+                  })
+                  .catch((err) => console.error(err))
+                  .finally(() => setRefreshingItems(false));
+              }}
+              disabled={refreshingItems}
+              className="flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700 disabled:opacity-50"
+            >
+              <RefreshCw
+                className={`h-4 w-4 ${refreshingItems ? "animate-spin" : ""}`}
+              />
+              Refresh Stock
+            </button>
+          </div>
+
           {lines.map((line, index) => (
             <div key={index} className="flex flex-wrap items-center gap-2">
               <select
@@ -207,12 +260,23 @@ export default function SalesInvoicesTab() {
                 className="min-w-[10rem] flex-1 rounded-lg border border-graphite-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
               >
                 <option value="">{t("selectItem")}</option>
-                {items.map((item) => (
-                  <option key={item._id} value={item._id}>
-                    {item.name} — {item.serialNumber}
-                  </option>
-                ))}
+
+                {items.map((item) => {
+                  const isOutOfStock = (item.stock || 0) === 0;
+
+                  return (
+                    <option
+                      key={item._id}
+                      value={item._id}
+                      disabled={isOutOfStock}
+                    >
+                      {item.name} — {item.serialNumber} (Stock:{" "}
+                      {item.stock || 0}){isOutOfStock ? " - OUT OF STOCK" : ""}
+                    </option>
+                  );
+                })}
               </select>
+
               <input
                 type="number"
                 min="1"
@@ -223,6 +287,13 @@ export default function SalesInvoicesTab() {
                 placeholder={t("quantity")}
                 className="w-24 rounded-lg border border-graphite-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
               />
+
+              {line.itemId && (
+                <span className="text-xs text-graphite-500">
+                  Max: {items.find((i) => i._id === line.itemId)?.stock || 0}
+                </span>
+              )}
+
               <input
                 type="number"
                 min="0"
@@ -234,6 +305,7 @@ export default function SalesInvoicesTab() {
                 placeholder={t("unitPrice")}
                 className="w-28 rounded-lg border border-graphite-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
               />
+
               {lines.length > 1 && (
                 <button
                   type="button"
@@ -245,6 +317,7 @@ export default function SalesInvoicesTab() {
               )}
             </div>
           ))}
+
           <button
             type="button"
             onClick={addLine}
@@ -255,10 +328,26 @@ export default function SalesInvoicesTab() {
           </button>
         </div>
 
-        <p className="mt-4 text-sm text-graphite-700">
-          {t("total")}:{" "}
-          <span className="font-semibold">{total.toFixed(2)}</span>
-        </p>
+        <div className="mt-4 space-y-2 rounded-lg bg-graphite-50 p-4">
+          <div className="flex justify-between text-sm text-graphite-700">
+            <span>{t("subtotal")}</span>
+            <span className="font-semibold">{total.toFixed(2)}</span>
+          </div>
+
+          <div className="flex justify-between text-sm text-graphite-700">
+            <span>
+              {t("vatDeduction")} ({vatRate}%)
+            </span>
+            <span className="font-semibold text-red-600">
+              -{vatAmount.toFixed(2)}
+            </span>
+          </div>
+
+          <div className="flex justify-between border-t border-graphite-200 pt-2 text-sm font-medium text-graphite-900">
+            <span>{t("totalAfterTax")}</span>
+            <span className="font-semibold">{totalAfterTax.toFixed(2)}</span>
+          </div>
+        </div>
 
         {formError && <p className="mt-2 text-sm text-red-600">{formError}</p>}
 
@@ -274,11 +363,11 @@ export default function SalesInvoicesTab() {
 
       <div className="mt-8">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-slate-100">
+          <h2 className="text-sm font-semibold text-graphite-900">
             {t("salesInvoiceHistory")}
           </h2>
           <div className="flex items-center gap-2">
-            <label className="text-sm text-slate-400">
+            <label className="text-sm text-graphite-600">
               {t("filterByDate")}
             </label>
             <DatePicker
@@ -292,7 +381,7 @@ export default function SalesInvoicesTab() {
               <button
                 type="button"
                 onClick={() => setSelectedDate("")}
-                className="rounded-lg px-2 py-1.5 text-xs font-medium text-primary-400 hover:bg-slate-700 hover:text-primary-300 transition-colors"
+                className="rounded-lg px-2 py-1.5 text-xs font-medium text-primary-600 hover:bg-primary-50 hover:text-primary-700 transition-colors"
               >
                 {t("clear")}
               </button>
@@ -303,33 +392,33 @@ export default function SalesInvoicesTab() {
           {loading ? (
             <div className="flex items-center gap-2">
               <Spinner />
-              <p className="text-sm text-slate-400">{t("loading")}</p>
+              <p className="text-sm text-graphite-500">{t("loading")}</p>
             </div>
           ) : listError ? (
-            <p className="text-sm text-red-400">{listError}</p>
+            <p className="text-sm text-red-600">{listError}</p>
           ) : filteredInvoices.length === 0 ? (
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-graphite-500">
               {selectedDate ? t("noInvoicesForDate") : t("noInvoicesYet")}
             </p>
           ) : (
-            <div className="divide-y divide-slate-700 rounded-xl border border-slate-700 bg-slate-800">
+            <div className="divide-y divide-graphite-200 rounded-xl border border-graphite-200 bg-white">
               {filteredInvoices.map((inv) => (
                 <div key={inv._id} className="px-4 py-3">
                   <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium text-slate-100">
+                    <p className="text-sm font-medium text-graphite-900">
                       {inv.invoiceNumber} ·{" "}
                       {inv.customerName || t("noCustomerName")}
                     </p>
-                    <p className="text-sm font-semibold text-slate-100">
+                    <p className="text-sm font-semibold text-graphite-900">
                       {inv.totalAmount || inv.total}
                     </p>
                   </div>
-                  <p className="mt-0.5 text-xs text-slate-400">
+                  <p className="mt-0.5 text-xs text-graphite-500">
                     {new Date(inv.date || inv.createdAt).toLocaleString()}
                   </p>
                   {(inv.vatAmount !== undefined ||
                     inv.vatRate !== undefined) && (
-                    <div className="mt-2 flex items-center gap-3 text-xs text-slate-400">
+                    <div className="mt-2 flex items-center gap-3 text-xs text-graphite-600">
                       {inv.vatRate !== undefined && (
                         <span>
                           {t("vat")}: {inv.vatRate}%
@@ -341,7 +430,7 @@ export default function SalesInvoicesTab() {
                         </span>
                       )}
                       {inv.vatAmount !== undefined && (
-                        <span className="text-red-400">
+                        <span className="text-red-600">
                           {t("vatDeduction")}: -{inv.vatAmount.toFixed(2)}
                         </span>
                       )}
@@ -354,7 +443,7 @@ export default function SalesInvoicesTab() {
                   )}
                   <ul className="mt-1.5 space-y-0.5">
                     {inv.lines.map((line, i) => (
-                      <li key={i} className="text-xs text-slate-400">
+                      <li key={i} className="text-xs text-graphite-600">
                         {line.itemName} · {line.quantity} × {line.unitPrice} ={" "}
                         {line.lineTotal}
                       </li>
