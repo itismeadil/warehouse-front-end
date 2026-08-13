@@ -185,7 +185,7 @@ export default function ItemDetail() {
   };
 
   const handleAddPartSave = async () => {
-    if (!draftPart.floorId || !draftPart.area) {
+    if (!draftPart.floorId || (!draftPart.areas && !draftPart.area)) {
       alert(t("requiredFieldsError"));
       return;
     }
@@ -194,7 +194,7 @@ export default function ItemDetail() {
     try {
       const newPart = await addPart(id, {
         floorId: draftPart.floorId,
-        area: draftPart.area,
+        areas: draftPart.areas || (draftPart.area ? [draftPart.area] : []),
       });
       setItem((prev) => ({
         ...prev,

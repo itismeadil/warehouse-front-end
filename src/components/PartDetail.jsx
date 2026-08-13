@@ -3,7 +3,13 @@ import { useTranslation } from "react-i18next";
 import { ArrowLeft, Plus, Minus, ImagePlus, X } from "lucide-react";
 import { getFloorOccupancy, getFloors } from "../api/floors";
 import { updatePart, uploadPartPhotos, deletePartPhoto } from "../api/items";
-import { areaSize, decodeShape, expandArea } from "../lib/floorShape";
+import {
+  areaSize,
+  areasSize,
+  decodeShape,
+  expandArea,
+  expandAreas,
+} from "../lib/floorShape";
 import { partLabel } from "../lib/Partlabel";
 import { useAuth } from "../context/AuthContext";
 import FloorGrid from "./FloorGrid";
@@ -78,7 +84,14 @@ export default function PartDetail({
   const fileInputRef = useRef(null);
 
   const photos = (part.photos || []).map((p) => ({ id: p._id, url: p.url }));
-  const hasLocation = Boolean(part.floorId && part.area);
+  const hasLocation = Boolean(
+    part.floorId && (part.area || (part.areas && part.areas.length > 0)),
+  );
+  const totalSize = part.areas
+    ? areasSize(part.areas)
+    : part.area
+      ? areaSize(part.area)
+      : 0;
   const maxPhotos = part.damaged || 0;
   const remainingSlots = Math.max(0, maxPhotos - photos.length);
 
@@ -164,12 +177,12 @@ export default function PartDetail({
       .catch((err) => console.error("Failed to load floors:", err));
   }, [canEdit]);
 
-  const handleLocationConfirm = async ({ floorId, area }) => {
+  const handleLocationConfirm = async ({ floorId, areas, area }) => {
     setSavingLocation(true);
     try {
       const updated = await updatePart(item._id, part._id, {
         floorId,
-        area,
+        areas: areas || (area ? [area] : []),
       });
       onPartUpdated?.(updated);
       setShowPicker(false);
@@ -187,7 +200,7 @@ export default function PartDetail({
     try {
       const updated = await updatePart(item._id, part._id, {
         floorId: null,
-        area: null,
+        areas: [],
       });
       onPartUpdated?.(updated);
     } catch (error) {
@@ -271,8 +284,10 @@ export default function PartDetail({
 
             {hasLocation && (
               <span className="text-xs font-medium text-graphite-500">
-                {areaSize(part.area)}{" "}
-                {areaSize(part.area) === 1 ? t("square") : t("squares")}
+                {totalSize} {totalSize === 1 ? t("square") : t("squares")}
+                {part.areas &&
+                  part.areas.length > 1 &&
+                  ` (${part.areas.length} locations)`}
               </span>
             )}
           </div>
@@ -302,7 +317,9 @@ export default function PartDetail({
                     partFloorMap.floor.shape,
                   )}
                   occupied={partFloorMap.occupied}
-                  selectedCells={expandArea(part.area)}
+                  selectedCells={
+                    part.areas ? expandAreas(part.areas) : expandArea(part.area)
+                  }
                 />
               </div>
             )}
@@ -482,7 +499,7 @@ export default function PartDetail({
         <FloorPickerModal
           floors={floors}
           initialFloorId={part.floorId?._id}
-          initialArea={hasLocation ? part.area : null}
+          initialArea={hasLocation ? part.areas || part.area : null}
           onClose={() => setShowPicker(false)}
           onConfirm={handleLocationConfirm}
         />

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { X } from "lucide-react";
-import { areaSize } from "../lib/floorShape";
+import { areaSize, areasSize, expandAreas } from "../lib/floorShape";
 import FloorPickerModal from "./FloorPickerModal";
 
 export default function AddItemPartForm({
@@ -16,7 +16,14 @@ export default function AddItemPartForm({
   const { t } = useTranslation();
   const [showPicker, setShowPicker] = useState(false);
 
-  const hasLocation = Boolean(part.floorId && part.area);
+  const hasLocation = Boolean(
+    part.floorId && (part.area || (part.areas && part.areas.length > 0)),
+  );
+  const totalSize = part.areas
+    ? areasSize(part.areas)
+    : part.area
+      ? areaSize(part.area)
+      : 0;
 
   return (
     <div className="relative rounded-lg border border-graphite-200 bg-graphite-50 p-4">
@@ -46,8 +53,11 @@ export default function AddItemPartForm({
           <div className="flex-1 rounded-lg border border-graphite-300 bg-white px-3 py-2 text-sm text-graphite-900">
             {hasLocation ? (
               <>
-                {part.floorName ?? t("floor")} · {areaSize(part.area)}{" "}
-                {areaSize(part.area) === 1 ? t("square") : t("squares")}
+                {part.floorName ?? t("floor")} · {totalSize}{" "}
+                {totalSize === 1 ? t("square") : t("squares")}
+                {part.areas &&
+                  part.areas.length > 1 &&
+                  ` (${part.areas.length} locations)`}
               </>
             ) : (
               <span className="text-graphite-400">{t("noLocationSet")}</span>
@@ -68,10 +78,14 @@ export default function AddItemPartForm({
         <FloorPickerModal
           floors={floors}
           initialFloorId={part.floorId}
-          initialArea={hasLocation ? part.area : null}
+          initialArea={hasLocation ? part.areas || part.area : null}
           onClose={() => setShowPicker(false)}
-          onConfirm={({ floorId, floorName, area }) => {
-            onLocationChange(part.id, { floorId, floorName, area });
+          onConfirm={({ floorId, floorName, areas, area }) => {
+            onLocationChange(part.id, {
+              floorId,
+              floorName,
+              areas: areas || (area ? [area] : []),
+            });
             setShowPicker(false);
           }}
         />

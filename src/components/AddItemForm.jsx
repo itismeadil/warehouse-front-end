@@ -59,7 +59,7 @@ export default function AddItemForm() {
 
   const buildPartPayload = (part) => ({
     floorId: part.floorId || null,
-    area: part.area || null,
+    areas: part.areas || (part.area ? [part.area] : []),
   });
 
   // Phase 1: create the item with Part 1
@@ -69,7 +69,7 @@ export default function AddItemForm() {
       toast.error(t("requiredFieldsError"));
       return;
     }
-    if (!draftPart.floorId || !draftPart.area) {
+    if (!draftPart.floorId || (!draftPart.areas && !draftPart.area)) {
       toast.error(t("completeCurrentPartError"));
       return;
     }
@@ -101,7 +101,7 @@ export default function AddItemForm() {
 
   // Phase 2: save an additional part to the existing item
   const handleSavePart = async () => {
-    if (!draftPart.floorId || !draftPart.area) {
+    if (!draftPart.floorId || (!draftPart.areas && !draftPart.area)) {
       toast.error(t("completeCurrentPartError"));
       return;
     }
@@ -274,7 +274,8 @@ export default function AddItemForm() {
               {savedParts.length > 0 && (
                 <span className="ml-auto flex items-center gap-1.5 rounded-full bg-primary-50 px-3 py-1 text-xs font-medium text-primary-700">
                   <Check className="h-3.5 w-3.5" />
-                  {savedParts.length} {savedParts.length === 1 ? t("part") : t("parts")}
+                  {savedParts.length}{" "}
+                  {savedParts.length === 1 ? t("part") : t("parts")}
                 </span>
               )}
             </div>
@@ -291,9 +292,7 @@ export default function AddItemForm() {
                       {index + 1}
                     </div>
                     <div className="flex-1">
-                      <span className="font-medium">
-                        PCS/CTN {index + 1}
-                      </span>
+                      <span className="font-medium">PCS/CTN {index + 1}</span>
                       <span className="mx-2 text-primary-400">•</span>
                       <span className="text-primary-700">
                         {part.floorId?.name ?? t("floor")}

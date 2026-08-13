@@ -4,7 +4,9 @@
 
 export function encodeShape(rows, cols, cells) {
   const activeSet =
-    cells instanceof Set ? cells : new Set(cells.map((c) => `${c.row}-${c.col}`));
+    cells instanceof Set
+      ? cells
+      : new Set(cells.map((c) => `${c.row}-${c.col}`));
 
   const bytes = new Uint8Array(Math.ceil((rows * cols) / 8));
 
@@ -12,7 +14,7 @@ export function encodeShape(rows, cols, cells) {
     for (let c = 0; c < cols; c++) {
       if (activeSet.has(`${r}-${c}`)) {
         const bitIndex = r * cols + c;
-        bytes[bitIndex >> 3] |= 1 << bitIndex % 8;
+        bytes[bitIndex >> 3] |= 1 << (bitIndex % 8);
       }
     }
   }
@@ -33,7 +35,7 @@ export function decodeShape(rows, cols, base64) {
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
       const bitIndex = r * cols + c;
-      if (bytes[bitIndex >> 3] & (1 << bitIndex % 8)) {
+      if (bytes[bitIndex >> 3] & (1 << (bitIndex % 8))) {
         cells.push({ row: r, col: c });
       }
     }
@@ -55,9 +57,23 @@ export function expandArea(area) {
   return cells;
 }
 
+// Expand multiple areas into individual cells
+export function expandAreas(areas) {
+  if (!areas || areas.length === 0) return [];
+  const cells = [];
+  areas.forEach((area) => {
+    cells.push(...expandArea(area));
+  });
+  return cells;
+}
+
 export function areaSize(area) {
   if (!area) return 0;
-  return (
-    (area.rowEnd - area.rowStart + 1) * (area.colEnd - area.colStart + 1)
-  );
+  return (area.rowEnd - area.rowStart + 1) * (area.colEnd - area.colStart + 1);
+}
+
+// Calculate total size across multiple areas
+export function areasSize(areas) {
+  if (!areas || areas.length === 0) return 0;
+  return areas.reduce((total, area) => total + areaSize(area), 0);
 }

@@ -5,7 +5,7 @@ import { X } from "lucide-react";
 import { decodeShape, expandArea } from "../lib/floorShape";
 import FloorGrid from "./FloorGrid";
 
-const MIN_CELLS = 4;
+const MIN_CELLS = 1;
 
 const toastRootId = "floor-picker-toast-root";
 const showToast = (message, type = "info") => {
@@ -103,37 +103,12 @@ export default function FloorPickerModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [floorId]);
 
-  // Once 4+ points are selected, snap them to the bounding rectangle so the
-  // person gets a clean block instead of a scattered set of dots.
-  const fillRectangle = (points) => {
-    if (points.length < MIN_CELLS) return points;
-
-    const rows = points.map((p) => p.row);
-    const cols = points.map((p) => p.col);
-    const minRow = Math.min(...rows);
-    const maxRow = Math.max(...rows);
-    const minCol = Math.min(...cols);
-    const maxCol = Math.max(...cols);
-
-    const filled = [];
-    for (let r = minRow; r <= maxRow; r++) {
-      for (let c = minCol; c <= maxCol; c++) {
-        filled.push({ row: r, col: c });
-      }
-    }
-    return filled;
-  };
-
   const toggleCell = (row, col) => {
     setSelectedCells((prev) => {
       const isSelected = prev.some((c) => c.row === row && c.col === col);
       let next = isSelected
         ? prev.filter((c) => !(c.row === row && c.col === col))
         : [...prev, { row, col }];
-
-      if (next.length >= MIN_CELLS) {
-        next = fillRectangle(next);
-      }
 
       return next.sort((a, b) => a.row - b.row || a.col - b.col);
     });
@@ -146,27 +121,54 @@ export default function FloorPickerModal({
       showToast("Please select a location", "error");
       return;
     }
-    if (selectedCells.length < MIN_CELLS) {
-      showToast(
-        `Please select at least ${MIN_CELLS} squares to define a space`,
-        "error",
-      );
-      return;
-    }
 
-    // selectedCells is always a filled rectangle by this point, so its
-    // bounding box fully describes it — that's all that gets stored.
-    const area = {
-      rowStart: Math.min(...selectedCells.map((c) => c.row)),
-      rowEnd: Math.max(...selectedCells.map((c) => c.row)),
-      colStart: Math.min(...selectedCells.map((c) => c.col)),
-      colEnd: Math.max(...selectedCells.map((c) => c.col)),
-    };
+    // Group selected cells into contiguous rectangles
+    const areas = [];
+    const remaining = [...selectedCells];
+
+    while (remaining.length > 0) {
+      const start = remaining[0];
+      const sameRow = remaining.filter((c) => c.row === start.row);
+
+      if (sameRow.length > 1) {
+        // Horizontal line
+        const cols = sameRow.map((c) => c.col).sort((a, b) => a - b);
+        // Check if cols are contiguous
+        const isContiguous = cols.every(
+          (col, i) => i === 0 || col === cols[i - 1] + 1,
+        );
+
+        if (isContiguous) {
+          areas.push({
+            rowStart: start.row,
+            rowEnd: start.row,
+            colStart: cols[0],
+            colEnd: cols[cols.length - 1],
+          });
+          sameRow.forEach((c) => {
+            const idx = remaining.findIndex(
+              (r) => r.row === c.row && r.col === c.col,
+            );
+            if (idx !== -1) remaining.splice(idx, 1);
+          });
+          continue;
+        }
+      }
+
+      // Single cell or non-contiguous - treat as 1x1 rectangle
+      areas.push({
+        rowStart: start.row,
+        rowEnd: start.row,
+        colStart: start.col,
+        colEnd: start.col,
+      });
+      remaining.shift();
+    }
 
     onConfirm({
       floorId,
       floorName: selectedFloor?.name,
-      area,
+      areas,
     });
   };
 
@@ -270,11 +272,6 @@ export default function FloorPickerModal({
                 {selectedCells.length}{" "}
                 {selectedCells.length === 1 ? t("square") : t("squares")}{" "}
                 {t("selected")}
-                {selectedCells.length > 0 &&
-                  selectedCells.length < MIN_CELLS &&
-                  ` — ${t("pickMore", {
-                    count: MIN_CELLS - selectedCells.length,
-                  })}`}
               </p>
             </>
           )}
@@ -290,7 +287,7 @@ export default function FloorPickerModal({
 
           <button
             onClick={handleConfirm}
-            disabled={!floorId || selectedCells.length < MIN_CELLS}
+            disabled={!floorId || selectedCells.length === 0}
             className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {t("confirmLocation")}
