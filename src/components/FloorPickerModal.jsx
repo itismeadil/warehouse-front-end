@@ -64,6 +64,7 @@ export default function FloorPickerModal({
     initialArea ? expandArea(initialArea) : [],
   );
   const [loading, setLoading] = useState(!!initialFloorId);
+  const [selectionMode, setSelectionMode] = useState("dots"); // "dots" or "squares"
 
   const { t } = useTranslation();
 
@@ -232,21 +233,32 @@ export default function FloorPickerModal({
           ) : (
             <>
               <div className="mb-3 flex items-center justify-between">
-                <div className="flex items-center gap-4 text-xs text-slate-500">
-                  <span className="inline-flex items-center gap-1.5">
-                    <span className="h-3 w-3 rounded-full border border-slate-300 bg-slate-200" />
-                    {t("empty")}
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium text-slate-600">
+                    Selection Mode:
                   </span>
-
-                  <span className="inline-flex items-center gap-1.5">
-                    <span className="h-3 w-3 rounded-full border border-blue-700 bg-blue-600" />
-                    {t("occupied")}
-                  </span>
-
-                  <span className="inline-flex items-center gap-1.5">
-                    <span className="h-3 w-3 rounded-full border border-emerald-600 bg-emerald-500" />
-                    {t("selected")}
-                  </span>
+                  <div className="flex rounded-lg border border-slate-200 bg-slate-50 p-1">
+                    <button
+                      onClick={() => setSelectionMode("dots")}
+                      className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                        selectionMode === "dots"
+                          ? "bg-white text-slate-900 shadow-sm"
+                          : "text-slate-500 hover:text-slate-700"
+                      }`}
+                    >
+                      Click Dots
+                    </button>
+                    <button
+                      onClick={() => setSelectionMode("squares")}
+                      className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                        selectionMode === "squares"
+                          ? "bg-white text-slate-900 shadow-sm"
+                          : "text-slate-500 hover:text-slate-700"
+                      }`}
+                    >
+                      Drag Squares
+                    </button>
+                  </div>
                 </div>
 
                 <button
@@ -257,6 +269,23 @@ export default function FloorPickerModal({
                 </button>
               </div>
 
+              <div className="mb-3 flex items-center gap-4 text-xs text-slate-500">
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="h-3 w-3 rounded-full border border-slate-300 bg-slate-200" />
+                  {t("empty")}
+                </span>
+
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="h-3 w-3 rounded-full border border-blue-700 bg-blue-600" />
+                  {t("occupied")}
+                </span>
+
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="h-3 w-3 rounded-full border border-emerald-600 bg-emerald-500" />
+                  {t("selected")}
+                </span>
+              </div>
+
               <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
                 <FloorGrid
                   rows={occupancy.floor.rows}
@@ -265,6 +294,8 @@ export default function FloorPickerModal({
                   occupied={occupancy.occupied}
                   selectedCells={selectedCells}
                   onCellClick={toggleCell}
+                  selectionMode={selectionMode}
+                  onSelectionChange={setSelectedCells}
                 />
               </div>
 

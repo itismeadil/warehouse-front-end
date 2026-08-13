@@ -169,7 +169,10 @@
   "brandName": "القصور",
   "login": "تسجيل الدخول",
   "itemDetails": "تفاصيل العنصر",
-  "stockSyncedFromAccountant": "المخزون متزامن من المحاسب",
+  "stockSyncedFromAccountant": "المخزون متزامن من المسؤول",
+  "locationLegend": "دليل الموقع",
+  "itemLocation": "موقع العنصر",
+  "otherItems": "عناصر أخرى",
 
   "title": "المستودع",
   "loginSubtitle": "سجّل الدخول إلى حسابك.",

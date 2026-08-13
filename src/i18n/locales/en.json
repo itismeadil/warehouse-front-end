@@ -165,7 +165,10 @@
   "brandName": "Al Qusor",
   "login": "Login",
   "itemDetails": "Item Details",
-  "stockSyncedFromAccountant": "Stock synced from accountant",
+  "stockSyncedFromAccountant": "Stock synced from admin",
+  "locationLegend": "Location Legend",
+  "itemLocation": "Item location",
+  "otherItems": "Other items",
 
   "title": "Warehouse",
   "loginSubtitle": "Sign in to your account.",

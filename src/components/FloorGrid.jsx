@@ -30,9 +30,15 @@ export default function FloorGrid({
   occupied = [],
   selectedCells = [],
   onCellClick,
+  selectionMode = "dots",
+  onSelectionChange,
 }) {
   const canvasRef = useRef(null);
   const [hover, setHover] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState(null);
+  const [dragEnd, setDragEnd] = useState(null);
+  const [mouseDownPos, setMouseDownPos] = useState(null);
 
   // Bounding box of the actual painted shape — falls back to the full
   // rows/cols grid if there's no shape yet (e.g. still being drawn).
@@ -91,8 +97,39 @@ export default function FloorGrid({
       ctx.fillStyle = color;
       ctx.fill();
     });
+
+    // Draw drag selection rectangle in squares mode
+    if (selectionMode === "squares" && isDragging && dragStart && dragEnd) {
+      const startX = Math.min(dragStart.col, dragEnd.col);
+      const endX = Math.max(dragStart.col, dragEnd.col);
+      const startY = Math.min(dragStart.row, dragEnd.row);
+      const endY = Math.max(dragStart.row, dragEnd.row);
+
+      const rectX = (startX - minCol) * PITCH;
+      const rectY = (startY - minRow) * PITCH;
+      const rectWidth = (endX - startX + 1) * PITCH;
+      const rectHeight = (endY - startY + 1) * PITCH;
+
+      ctx.strokeStyle = SELECTED_COLOR;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(rectX, rectY, rectWidth, rectHeight);
+      ctx.fillStyle = "rgba(16, 185, 129, 0.2)";
+      ctx.fillRect(rectX, rectY, rectWidth, rectHeight);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rows, cols, shapeCells, occupied, selectedCells, minRow, minCol]);
+  }, [
+    rows,
+    cols,
+    shapeCells,
+    occupied,
+    selectedCells,
+    minRow,
+    minCol,
+    selectionMode,
+    isDragging,
+    dragStart,
+    dragEnd,
+  ]);
 
   const cellFromEvent = (e) => {
     const rect = canvasRef.current.getBoundingClientRect();
@@ -106,6 +143,13 @@ export default function FloorGrid({
 
   const handleClick = (e) => {
     if (!onCellClick) return;
+
+    // In squares mode, handle drag selection
+    if (selectionMode === "squares") {
+      return;
+    }
+
+    // In dots mode, use the original click behavior
     const { row, col } = cellFromEvent(e);
     const key = `${row}-${col}`;
 
@@ -117,10 +161,30 @@ export default function FloorGrid({
     onCellClick(row, col);
   };
 
+  const handleMouseDown = (e) => {
+    if (selectionMode !== "squares") return;
+
+    const { row, col } = cellFromEvent(e);
+    const key = `${row}-${col}`;
+
+    if (!shapeSet.has(key)) return;
+
+    setMouseDownPos({ row, col, clientX: e.clientX, clientY: e.clientY });
+    setIsDragging(true);
+    setDragStart({ row, col });
+    setDragEnd({ row, col });
+  };
+
   const handleMouseMove = (e) => {
     const { row, col } = cellFromEvent(e);
     const key = `${row}-${col}`;
     const entry = shapeSet.has(key) ? occupiedMap.get(key) : null;
+
+    if (selectionMode === "squares" && isDragging) {
+      setDragEnd({ row, col });
+      setHover(null);
+      return;
+    }
 
     if (!entry) {
       setHover(null);
@@ -134,6 +198,72 @@ export default function FloorGrid({
     });
   };
 
+  const handleMouseUp = (e) => {
+    if (selectionMode === "squares" && isDragging && dragStart && dragEnd) {
+      // Check if this was a click (minimal movement) or a drag
+      const movementThreshold = 5; // pixels
+      const dx = Math.abs(e.clientX - mouseDownPos.clientX);
+      const dy = Math.abs(e.clientY - mouseDownPos.clientY);
+      const isClick = dx < movementThreshold && dy < movementThreshold;
+
+      if (isClick) {
+        // Treat as click - toggle individual cell
+        const { row, col } = dragStart;
+        const key = `${row}-${col}`;
+
+        if (onSelectionChange) {
+          onSelectionChange((prev) => {
+            const isSelected = prev.some((c) => c.row === row && c.col === col);
+            let next = isSelected
+              ? prev.filter((c) => !(c.row === row && c.col === col))
+              : [...prev, { row, col }];
+            return next.sort((a, b) => a.row - b.row || a.col - b.col);
+          });
+        }
+      } else {
+        // Treat as drag - select rectangle
+        const startRow = Math.min(dragStart.row, dragEnd.row);
+        const endRow = Math.max(dragStart.row, dragEnd.row);
+        const startCol = Math.min(dragStart.col, dragEnd.col);
+        const endCol = Math.max(dragStart.col, dragEnd.col);
+
+        // Collect all cells in the drag rectangle
+        const newSelectedCells = [];
+        for (let r = startRow; r <= endRow; r++) {
+          for (let c = startCol; c <= endCol; c++) {
+            const key = `${r}-${c}`;
+            if (shapeSet.has(key)) {
+              const isOccupied = occupiedMap.has(key);
+              if (!isOccupied) {
+                newSelectedCells.push({ row: r, col: c });
+              }
+            }
+          }
+        }
+
+        // Add new selection to existing selected cells (for multiple squares)
+        if (onSelectionChange && newSelectedCells.length > 0) {
+          onSelectionChange((prev) => {
+            const existingSet = new Set(prev.map((c) => `${c.row}-${c.col}`));
+            const combined = [...prev];
+            newSelectedCells.forEach((cell) => {
+              const key = `${cell.row}-${cell.col}`;
+              if (!existingSet.has(key)) {
+                combined.push(cell);
+              }
+            });
+            return combined.sort((a, b) => a.row - b.row || a.col - b.col);
+          });
+        }
+      }
+
+      setIsDragging(false);
+      setDragStart(null);
+      setDragEnd(null);
+      setMouseDownPos(null);
+    }
+  };
+
   return (
     <div className="relative inline-block max-w-full overflow-auto rounded-lg border border-slate-200 bg-white p-2">
       <canvas
@@ -141,9 +271,25 @@ export default function FloorGrid({
         width={width}
         height={height}
         onClick={handleClick}
+        onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
-        onMouseLeave={() => setHover(null)}
-        className={onCellClick ? "cursor-pointer" : ""}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={() => {
+          setHover(null);
+          if (isDragging) {
+            setIsDragging(false);
+            setDragStart(null);
+            setDragEnd(null);
+            setMouseDownPos(null);
+          }
+        }}
+        className={
+          selectionMode === "squares"
+            ? "cursor-crosshair"
+            : onCellClick
+              ? "cursor-pointer"
+              : ""
+        }
       />
       {hover && (
         <div

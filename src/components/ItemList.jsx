@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, ChevronLeft } from "lucide-react";
 
 const StockBadge = ({ stock }) => {
   const qty = stock || 0;
@@ -30,8 +30,9 @@ const StockBadge = ({ stock }) => {
 };
 
 const ItemList = ({ items, loading, searchTerm = "", onChanged }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const isRTL = i18n.language === "ar";
 
   const filteredItems = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
@@ -124,7 +125,11 @@ const ItemList = ({ items, loading, searchTerm = "", onChanged }) => {
               <StockBadge stock={item.stock} />
             </div>
 
-            <ChevronRight className="hidden h-4 w-4 shrink-0 text-graphite-300 transition-transform group-hover:translate-x-0.5 group-hover:text-primary-400 sm:block" />
+            {isRTL ? (
+              <ChevronLeft className="hidden h-4 w-4 shrink-0 text-graphite-300 transition-transform group-hover:-translate-x-0.5 group-hover:text-primary-400 sm:block" />
+            ) : (
+              <ChevronRight className="hidden h-4 w-4 shrink-0 text-graphite-300 transition-transform group-hover:translate-x-0.5 group-hover:text-primary-400 sm:block" />
+            )}
           </button>
         ))}
       </div>

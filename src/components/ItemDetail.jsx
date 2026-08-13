@@ -3,6 +3,7 @@ import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   ArrowLeft,
+  ArrowRight,
   ChevronDown,
   ChevronUp,
   Trash2,
@@ -29,7 +30,7 @@ export default function ItemDetail() {
   const { id } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n: translation } = useTranslation();
   const { user } = useAuth();
   const canEdit = user?.role === "admin" || user?.role === "manager";
 
@@ -240,7 +241,11 @@ export default function ItemDetail() {
         onClick={() => navigate("/")}
         className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-graphite-600 transition-colors hover:text-graphite-900"
       >
-        <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+        {translation.dir() === "rtl" ? (
+          <ArrowRight className="h-4 w-4" aria-hidden="true" />
+        ) : (
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+        )}
         {t("backToItems")}
       </button>
 
@@ -394,98 +399,124 @@ export default function ItemDetail() {
         </p>
       </div>
 
-      {/* Parts: each is a card; clicking expands Location/Stats tabs inline */}
-      <div className="mt-6">
-        <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-graphite-500">
-            {t("parts")}
-          </h3>
-          {canEdit && (
-            <button
-              onClick={handleAddPartClick}
-              className="text-xs font-medium text-primary-600 hover:text-primary-700 transition-colors"
-            >
-              {t("addPart")}
-            </button>
-          )}
-        </div>
-
-        <div className="space-y-3">
-          {showAddPart && draftPart && (
-            <div className="rounded-xl border-2 border-dashed border-primary-300 bg-primary-50/50 p-4">
-              <AddItemPartForm
-                part={draftPart}
-                index={item.parts?.length || 0}
-                totalParts={(item.parts?.length || 0) + 1}
-                floors={floors}
-                onChange={() => {}}
-                onLocationChange={(id, location) => {
-                  setDraftPart((prev) => ({ ...prev, ...location }));
-                }}
-                onRemove={handleAddPartCancel}
-              />
-              <div className="mt-3 flex gap-2">
-                <button
-                  onClick={handleAddPartSave}
-                  disabled={addingPart}
-                  className="flex-1 rounded-lg bg-primary-600 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700 disabled:opacity-50"
-                >
-                  {addingPart ? t("saving") : t("savePart")}
-                </button>
-                <button
-                  onClick={handleAddPartCancel}
-                  disabled={addingPart}
-                  className="rounded-lg border border-graphite-300 bg-white px-4 py-2 text-sm font-medium text-graphite-700 transition-colors hover:bg-graphite-50 disabled:opacity-50"
-                >
-                  {t("cancel")}
-                </button>
-              </div>
+      {/* Legend for floor grid colors and Parts section - only show when stock > 0 or has damaged parts */}
+      {!(item.stock === 0 && !item.parts?.some((part) => part.damaged > 0)) && (
+        <div>
+          {/* Legend for floor grid colors */}
+          <div className="mt-6 rounded-xl border border-graphite-200 bg-white p-4 shadow-sm">
+            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-graphite-500">
+              {t("locationLegend")}
+            </h3>
+            <div className="flex flex-wrap items-center gap-4 text-xs text-graphite-600">
+              <span className="inline-flex items-center gap-1.5">
+                <span className="h-3 w-3 rounded-full border border-emerald-600 bg-emerald-500" />
+                {t("itemLocation")}
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="h-3 w-3 rounded-full border border-slate-300 bg-slate-200" />
+                {t("empty")}
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="h-3 w-3 rounded-full border border-blue-700 bg-blue-600" />
+                {t("otherItems")}
+              </span>
             </div>
-          )}
+          </div>
 
-          {item.parts?.map((part) => {
-            const isExpanded = expandedPartId === part._id;
-            return (
-              <div
-                key={part._id}
-                className="overflow-hidden rounded-xl border border-graphite-200 bg-white shadow-sm"
-              >
+          {/* Parts: each is a card; clicking expands Location/Stats tabs inline */}
+          <div className="mt-6">
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-graphite-500">
+                {t("parts")}
+              </h3>
+              {canEdit && (
                 <button
-                  type="button"
-                  onClick={() =>
-                    setExpandedPartId(isExpanded ? null : part._id)
-                  }
-                  className="flex w-full items-center justify-between px-4 py-3 text-start"
+                  onClick={handleAddPartClick}
+                  className="text-xs font-medium text-primary-600 hover:text-primary-700 transition-colors"
                 >
-                  <span className="text-sm font-semibold text-graphite-900 truncate">
-                    PCS/CTN: {partLabel(item, part)}
-                  </span>
-                  <span className="ml-auto shrink-0 text-sm text-graphite-500 mr-3">
-                    {`Damaged: ${part.damaged}`}
-                  </span>
-                  {isExpanded ? (
-                    <ChevronUp className="h-4 w-4 shrink-0 text-graphite-400" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4 shrink-0 text-graphite-400" />
-                  )}
+                  {t("addPart")}
                 </button>
+              )}
+            </div>
 
-                {isExpanded && (
-                  <div className="border-t border-graphite-200 px-4 py-4">
-                    <PartDetail
-                      embedded
-                      item={item}
-                      part={part}
-                      onUpdateField={updatePartField}
-                      onPartUpdated={handlePartUpdated}
-                    />
+            <div className="space-y-3">
+              {showAddPart && draftPart && (
+                <div className="rounded-xl border-2 border-dashed border-primary-300 bg-primary-50/50 p-4">
+                  <AddItemPartForm
+                    part={draftPart}
+                    index={item.parts?.length || 0}
+                    totalParts={(item.parts?.length || 0) + 1}
+                    floors={floors}
+                    onChange={() => {}}
+                    onLocationChange={(id, location) => {
+                      setDraftPart((prev) => ({ ...prev, ...location }));
+                    }}
+                    onRemove={handleAddPartCancel}
+                  />
+                  <div className="mt-3 flex gap-2">
+                    <button
+                      onClick={handleAddPartSave}
+                      disabled={addingPart}
+                      className="flex-1 rounded-lg bg-primary-600 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700 disabled:opacity-50"
+                    >
+                      {addingPart ? t("saving") : t("savePart")}
+                    </button>
+                    <button
+                      onClick={handleAddPartCancel}
+                      disabled={addingPart}
+                      className="rounded-lg border border-graphite-300 bg-white px-4 py-2 text-sm font-medium text-graphite-700 transition-colors hover:bg-graphite-50 disabled:opacity-50"
+                    >
+                      {t("cancel")}
+                    </button>
                   </div>
-                )}
-              </div>
-            );
-          })}
+                </div>
+              )}
+
+              {item.parts?.map((part) => {
+                const isExpanded = expandedPartId === part._id;
+                return (
+                  <div
+                    key={part._id}
+                    className="overflow-hidden rounded-xl border border-graphite-200 bg-white shadow-sm"
+                  >
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setExpandedPartId(isExpanded ? null : part._id)
+                      }
+                      className="flex w-full items-center justify-between px-4 py-3 text-start"
+                    >
+                      <span className="text-sm font-semibold text-graphite-900 truncate">
+                        PCS/CTN: {partLabel(item, part)}
+                      </span>
+                      <span className="ml-auto shrink-0 text-sm text-graphite-500 mr-3">
+                        {`Damaged: ${part.damaged}`}
+                      </span>
+                      {isExpanded ? (
+                        <ChevronUp className="h-4 w-4 shrink-0 text-graphite-400" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4 shrink-0 text-graphite-400" />
+                      )}
+                    </button>
+
+                    {isExpanded && (
+                      <div className="border-t border-graphite-200 px-4 py-4">
+                        <PartDetail
+                          embedded
+                          item={item}
+                          part={part}
+                          onUpdateField={updatePartField}
+                          onPartUpdated={handlePartUpdated}
+                        />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
       {showDeleteConfirm && (
         <ConfirmDialog
