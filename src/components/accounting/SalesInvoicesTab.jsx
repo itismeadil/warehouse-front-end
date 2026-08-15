@@ -1,9 +1,10 @@
 import { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Plus, Trash2, RefreshCw } from "lucide-react";
+import { Plus, Trash2, RefreshCw, Camera } from "lucide-react";
 import { getItems } from "../../api/items";
 import { getSalesInvoices, createSalesInvoice } from "../../api/accountant";
 import DatePicker, { toLocalDateString } from "../DatePicker";
+import InvoiceScanner from "./InvoiceScanner";
 
 const Spinner = () => (
   <div
@@ -13,7 +14,12 @@ const Spinner = () => (
   />
 );
 
-const emptyLine = () => ({ itemId: "", quantity: 1, unitPrice: "" });
+const emptyLine = () => ({
+  itemId: "",
+  quantity: 1,
+  unitPrice: "",
+  description: "",
+});
 
 export default function SalesInvoicesTab() {
   const { t } = useTranslation();
@@ -32,6 +38,7 @@ export default function SalesInvoicesTab() {
   const [loading, setLoading] = useState(true);
   const [listError, setListError] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
+  const [showScanner, setShowScanner] = useState(false);
 
   const loadInvoices = () => {
     setLoading(true);
@@ -114,6 +121,20 @@ export default function SalesInvoicesTab() {
     setVatRate(15);
   };
 
+  const handleScanComplete = (data) => {
+    if (data.invoiceNumber) setInvoiceNumber(data.invoiceNumber);
+    if (data.taxRate) setVatRate(Number(data.taxRate));
+    if (data.lineItems && data.lineItems.length > 0) {
+      const newLines = data.lineItems.map((item) => ({
+        itemId: "",
+        quantity: item.quantity,
+        unitPrice: item.price,
+        description: item.description || "",
+      }));
+      setLines(newLines);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFormError("");
@@ -176,10 +197,31 @@ export default function SalesInvoicesTab() {
 
   return (
     <div>
+      {showScanner && (
+        <InvoiceScanner
+          onScanComplete={handleScanComplete}
+          onClose={() => setShowScanner(false)}
+        />
+      )}
+
       <form
         onSubmit={handleSubmit}
         className="rounded-xl border border-graphite-200 bg-white p-6 shadow-sm"
       >
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-graphite-900">
+            Create Sales Invoice
+          </h2>
+          <button
+            type="button"
+            onClick={() => setShowScanner(true)}
+            className="flex items-center gap-2 rounded-lg border border-primary-200 bg-primary-50 px-3 py-2 text-sm font-medium text-primary-700 hover:bg-primary-100 transition-colors"
+          >
+            <Camera className="h-4 w-4" />
+            Scan Invoice
+          </button>
+        </div>
+
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div>
             <label className="block text-sm font-medium text-graphite-700">
@@ -276,7 +318,18 @@ export default function SalesInvoicesTab() {
                   );
                 })}
               </select>
-
+              {line.description && (
+                <input
+                  type="text"
+                  value={line.description}
+                  onChange={(e) =>
+                    updateLine(index, { description: e.target.value })
+                  }
+                  placeholder="Item description"
+                  className="min-w-[8rem] flex-1 rounded-lg border border-graphite-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 bg-graphite-50"
+                  readOnly
+                />
+              )}
               <input
                 type="number"
                 min="1"

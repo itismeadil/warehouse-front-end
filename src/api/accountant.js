@@ -51,3 +51,22 @@ export const fulfillReservation = (id, payload) =>
   accountantApi
     .post(`/reservations/${id}/fulfill`, payload)
     .then((res) => res.data);
+
+// Expenses — business expenses tracking
+export const getExpenses = (params) =>
+  accountantApi.get("/expenses", { params }).then((res) => res.data);
+
+export const createExpense = (payload) =>
+  accountantApi.post("/expenses", payload).then((res) => res.data);
+
+export const getExpense = (id) =>
+  accountantApi.get(`/expenses/${id}`).then((res) => res.data);
+
+export const updateExpense = (id, payload) =>
+  accountantApi.put(`/expenses/${id}`, payload).then((res) => res.data);
+
+export const deleteExpense = (id) =>
+  accountantApi.delete(`/expenses/${id}`).then((res) => res.data);
+
+export const getExpenseSummary = (params) =>
+  accountantApi.get("/expenses/summary", { params }).then((res) => res.data);

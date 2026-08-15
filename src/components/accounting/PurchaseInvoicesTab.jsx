@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Camera } from "lucide-react";
 import { getItems } from "../../api/items";
 import {
   getPurchaseInvoices,
   createPurchaseInvoice,
 } from "../../api/accountant";
+import InvoiceScanner from "./InvoiceScanner";
 
 const Spinner = () => (
   <div
@@ -15,7 +16,12 @@ const Spinner = () => (
   />
 );
 
-const emptyLine = () => ({ itemId: "", quantity: 1, unitCost: "" });
+const emptyLine = () => ({
+  itemId: "",
+  quantity: 1,
+  unitCost: "",
+  description: "",
+});
 
 export default function PurchaseInvoicesTab() {
   const { t } = useTranslation();
@@ -31,15 +37,14 @@ export default function PurchaseInvoicesTab() {
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [listError, setListError] = useState("");
+  const [showScanner, setShowScanner] = useState(false);
 
   const loadInvoices = () => {
     setLoading(true);
     setListError("");
     getPurchaseInvoices()
       .then((data) => setInvoices(Array.isArray(data) ? data : []))
-      .catch((err) =>
-        setListError(err.response?.data?.message || err.message),
-      )
+      .catch((err) => setListError(err.response?.data?.message || err.message))
       .finally(() => setLoading(false));
   };
 
@@ -71,6 +76,19 @@ export default function PurchaseInvoicesTab() {
     setLines([emptyLine()]);
   };
 
+  const handleScanComplete = (data) => {
+    if (data.invoiceNumber) setInvoiceNumber(data.invoiceNumber);
+    if (data.lineItems && data.lineItems.length > 0) {
+      const newLines = data.lineItems.map((item) => ({
+        itemId: "",
+        quantity: item.quantity,
+        unitCost: item.price,
+        description: item.description || "",
+      }));
+      setLines(newLines);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFormError("");
@@ -78,7 +96,9 @@ export default function PurchaseInvoicesTab() {
     if (!invoiceNumber.trim() || !supplierName.trim()) {
       return setFormError(t("invoiceFieldsRequired"));
     }
-    const validLines = lines.filter((l) => l.itemId && l.quantity && l.unitCost !== "");
+    const validLines = lines.filter(
+      (l) => l.itemId && l.quantity && l.unitCost !== "",
+    );
     if (validLines.length === 0) {
       return setFormError(t("atLeastOneLine"));
     }
@@ -106,10 +126,31 @@ export default function PurchaseInvoicesTab() {
 
   return (
     <div>
+      {showScanner && (
+        <InvoiceScanner
+          onScanComplete={handleScanComplete}
+          onClose={() => setShowScanner(false)}
+        />
+      )}
+
       <form
         onSubmit={handleSubmit}
         className="rounded-xl border border-graphite-200 bg-white p-6 shadow-sm"
       >
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-graphite-900">
+            Create Purchase Invoice
+          </h2>
+          <button
+            type="button"
+            onClick={() => setShowScanner(true)}
+            className="flex items-center gap-2 rounded-lg border border-primary-200 bg-primary-50 px-3 py-2 text-sm font-medium text-primary-700 hover:bg-primary-100 transition-colors"
+          >
+            <Camera className="h-4 w-4" />
+            Scan Invoice
+          </button>
+        </div>
+
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label className="block text-sm font-medium text-graphite-700">
@@ -154,11 +195,25 @@ export default function PurchaseInvoicesTab() {
                   </option>
                 ))}
               </select>
+              {line.description && (
+                <input
+                  type="text"
+                  value={line.description}
+                  onChange={(e) =>
+                    updateLine(index, { description: e.target.value })
+                  }
+                  placeholder="Item description"
+                  className="min-w-[8rem] flex-1 rounded-lg border border-graphite-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 bg-graphite-50"
+                  readOnly
+                />
+              )}
               <input
                 type="number"
                 min="1"
                 value={line.quantity}
-                onChange={(e) => updateLine(index, { quantity: e.target.value })}
+                onChange={(e) =>
+                  updateLine(index, { quantity: e.target.value })
+                }
                 placeholder={t("quantity")}
                 className="w-24 rounded-lg border border-graphite-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
               />
@@ -167,7 +222,9 @@ export default function PurchaseInvoicesTab() {
                 min="0"
                 step="0.01"
                 value={line.unitCost}
-                onChange={(e) => updateLine(index, { unitCost: e.target.value })}
+                onChange={(e) =>
+                  updateLine(index, { unitCost: e.target.value })
+                }
                 placeholder={t("unitCost")}
                 className="w-28 rounded-lg border border-graphite-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
               />
@@ -193,7 +250,8 @@ export default function PurchaseInvoicesTab() {
         </div>
 
         <p className="mt-4 text-sm text-graphite-700">
-          {t("total")}: <span className="font-semibold">{total.toFixed(2)}</span>
+          {t("total")}:{" "}
+          <span className="font-semibold">{total.toFixed(2)}</span>
         </p>
 
         {formError && <p className="mt-2 text-sm text-red-600">{formError}</p>}
