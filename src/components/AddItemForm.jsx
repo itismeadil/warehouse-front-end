@@ -32,6 +32,13 @@ export default function AddItemForm() {
   // Parts already saved to the backend (locked, read-only)
   const [savedParts, setSavedParts] = useState([]);
 
+  // Enhance saved parts with their IDs and indices for display
+  const enhancedSavedParts = savedParts.map((part, index) => ({
+    ...part,
+    id: part._id || `saved-${index}`,
+    partIndex: index + 1,
+  }));
+
   const [itemId, setItemId] = useState(null); // null until Part 1 is submitted
   const [addingAnother, setAddingAnother] = useState(false);
 
@@ -86,7 +93,14 @@ export default function AddItemForm() {
       });
 
       setItemId(created._id);
-      setSavedParts(created.parts); // parts come back with real _id + populated floorId
+      // Enhance parts with their IDs and indices for display
+      setSavedParts(
+        created.parts.map((part, index) => ({
+          ...part,
+          id: part._id || `saved-${index}`,
+          partIndex: index + 1,
+        })),
+      );
       toast.success(t("itemAddedSuccess"));
     } catch (error) {
       toast.error(
@@ -109,7 +123,14 @@ export default function AddItemForm() {
     setLoading(true);
     try {
       const newPart = await addPart(itemId, buildPartPayload(draftPart));
-      setSavedParts((prev) => [...prev, newPart]);
+      setSavedParts((prev) => [
+        ...prev,
+        {
+          ...newPart,
+          id: newPart._id || `saved-${prev.length}`,
+          partIndex: prev.length + 1,
+        },
+      ]);
       setDraftPart(emptyPart(Date.now()));
       setAddingAnother(false); // back to the yes/no prompt
       toast.success(t("partAddedSuccess"));
@@ -315,6 +336,7 @@ export default function AddItemForm() {
                   onChange={handleDraftChange}
                   onLocationChange={handleDraftLocationChange}
                   onRemove={() => {}}
+                  savedParts={enhancedSavedParts}
                 />
               </div>
             )}
@@ -355,6 +377,7 @@ export default function AddItemForm() {
                     onChange={handleDraftChange}
                     onLocationChange={handleDraftLocationChange}
                     onRemove={() => setAddingAnother(false)}
+                    savedParts={enhancedSavedParts}
                   />
                 </div>
                 <button

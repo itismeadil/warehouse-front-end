@@ -133,6 +133,23 @@ export default function PurchaseInvoicesTab() {
         />
       )}
 
+      {/* Helpful Hint */}
+      <div className="mb-4 rounded-lg bg-green-50 px-4 py-3 border border-green-200">
+        <div className="flex items-start gap-3">
+          <div className="flex-shrink-0">
+            <Plus className="h-5 w-5 text-green-600" />
+          </div>
+          <div className="flex-1">
+            <h4 className="text-sm font-semibold text-green-900 mb-1">
+              {t("purchaseInvoicesHintTitle")}
+            </h4>
+            <p className="text-xs text-green-800 leading-relaxed">
+              {t("purchaseInvoicesHint")}
+            </p>
+          </div>
+        </div>
+      </div>
+
       <form
         onSubmit={handleSubmit}
         className="rounded-xl border border-graphite-200 bg-white p-6 shadow-sm"
@@ -250,7 +267,7 @@ export default function PurchaseInvoicesTab() {
         </div>
 
         <p className="mt-4 text-sm text-graphite-700">
-          {t("total")}:{" "}
+          {t("invoiceTotal")}:{" "}
           <span className="font-semibold">{total.toFixed(2)}</span>
         </p>
 

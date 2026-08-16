@@ -9,6 +9,9 @@ import {
   cancelReservation,
   fulfillReservation,
 } from "../../api/accountant";
+import AlertModal from "../AlertModal";
+import { useAlert } from "../../hooks/useAlert";
+import { useAuth } from "../../context/AuthContext";
 
 const Spinner = () => (
   <div
@@ -33,7 +36,10 @@ function CancelReasonModal({ reservation, onClose, onConfirm, submitting }) {
         <p className="mt-1 text-xs text-graphite-500">
           {reservation.itemName} — {reservation.quantity} {t("units")}
           {reservation.unitPrice != null && (
-            <> · {reservation.unitPrice} {t("perUnit")}</>
+            <>
+              {" "}
+              · {reservation.unitPrice} {t("perUnit")}
+            </>
           )}
         </p>
 
@@ -89,7 +95,10 @@ function FulfillModal({ reservation, onClose, onConfirm, submitting }) {
         <p className="mt-1 text-xs text-graphite-500">
           {reservation.itemName} — {reservation.quantity} {t("units")}
           {reservation.unitPrice != null && (
-            <> · {reservation.unitPrice} {t("perUnit")}</>
+            <>
+              {" "}
+              · {reservation.unitPrice} {t("perUnit")}
+            </>
           )}
         </p>
 
@@ -112,8 +121,12 @@ function FulfillModal({ reservation, onClose, onConfirm, submitting }) {
             <span className="font-semibold">{subtotal.toFixed(2)}</span>
           </div>
           <div className="flex justify-between text-xs text-graphite-700">
-            <span>{t("vatDeduction")} ({vatRate}%)</span>
-            <span className="font-semibold text-red-600">-{vatAmount.toFixed(2)}</span>
+            <span>
+              {t("vatDeduction")} ({vatRate}%)
+            </span>
+            <span className="font-semibold text-red-600">
+              -{vatAmount.toFixed(2)}
+            </span>
           </div>
           <div className="flex justify-between text-xs font-medium text-graphite-900 border-t border-graphite-200 pt-2">
             <span>{t("totalAfterTax")}</span>
@@ -132,7 +145,9 @@ function FulfillModal({ reservation, onClose, onConfirm, submitting }) {
           <button
             type="button"
             disabled={submitting}
-            onClick={() => onConfirm({ vatRate, subtotal, vatAmount, totalAfterTax })}
+            onClick={() =>
+              onConfirm({ vatRate, subtotal, vatAmount, totalAfterTax })
+            }
             className="flex items-center gap-2 rounded-lg bg-primary-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {submitting && <Spinner />}
@@ -146,6 +161,8 @@ function FulfillModal({ reservation, onClose, onConfirm, submitting }) {
 
 export default function SellReserveTab() {
   const { t } = useTranslation();
+  const { alert, showAlert, hideAlert } = useAlert();
+  const { user } = useAuth();
 
   const [items, setItems] = useState([]);
   const [itemId, setItemId] = useState("");
@@ -208,7 +225,7 @@ export default function SellReserveTab() {
       const subtotal = Number(quantity) * Number(price);
       const vatAmount = subtotal * (vatRate / 100);
       const totalAfterTax = subtotal - vatAmount;
-      
+
       await createSalesInvoice({
         invoiceNumber: `SALE-${Date.now()}`,
         customerName: customerName || undefined,
@@ -267,7 +284,10 @@ export default function SellReserveTab() {
       setCancelTarget(null);
       loadReservations();
     } catch (err) {
-      alert(err.response?.data?.message || err.message);
+      showAlert(err.response?.data?.message || err.message, {
+        type: "error",
+        title: t("error", "Error"),
+      });
     } finally {
       setCancelling(false);
     }
@@ -289,7 +309,10 @@ export default function SellReserveTab() {
       setFulfillTarget(null);
       loadReservations();
     } catch (err) {
-      alert(err.response?.data?.message || err.message);
+      showAlert(err.response?.data?.message || err.message, {
+        type: "error",
+        title: t("error", "Error"),
+      });
     } finally {
       setFulfillingId(null);
     }
@@ -297,6 +320,23 @@ export default function SellReserveTab() {
 
   return (
     <div>
+      {/* Helpful Hint */}
+      <div className="mb-4 rounded-lg bg-amber-50 px-4 py-3 border border-amber-200">
+        <div className="flex items-start gap-3">
+          <div className="flex-shrink-0">
+            <ShoppingCart className="h-5 w-5 text-amber-600" />
+          </div>
+          <div className="flex-1">
+            <h4 className="text-sm font-semibold text-amber-900 mb-1">
+              {t("sellReserveHintTitle")}
+            </h4>
+            <p className="text-xs text-amber-800 leading-relaxed">
+              {t("sellReserveHint")}
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Form */}
       <div className="rounded-xl border border-graphite-200 bg-white p-6 shadow-sm">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -313,15 +353,15 @@ export default function SellReserveTab() {
               {items.map((item) => {
                 const isOutOfStock = (item.stock || 0) === 0;
                 return (
-                  <option 
-                    key={item._id} 
+                  <option
+                    key={item._id}
                     value={item._id}
                     disabled={isOutOfStock}
                   >
                     {item.name} — {item.serialNumber}{" "}
                     {typeof item.stock === "number" &&
                       `(${item.stock} ${t("inStock")})`}
-                    {isOutOfStock ? ' - OUT OF STOCK' : ''}
+                    {isOutOfStock ? " - OUT OF STOCK" : ""}
                   </option>
                 );
               })}
@@ -394,15 +434,29 @@ export default function SellReserveTab() {
           <div className="mt-4 space-y-2 rounded-lg bg-graphite-50 p-4">
             <div className="flex justify-between text-sm text-graphite-700">
               <span>{t("subtotal")}</span>
-              <span className="font-semibold">{(Number(quantity) * Number(price)).toFixed(2)}</span>
+              <span className="font-semibold">
+                {(Number(quantity) * Number(price)).toFixed(2)}
+              </span>
             </div>
             <div className="flex justify-between text-sm text-graphite-700">
-              <span>{t("vatDeduction")} ({vatRate}%)</span>
-              <span className="font-semibold text-red-600">-{((Number(quantity) * Number(price)) * (vatRate / 100)).toFixed(2)}</span>
+              <span>
+                {t("vatDeduction")} ({vatRate}%)
+              </span>
+              <span className="font-semibold text-red-600">
+                -
+                {(Number(quantity) * Number(price) * (vatRate / 100)).toFixed(
+                  2,
+                )}
+              </span>
             </div>
             <div className="flex justify-between text-sm font-medium text-graphite-900 border-t border-graphite-200 pt-2">
               <span>{t("totalAfterTax")}</span>
-              <span className="font-semibold">{((Number(quantity) * Number(price)) - ((Number(quantity) * Number(price)) * (vatRate / 100))).toFixed(2)}</span>
+              <span className="font-semibold">
+                {(
+                  Number(quantity) * Number(price) -
+                  Number(quantity) * Number(price) * (vatRate / 100)
+                ).toFixed(2)}
+              </span>
             </div>
           </div>
         )}
@@ -414,7 +468,11 @@ export default function SellReserveTab() {
             disabled={saving !== false}
             className="flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {saving === "sale" ? <Spinner /> : <ShoppingCart className="h-4 w-4" />}
+            {saving === "sale" ? (
+              <Spinner />
+            ) : (
+              <ShoppingCart className="h-4 w-4" />
+            )}
             {t("recordSale")}
           </button>
           <button
@@ -447,7 +505,9 @@ export default function SellReserveTab() {
               <p className="text-sm text-graphite-500">{t("loading")}</p>
             </div>
           ) : reservations.length === 0 ? (
-            <p className="text-sm text-graphite-500">{t("noActiveReservations")}</p>
+            <p className="text-sm text-graphite-500">
+              {t("noActiveReservations")}
+            </p>
           ) : (
             <div className="divide-y divide-graphite-200 rounded-xl border border-graphite-200 bg-white">
               {reservations.map((res) => (
@@ -462,7 +522,10 @@ export default function SellReserveTab() {
                     <p className="text-xs text-graphite-500">
                       {res.customerName || t("noCustomerName")}
                       {res.unitPrice != null && (
-                        <> · {res.unitPrice} {t("perUnit")}</>
+                        <>
+                          {" "}
+                          · {res.unitPrice} {t("perUnit")}
+                        </>
                       )}
                       {" · "}
                       {new Date(res.createdAt).toLocaleString()}
@@ -511,6 +574,18 @@ export default function SellReserveTab() {
           onConfirm={handleConfirmFulfill}
         />
       )}
+
+      <AlertModal
+        isOpen={!!alert}
+        onClose={hideAlert}
+        title={alert?.title}
+        message={alert?.message}
+        type={alert?.type}
+        showCancel={alert?.showCancel}
+        confirmText={alert?.confirmText}
+        cancelText={alert?.cancelText}
+        onConfirm={alert?.onConfirm}
+      />
     </div>
   );
 }

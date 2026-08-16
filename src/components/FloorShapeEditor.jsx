@@ -1,11 +1,19 @@
-import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
+import {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from "react";
 
-const PITCH = 6; // px between dot centers
+const PITCH = 6; // px between cell centers
 const DOT_RADIUS = 1.6;
 const ACTIVE_RADIUS = 2.6;
+const RECT_SIZE = 4; // Size of rectangle cells for empty cells
+const FILLED_SIZE = 5; // Size for filled cells (small gap between them)
 
 const DOT_COLOR = "#cbd5e1"; // slate-300, empty
-const ACTIVE_COLOR = "#2563eb"; // blue-600, committed part of floor
+const ACTIVE_COLOR = "#64748b"; // slate-500, committed part of floor (softer color)
 const PREVIEW_FILL_COLOR = "#10b981"; // emerald-500, rectangle about to be added
 const PREVIEW_ERASE_COLOR = "#f87171"; // red-400, rectangle about to be removed
 
@@ -19,6 +27,9 @@ const FloorShapeEditor = forwardRef(function FloorShapeEditor(
   { rows, cols, initialCells = [] },
   ref,
 ) {
+  const [cells, setCells] = useState(
+    () => new Set((initialCells ?? []).map(({ row, col }) => `${row}-${col}`)),
+  );
   const canvasRef = useRef(null);
   const activeRef = useRef(
     new Set(initialCells.map((c) => `${c.row}-${c.col}`)),
@@ -62,10 +73,14 @@ const FloorShapeEditor = forwardRef(function FloorShapeEditor(
         const cx = c * PITCH + PITCH / 2;
         const cy = r * PITCH + PITCH / 2;
 
-        ctx.beginPath();
-        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+        // For active/preview cells, use larger size with small gaps
+        // For empty cells, use smaller rectangles with larger gaps
+        const isFilled = active || inPreview;
+        const size = isFilled ? FILLED_SIZE : RECT_SIZE;
+        const rectX = cx - size / 2;
+        const rectY = cy - size / 2;
         ctx.fillStyle = color;
-        ctx.fill();
+        ctx.fillRect(rectX, rectY, size, size);
       }
     }
   };

@@ -19,30 +19,35 @@ const TABS = [
   {
     id: "calculations",
     label: "calculations",
+    description: "calculationsDescription",
     Component: CalculationsTab,
     icon: Calculator,
   },
   {
     id: "sellReserve",
     label: "sellReserve",
+    description: "sellReserveDescription",
     Component: SellReserveTab,
     icon: ShoppingCart,
   },
   {
     id: "purchaseInvoices",
     label: "purchaseInvoices",
+    description: "purchaseInvoicesDescription",
     Component: PurchaseInvoicesTab,
     icon: ArrowDown,
   },
   {
     id: "salesInvoices",
     label: "salesInvoices",
+    description: "salesInvoicesDescription",
     Component: SalesInvoicesTab,
     icon: ArrowUp,
   },
   {
     id: "expenses",
     label: "expenses",
+    description: "expensesDescription",
     Component: ExpensesTab,
     icon: CreditCard,
   },
@@ -109,6 +114,13 @@ export default function Accounting() {
             );
           })}
         </nav>
+      </div>
+
+      {/* Tab Description */}
+      <div className="mb-6 rounded-lg bg-blue-50 px-4 py-3 border border-blue-200">
+        <p className="text-sm text-blue-700">
+          {t(TABS.find((tab) => tab.id === activeTab).description)}
+        </p>
       </div>
 
       {/* Content Area */}

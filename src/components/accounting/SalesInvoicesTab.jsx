@@ -204,6 +204,23 @@ export default function SalesInvoicesTab() {
         />
       )}
 
+      {/* Helpful Hint */}
+      <div className="mb-4 rounded-lg bg-purple-50 px-4 py-3 border border-purple-200">
+        <div className="flex items-start gap-3">
+          <div className="flex-shrink-0">
+            <Plus className="h-5 w-5 text-purple-600" />
+          </div>
+          <div className="flex-1">
+            <h4 className="text-sm font-semibold text-purple-900 mb-1">
+              {t("salesInvoicesHintTitle")}
+            </h4>
+            <p className="text-xs text-purple-800 leading-relaxed">
+              {t("salesInvoicesHint")}
+            </p>
+          </div>
+        </div>
+      </div>
+
       <form
         onSubmit={handleSubmit}
         className="rounded-xl border border-graphite-200 bg-white p-6 shadow-sm"

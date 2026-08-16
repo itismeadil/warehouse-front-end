@@ -12,6 +12,7 @@ export default function AddItemPartForm({
   onChange,
   onLocationChange,
   onRemove,
+  savedParts = [],
 }) {
   const { t } = useTranslation();
   const [showPicker, setShowPicker] = useState(false);
@@ -79,6 +80,8 @@ export default function AddItemPartForm({
           floors={floors}
           initialFloorId={part.floorId}
           initialArea={hasLocation ? part.areas || part.area : null}
+          savedParts={savedParts}
+          currentPartId={part.id}
           onClose={() => setShowPicker(false)}
           onConfirm={({ floorId, floorName, areas, area }) => {
             onLocationChange(part.id, {

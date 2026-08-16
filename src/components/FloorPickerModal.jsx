@@ -57,6 +57,8 @@ export default function FloorPickerModal({
   initialArea,
   onConfirm,
   onClose,
+  savedParts = [],
+  currentPartId = null,
 }) {
   const [floorId, setFloorId] = useState(initialFloorId || "");
   const [occupancy, setOccupancy] = useState(null);
@@ -78,6 +80,36 @@ export default function FloorPickerModal({
       occupancy.floor.shape,
     );
   }, [occupancy]);
+
+  // Combine occupied data with saved parts to show them on the map
+  const enhancedOccupied = useMemo(() => {
+    if (!occupancy) return [];
+
+    const occupiedWithSavedParts = [...occupancy.occupied];
+
+    // Add saved parts to the occupied data so they show on the map
+    savedParts.forEach((savedPart) => {
+      // Skip the current part being edited
+      if (savedPart.id === currentPartId) return;
+
+      // Handle both floorId formats (can be object with _id or string)
+      const savedFloorId = savedPart.floorId?._id || savedPart.floorId;
+
+      if (savedFloorId === floorId && (savedPart.areas || savedPart.area)) {
+        const areas =
+          savedPart.areas || (savedPart.area ? [savedPart.area] : []);
+        areas.forEach((area) => {
+          occupiedWithSavedParts.push({
+            area,
+            isSavedPart: true,
+            partIndex: savedPart.partIndex || 0,
+          });
+        });
+      }
+    });
+
+    return occupiedWithSavedParts;
+  }, [occupancy, savedParts, currentPartId, floorId]);
 
   useEffect(() => {
     if (!floorId) {
@@ -280,6 +312,13 @@ export default function FloorPickerModal({
                   {t("occupied")}
                 </span>
 
+                {savedParts.length > 0 && (
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="h-3 w-3 rounded-full border border-amber-600 bg-amber-500" />
+                    {t("itemPart")}
+                  </span>
+                )}
+
                 <span className="inline-flex items-center gap-1.5">
                   <span className="h-3 w-3 rounded-full border border-emerald-600 bg-emerald-500" />
                   {t("selected")}
@@ -291,7 +330,7 @@ export default function FloorPickerModal({
                   rows={occupancy.floor.rows}
                   cols={occupancy.floor.cols}
                   shapeCells={shapeCells}
-                  occupied={occupancy.occupied}
+                  occupied={enhancedOccupied}
                   selectedCells={selectedCells}
                   onCellClick={toggleCell}
                   selectionMode={selectionMode}

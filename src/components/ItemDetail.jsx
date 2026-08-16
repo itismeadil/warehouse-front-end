@@ -25,6 +25,8 @@ import { partLabel } from "../lib/Partlabel";
 import PartDetail from "./PartDetail";
 import ConfirmDialog from "./ConfirmDialog";
 import AddItemPartForm from "./AddItemPartForm";
+import AlertModal from "./AlertModal";
+import { useAlert } from "../hooks/useAlert";
 
 export default function ItemDetail() {
   const { id } = useParams();
@@ -33,6 +35,7 @@ export default function ItemDetail() {
   const { t, i18n: translation } = useTranslation();
   const { user } = useAuth();
   const canEdit = user?.role === "admin" || user?.role === "manager";
+  const { alert, showAlert, hideAlert } = useAlert();
 
   // If we navigated here from ItemList, the item is already in memory —
   // avoids an extra fetch. Falls back to fetching all items (and finding
@@ -106,8 +109,11 @@ export default function ItemDetail() {
         parts: prev.parts.map((p) => (p._id === partId ? updated : p)),
       }));
     } catch (error) {
-      alert(
-        "Update failed: " + (error.response?.data?.message || error.message),
+      showAlert(
+        t("updateFailed", "Update failed") +
+          ": " +
+          (error.response?.data?.message || error.message),
+        { type: "error", title: t("error", "Error") },
       );
     }
   };
@@ -125,7 +131,10 @@ export default function ItemDetail() {
       await deleteItem(id);
       navigate("/");
     } catch (error) {
-      alert(error.response?.data?.message || error.message);
+      showAlert(error.response?.data?.message || error.message, {
+        type: "error",
+        title: t("error", "Error"),
+      });
       setDeleting(false);
       setShowDeleteConfirm(false);
     }
@@ -148,7 +157,10 @@ export default function ItemDetail() {
 
   const handleEditSave = async () => {
     if (!editForm.serialNumber || !editForm.name || !editForm.color) {
-      alert(t("requiredFieldsError"));
+      showAlert(t("requiredFieldsError"), {
+        type: "error",
+        title: t("error", "Error"),
+      });
       return;
     }
 
@@ -163,12 +175,16 @@ export default function ItemDetail() {
       });
       setItem(updated);
       setIsEditing(false);
-      alert(t("itemUpdatedSuccess"));
+      showAlert(t("itemUpdatedSuccess"), {
+        type: "success",
+        title: t("success", "Success"),
+      });
     } catch (error) {
-      alert(
+      showAlert(
         t("itemUpdatedError") +
           ": " +
           (error.response?.data?.message || error.message),
+        { type: "error", title: t("error", "Error") },
       );
     } finally {
       setSaving(false);
@@ -187,7 +203,10 @@ export default function ItemDetail() {
 
   const handleAddPartSave = async () => {
     if (!draftPart.floorId || (!draftPart.areas && !draftPart.area)) {
-      alert(t("requiredFieldsError"));
+      showAlert(t("requiredFieldsError"), {
+        type: "error",
+        title: t("error", "Error"),
+      });
       return;
     }
 
@@ -203,11 +222,16 @@ export default function ItemDetail() {
       }));
       setShowAddPart(false);
       setDraftPart(null);
-      alert(t("partAddedSuccess"));
+      showAlert(t("partAddedSuccess"), {
+        type: "success",
+        title: t("success", "Success"),
+      });
     } catch (error) {
-      alert(
-        "Failed to add part: " +
+      showAlert(
+        t("failedToAddPart", "Failed to add part") +
+          ": " +
           (error.response?.data?.message || error.message),
+        { type: "error", title: t("error", "Error") },
       );
     } finally {
       setAddingPart(false);
@@ -529,6 +553,18 @@ export default function ItemDetail() {
           onCancel={() => setShowDeleteConfirm(false)}
         />
       )}
+
+      <AlertModal
+        isOpen={!!alert}
+        onClose={hideAlert}
+        title={alert?.title}
+        message={alert?.message}
+        type={alert?.type}
+        showCancel={alert?.showCancel}
+        confirmText={alert?.confirmText}
+        cancelText={alert?.cancelText}
+        onConfirm={alert?.onConfirm}
+      />
     </div>
   );
 }

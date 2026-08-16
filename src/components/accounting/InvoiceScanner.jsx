@@ -1,6 +1,15 @@
 import { useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Camera, Upload, X, Check, AlertCircle, Loader2 } from "lucide-react";
+import {
+  Camera,
+  Upload,
+  X,
+  Check,
+  AlertCircle,
+  Loader2,
+  Edit2,
+  RotateCcw,
+} from "lucide-react";
 import Tesseract from "tesseract.js";
 
 const Spinner = () => (
@@ -21,6 +30,10 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
   const [progress, setProgress] = useState(0);
   const [extractedData, setExtractedData] = useState(null);
   const [error, setError] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+  const [editableData, setEditableData] = useState(null);
+  const [imageQuality, setImageQuality] = useState(null);
+  const [ocrConfidence, setOcrConfidence] = useState(null);
 
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
@@ -29,6 +42,10 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
       setPreview(URL.createObjectURL(file));
       setExtractedData(null);
       setError("");
+      setImageQuality(null);
+      setOcrConfidence(null);
+      setIsEditing(false);
+      setEditableData(null);
     }
   };
 
@@ -40,7 +57,59 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
       setPreview(URL.createObjectURL(file));
       setExtractedData(null);
       setError("");
+      setImageQuality(null);
+      setOcrConfidence(null);
+      setIsEditing(false);
+      setEditableData(null);
     }
+  };
+
+  const assessImageQuality = (imgElement) => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+
+      canvas.width = imgElement.naturalWidth;
+      canvas.height = imgElement.naturalHeight;
+      ctx.drawImage(imgElement, 0, 0);
+
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
+
+      // Calculate brightness and contrast
+      let totalBrightness = 0;
+      let maxBrightness = 0;
+      let minBrightness = 255;
+
+      for (let i = 0; i < data.length; i += 4) {
+        const brightness = (data[i] + data[i + 1] + data[i + 2]) / 3;
+        totalBrightness += brightness;
+        maxBrightness = Math.max(maxBrightness, brightness);
+        minBrightness = Math.min(minBrightness, brightness);
+      }
+
+      const avgBrightness = totalBrightness / (data.length / 4);
+      const contrast = maxBrightness - minBrightness;
+
+      // Calculate resolution score
+      const resolution = canvas.width * canvas.height;
+      const resolutionScore = Math.min(resolution / (1920 * 1080), 1);
+
+      // Calculate overall quality score
+      const brightnessScore = 1 - Math.abs(avgBrightness - 128) / 128;
+      const contrastScore = Math.min(contrast / 200, 1);
+      const overallScore =
+        brightnessScore * 0.3 + contrastScore * 0.4 + resolutionScore * 0.3;
+
+      resolve({
+        score: overallScore,
+        brightness: avgBrightness,
+        contrast: contrast,
+        resolution: resolution,
+        recommendation:
+          overallScore < 0.5 ? "low" : overallScore < 0.7 ? "medium" : "high",
+      });
+    });
   };
 
   const processImage = async () => {
@@ -51,22 +120,46 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
     setError("");
 
     try {
+      // Assess image quality first
+      const img = new Image();
+      img.src = preview;
+      await new Promise((resolve) => {
+        if (img.complete) resolve();
+        else img.onload = resolve;
+      });
+
+      const quality = await assessImageQuality(img);
+      setImageQuality(quality);
+
+      // Enhanced OCR configuration based on image quality
+      const ocrConfig = {
+        logger: (m) => {
+          if (m.status === "recognizing text") {
+            setProgress(Math.round(m.progress * 100));
+          }
+        },
+      };
+
+      // Adaptive preprocessing based on quality
+      if (quality.recommendation === "low") {
+        // For low quality images, use more aggressive preprocessing
+        ocrConfig.preprocess = ["invert", "grayscale", "normalize"];
+      }
+
       const result = await Tesseract.recognize(
         preview,
         "eng+ara", // Support both English and Arabic
-        {
-          logger: (m) => {
-            if (m.status === "recognizing text") {
-              setProgress(Math.round(m.progress * 100));
-            }
-          },
-        },
+        ocrConfig,
       );
 
       const extractedText = result.data.text;
-      const parsedData = parseInvoiceText(extractedText);
+      const confidence = result.data.confidence;
+      setOcrConfidence(confidence);
+
+      const parsedData = parseInvoiceText(extractedText, confidence);
 
       setExtractedData(parsedData);
+      setEditableData(JSON.parse(JSON.stringify(parsedData))); // Deep copy for editing
     } catch (err) {
       console.error("OCR Error:", err);
       setError("Failed to process image. Please try a clearer image.");
@@ -75,8 +168,8 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
     }
   };
 
-  const parseInvoiceText = (text) => {
-    // Simple parsing logic - can be enhanced based on your invoice format
+  const parseInvoiceText = (text, confidence = 0) => {
+    // Enhanced parsing logic with confidence-based validation
     const lines = text.split("\n").filter((line) => line.trim());
 
     const data = {
@@ -85,13 +178,18 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
       total: "",
       lineItems: [],
       rawText: text,
+      confidence: confidence,
+      warnings: [],
     };
 
-    // Try to extract invoice number (common patterns)
+    // Enhanced invoice number patterns
     const invoicePatterns = [
       /invoice\s*[:#]?\s*([a-zA-Z0-9-]+)/i,
       /inv\s*[:#]?\s*([a-zA-Z0-9-]+)/i,
       /فاتورة\s*[:#]?\s*([a-zA-Z0-9-]+)/i,
+      /bill\s*[:#]?\s*([a-zA-Z0-9-]+)/i,
+      /رقم\s*الفاتورة\s*[:#]?\s*([a-zA-Z0-9-]+)/i,
+      /#\s*([a-zA-Z0-9-]+)/i,
     ];
 
     for (const pattern of invoicePatterns) {
@@ -102,10 +200,12 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
       }
     }
 
-    // Try to extract date
+    // Enhanced date patterns with multiple formats
     const datePatterns = [
       /(\d{4}[-/]\d{1,2}[-/]\d{1,2})/,
       /(\d{1,2}[-/]\d{1,2}[-/]\d{4})/,
+      /(\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{4})/i,
+      /(\d{1,2}\s+(?:يناير|فبراير|مارس|أبريل|مايو|يونيو|يوليو|أغسطس|سبتمبر|أكتوبر|نوفمبر|ديسمبر)\s+\d{4})/,
     ];
 
     for (const pattern of datePatterns) {
@@ -116,11 +216,14 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
       }
     }
 
-    // Try to extract total amount
+    // Enhanced total amount patterns with currency symbols
     const totalPatterns = [
-      /total\s*[:]?\s*([0-9.,]+)/i,
-      /الإجمالي\s*[:]?\s*([0-9.,]+)/i,
-      /amount\s*[:]?\s*([0-9.,]+)/i,
+      /total\s*[:]?\s*[$€£₹]?\s*([0-9.,]+)/i,
+      /الإجمالي\s*[:]?\s*[$€£₹]?\s*([0-9.,]+)/i,
+      /amount\s*[:]?\s*[$€£₹]?\s*([0-9.,]+)/i,
+      /المبلغ\s*[:]?\s*[$€£₹]?\s*([0-9.,]+)/i,
+      /grand\s*total\s*[:]?\s*[$€£₹]?\s*([0-9.,]+)/i,
+      /[$€£₹]\s*([0-9.,]+)/,
     ];
 
     for (const pattern of totalPatterns) {
@@ -131,19 +234,9 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
       }
     }
 
-    // Enhanced line item extraction - look for patterns with description, quantity, and price
-    const lineItemPatterns = [
-      // Pattern: Description followed by quantity and price
-      /([a-zA-Z\u0600-\u06FF\s]+)\s+(\d+)\s*[x×]?\s*([0-9.,]+)/g,
-      // Pattern: Item number/name, quantity, price
-      /([a-zA-Z0-9-]+)\s+(\d+)\s*[x×]?\s*([0-9.,]+)/g,
-      // Pattern: Just quantity and price
-      /(\d+)\s*[x×]\s*([0-9.,]+)/g,
-    ];
-
-    // First try to extract detailed line items with descriptions
+    // Enhanced line item extraction with better patterns
     const detailedPattern =
-      /([a-zA-Z\u0600-\u06FF\s][a-zA-Z\u0600-\u06FF0-9\s]*)\s+(\d+)\s*[x×]?\s*([0-9.,]+)/g;
+      /([a-zA-Z\u0600-\u06FF\s][a-zA-Z\u0600-\u06FF0-9\s\-\.]*)\s+(\d+)\s*[x×]\s*[$€£₹]?\s*([0-9.,]+)/g;
     let match;
     while ((match = detailedPattern.exec(text)) !== null) {
       const description = match[1].trim();
@@ -154,28 +247,56 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
       if (description.length > 2 && !isNaN(quantity) && !isNaN(price)) {
         data.lineItems.push({
           description: description,
-          quantity: quantity,
-          price: price,
+          quantity: parseInt(quantity),
+          price: parseFloat(price),
         });
+      }
+    }
+
+    // Alternative pattern: Price first, then quantity
+    const priceFirstPattern =
+      /[$€£₹]?\s*([0-9.,]+)\s*[x×]\s*(\d+)\s*([a-zA-Z\u0600-\u06FF\s][a-zA-Z\u0600-\u06FF0-9\s\-\.]*)/g;
+    while ((match = priceFirstPattern.exec(text)) !== null) {
+      const price = match[1].replace(/,/g, "");
+      const quantity = match[2];
+      const description = match[3].trim();
+
+      if (description.length > 2 && !isNaN(quantity) && !isNaN(price)) {
+        // Avoid duplicates
+        const isDuplicate = data.lineItems.some(
+          (item) =>
+            item.description === description &&
+            item.quantity === parseInt(quantity) &&
+            item.price === parseFloat(price),
+        );
+
+        if (!isDuplicate) {
+          data.lineItems.push({
+            description: description,
+            quantity: parseInt(quantity),
+            price: parseFloat(price),
+          });
+        }
       }
     }
 
     // If no detailed items found, fall back to simple quantity × price patterns
     if (data.lineItems.length === 0) {
-      const simplePattern = /(\d+)\s*[x×]\s*([0-9.,]+)/g;
+      const simplePattern = /(\d+)\s*[x×]\s*[$€£₹]?\s*([0-9.,]+)/g;
       while ((match = simplePattern.exec(text)) !== null) {
         data.lineItems.push({
           description: "",
-          quantity: match[1],
-          price: match[2].replace(/,/g, ""),
+          quantity: parseInt(match[1]),
+          price: parseFloat(match[2].replace(/,/g, "")),
         });
       }
     }
 
-    // Try to extract tax/VAT information
+    // Enhanced tax/VAT extraction
     const taxPatterns = [
       /(?:tax|vat|الضريبة|ضريبة)\s*[:#]?\s*([0-9.,]+)%?/i,
-      /(?:tax|vat|الضريبة|ضريبة)\s*[:#]?\s*([0-9.,]+)/i,
+      /(?:tax|vat|الضريبة|ضريبة)\s*[:#]?\s*[$€£₹]?\s*([0-9.,]+)/i,
+      /(?:vat|ضريبة\s*القيمة\s*المضافة)\s*[:#]?\s*([0-9.,]+)%?/i,
     ];
 
     for (const pattern of taxPatterns) {
@@ -186,14 +307,74 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
       }
     }
 
+    // Add confidence-based warnings (using translation keys)
+    if (confidence < 60) {
+      data.warnings.push("lowOcrConfidence");
+    }
+    if (data.lineItems.length === 0) {
+      data.warnings.push("noLineItemsDetected");
+    }
+    if (!data.total) {
+      data.warnings.push("totalAmountNotFound");
+    }
+    if (!data.invoiceNumber) {
+      data.warnings.push("invoiceNumberNotFound");
+    }
+
     return data;
   };
 
   const handleApplyData = () => {
-    if (extractedData && onScanComplete) {
-      onScanComplete(extractedData);
+    const dataToApply = isEditing ? editableData : extractedData;
+    if (dataToApply && onScanComplete) {
+      onScanComplete(dataToApply);
       onClose();
     }
+  };
+
+  const handleEditToggle = () => {
+    if (isEditing) {
+      // Save changes
+      setExtractedData(JSON.parse(JSON.stringify(editableData)));
+      setIsEditing(false);
+    } else {
+      // Start editing
+      setEditableData(JSON.parse(JSON.stringify(extractedData)));
+      setIsEditing(true);
+    }
+  };
+
+  const handleEditableChange = (field, value) => {
+    setEditableData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleLineItemChange = (index, field, value) => {
+    setEditableData((prev) => ({
+      ...prev,
+      lineItems: prev.lineItems.map((item, i) =>
+        i === index ? { ...item, [field]: value } : item,
+      ),
+    }));
+  };
+
+  const addLineItem = () => {
+    setEditableData((prev) => ({
+      ...prev,
+      lineItems: [
+        ...prev.lineItems,
+        { description: "", quantity: 1, price: 0 },
+      ],
+    }));
+  };
+
+  const removeLineItem = (index) => {
+    setEditableData((prev) => ({
+      ...prev,
+      lineItems: prev.lineItems.filter((_, i) => i !== index),
+    }));
   };
 
   const handleReset = () => {
@@ -218,10 +399,10 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
             </div>
             <div>
               <h2 className="text-lg font-semibold text-graphite-900">
-                Scan Invoice
+                {t("invoiceScannerTitle")}
               </h2>
               <p className="text-sm text-graphite-500">
-                Upload an invoice image to extract data
+                {t("invoiceScannerDescription")}
               </p>
             </div>
           </div>
@@ -255,10 +436,10 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
                 <Upload className="h-6 w-6 text-graphite-500" />
               </div>
               <p className="text-sm font-medium text-graphite-900">
-                Click to upload or drag and drop
+                {t("uploadInvoice")}
               </p>
               <p className="mt-1 text-xs text-graphite-500">
-                PNG, JPG, GIF up to 10MB
+                {t("uploadInvoiceHint")}
               </p>
             </div>
           ) : (
@@ -286,7 +467,7 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
                   <Spinner />
                   <div className="flex-1">
                     <p className="text-sm font-medium text-primary-900">
-                      Processing image...
+                      {t("processingImage")}
                     </p>
                     <div className="mt-1 h-2 w-full rounded-full bg-primary-200">
                       <div
@@ -308,19 +489,93 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
               )}
 
               {/* Extracted Data Preview */}
-              {extractedData && (
+              {extractedData && !isEditing && (
                 <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Check className="h-4 w-4 text-green-600" />
-                    <p className="text-sm font-medium text-green-900">
-                      Data extracted successfully
-                    </p>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-600" />
+                      <p className="text-sm font-medium text-green-900">
+                        Data extracted successfully
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleEditToggle}
+                      className="text-xs font-medium text-green-700 hover:text-green-900 flex items-center gap-1"
+                    >
+                      <Edit2 className="h-3 w-3" />
+                      {t("editExtractedData")}
+                    </button>
                   </div>
+
+                  {/* Quality Indicators */}
+                  {(imageQuality || ocrConfidence) && (
+                    <div className="mb-3 grid grid-cols-2 gap-2">
+                      {imageQuality && (
+                        <div className="rounded bg-green-100 px-2 py-1 text-xs">
+                          <span className="text-green-700">
+                            {t("imageQuality")}:{" "}
+                          </span>
+                          <span
+                            className={`font-medium ${
+                              imageQuality.recommendation === "high"
+                                ? "text-green-900"
+                                : imageQuality.recommendation === "medium"
+                                  ? "text-amber-700"
+                                  : "text-red-700"
+                            }`}
+                          >
+                            {imageQuality.recommendation}
+                          </span>
+                        </div>
+                      )}
+                      {ocrConfidence && (
+                        <div className="rounded bg-green-100 px-2 py-1 text-xs">
+                          <span className="text-green-700">
+                            {t("ocrConfidence")}:{" "}
+                          </span>
+                          <span
+                            className={`font-medium ${
+                              ocrConfidence > 80
+                                ? "text-green-900"
+                                : ocrConfidence > 60
+                                  ? "text-amber-700"
+                                  : "text-red-700"
+                            }`}
+                          >
+                            {Math.round(ocrConfidence)}%
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Warnings */}
+                  {extractedData.warnings &&
+                    extractedData.warnings.length > 0 && (
+                      <div className="mb-3 rounded bg-amber-100 px-3 py-2">
+                        <div className="flex items-start gap-2">
+                          <AlertCircle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                          <div className="text-xs">
+                            <p className="font-medium text-amber-900">
+                              {t("warnings")}:
+                            </p>
+                            <ul className="mt-1 space-y-1 text-amber-800">
+                              {extractedData.warnings.map((warning, idx) => (
+                                <li key={idx}>• {t(warning)}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    )}
 
                   <div className="space-y-2 text-sm">
                     {extractedData.invoiceNumber && (
                       <div className="flex justify-between">
-                        <span className="text-green-700">Invoice Number:</span>
+                        <span className="text-green-700">
+                          {t("invoiceScannerInvoiceNumber")}:
+                        </span>
                         <span className="font-medium text-green-900">
                           {extractedData.invoiceNumber}
                         </span>
@@ -328,7 +583,9 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
                     )}
                     {extractedData.date && (
                       <div className="flex justify-between">
-                        <span className="text-green-700">Date:</span>
+                        <span className="text-green-700">
+                          {t("invoiceScannerDate")}:
+                        </span>
                         <span className="font-medium text-green-900">
                           {extractedData.date}
                         </span>
@@ -336,7 +593,9 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
                     )}
                     {extractedData.total && (
                       <div className="flex justify-between">
-                        <span className="text-green-700">Total:</span>
+                        <span className="text-green-700">
+                          {t("invoiceScannerTotal")}:
+                        </span>
                         <span className="font-medium text-green-900">
                           {extractedData.total}
                         </span>
@@ -344,7 +603,9 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
                     )}
                     {extractedData.taxRate && (
                       <div className="flex justify-between">
-                        <span className="text-green-700">Tax Rate:</span>
+                        <span className="text-green-700">
+                          {t("invoiceScannerTaxRate")}:
+                        </span>
                         <span className="font-medium text-green-900">
                           {extractedData.taxRate}%
                         </span>
@@ -352,7 +613,9 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
                     )}
                     {extractedData.lineItems.length > 0 && (
                       <div>
-                        <span className="text-green-700">Line Items:</span>
+                        <span className="text-green-700">
+                          {t("lineItems")}:
+                        </span>
                         <div className="mt-1 space-y-1">
                           {extractedData.lineItems.map((item, idx) => (
                             <div
@@ -365,14 +628,187 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
                                 </div>
                               )}
                               <div className="flex justify-between text-green-800">
-                                <span>Qty: {item.quantity}</span>
-                                <span>Price: {item.price}</span>
+                                <span>
+                                  {t("invoiceScannerQuantity")}: {item.quantity}
+                                </span>
+                                <span>
+                                  {t("invoiceScannerPrice")}: {item.price}
+                                </span>
                               </div>
                             </div>
                           ))}
                         </div>
                       </div>
                     )}
+                  </div>
+                </div>
+              )}
+
+              {/* Editable Form */}
+              {isEditing && editableData && (
+                <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <Edit2 className="h-4 w-4 text-blue-600" />
+                      <p className="text-sm font-medium text-blue-900">
+                        {t("editExtractedData")}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleEditToggle}
+                      className="text-xs font-medium text-blue-700 hover:text-blue-900 flex items-center gap-1"
+                    >
+                      <Check className="h-3 w-3" />
+                      {t("invoiceScannerSaveChanges")}
+                    </button>
+                  </div>
+
+                  <div className="space-y-3 text-sm">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium text-blue-700 mb-1">
+                          {t("invoiceScannerInvoiceNumber")}
+                        </label>
+                        <input
+                          type="text"
+                          value={editableData.invoiceNumber}
+                          onChange={(e) =>
+                            handleEditableChange(
+                              "invoiceNumber",
+                              e.target.value,
+                            )
+                          }
+                          className="w-full rounded border border-blue-300 px-2 py-1 text-blue-900 focus:border-blue-500 focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-blue-700 mb-1">
+                          {t("invoiceScannerDate")}
+                        </label>
+                        <input
+                          type="text"
+                          value={editableData.date}
+                          onChange={(e) =>
+                            handleEditableChange("date", e.target.value)
+                          }
+                          placeholder="YYYY-MM-DD"
+                          className="w-full rounded border border-blue-300 px-2 py-1 text-blue-900 focus:border-blue-500 focus:outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium text-blue-700 mb-1">
+                          {t("invoiceScannerTotal")}
+                        </label>
+                        <input
+                          type="text"
+                          value={editableData.total}
+                          onChange={(e) =>
+                            handleEditableChange("total", e.target.value)
+                          }
+                          className="w-full rounded border border-blue-300 px-2 py-1 text-blue-900 focus:border-blue-500 focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-blue-700 mb-1">
+                          {t("invoiceScannerTaxRate")} (%)
+                        </label>
+                        <input
+                          type="text"
+                          value={editableData.taxRate || ""}
+                          onChange={(e) =>
+                            handleEditableChange("taxRate", e.target.value)
+                          }
+                          className="w-full rounded border border-blue-300 px-2 py-1 text-blue-900 focus:border-blue-500 focus:outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="block text-xs font-medium text-blue-700">
+                          {t("lineItems")}
+                        </label>
+                        <button
+                          type="button"
+                          onClick={addLineItem}
+                          className="text-xs font-medium text-blue-600 hover:text-blue-800"
+                        >
+                          + {t("invoiceScannerAddLineItem")}
+                        </button>
+                      </div>
+                      <div className="space-y-2">
+                        {editableData.lineItems.map((item, idx) => (
+                          <div key={idx} className="rounded bg-blue-100 p-2">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-xs font-medium text-blue-700">
+                                Item {idx + 1}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => removeLineItem(idx)}
+                                className="text-xs text-red-600 hover:text-red-800"
+                              >
+                                {t("remove")}
+                              </button>
+                            </div>
+                            <div className="grid grid-cols-3 gap-2">
+                              <div className="col-span-2">
+                                <input
+                                  type="text"
+                                  value={item.description}
+                                  onChange={(e) =>
+                                    handleLineItemChange(
+                                      idx,
+                                      "description",
+                                      e.target.value,
+                                    )
+                                  }
+                                  placeholder={t(
+                                    "invoiceScannerItemDescription",
+                                  )}
+                                  className="w-full rounded border border-blue-300 px-2 py-1 text-blue-900 focus:border-blue-500 focus:outline-none text-xs"
+                                />
+                              </div>
+                              <div>
+                                <input
+                                  type="number"
+                                  value={item.quantity}
+                                  onChange={(e) =>
+                                    handleLineItemChange(
+                                      idx,
+                                      "quantity",
+                                      parseInt(e.target.value) || 0,
+                                    )
+                                  }
+                                  placeholder={t("invoiceScannerQuantity")}
+                                  className="w-full rounded border border-blue-300 px-2 py-1 text-blue-900 focus:border-blue-500 focus:outline-none text-xs"
+                                />
+                              </div>
+                              <div className="col-span-3">
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  value={item.price}
+                                  onChange={(e) =>
+                                    handleLineItemChange(
+                                      idx,
+                                      "price",
+                                      parseFloat(e.target.value) || 0,
+                                    )
+                                  }
+                                  placeholder={t("invoiceScannerPrice")}
+                                  className="w-full rounded border border-blue-300 px-2 py-1 text-blue-900 focus:border-blue-500 focus:outline-none text-xs"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
@@ -386,18 +822,18 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
                     className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-primary-700 transition-colors"
                   >
                     <Camera className="h-4 w-4" />
-                    Extract Data
+                    {t("extractData")}
                   </button>
                 )}
 
-                {extractedData && (
+                {extractedData && !isEditing && (
                   <>
                     <button
                       type="button"
                       onClick={handleReset}
                       className="flex-1 rounded-lg border border-graphite-300 px-4 py-2.5 text-sm font-medium text-graphite-700 hover:bg-graphite-50 transition-colors"
                     >
-                      Scan Different
+                      {t("scanDifferent")}
                     </button>
                     <button
                       type="button"
@@ -405,11 +841,53 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
                       className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-green-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-green-700 transition-colors"
                     >
                       <Check className="h-4 w-4" />
-                      Apply Data
+                      {t("applyData")}
+                    </button>
+                  </>
+                )}
+
+                {isEditing && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditableData(
+                          JSON.parse(JSON.stringify(extractedData)),
+                        );
+                        setIsEditing(false);
+                      }}
+                      className="flex-1 rounded-lg border border-graphite-300 px-4 py-2.5 text-sm font-medium text-graphite-700 hover:bg-graphite-50 transition-colors flex items-center justify-center gap-2"
+                    >
+                      <RotateCcw className="h-4 w-4" />
+                      {t("cancel")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleEditToggle}
+                      className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+                    >
+                      <Check className="h-4 w-4" />
+                      {t("invoiceScannerSaveChanges")}
                     </button>
                   </>
                 )}
               </div>
+
+              {/* Tips for better OCR */}
+              {!processing && !extractedData && (
+                <div className="mt-4 rounded-lg bg-graphite-50 px-4 py-3">
+                  <p className="text-xs font-medium text-graphite-900 mb-2">
+                    {t("tipsForBetterResults")}:
+                  </p>
+                  <ul className="text-xs text-graphite-600 space-y-1">
+                    <li>• {t("tipHighResolution")}</li>
+                    <li>• {t("tipGoodLighting")}</li>
+                    <li>• {t("tipParallelCamera")}</li>
+                    <li>• {t("tipAvoidBlurry")}</li>
+                    <li>• {t("tipWellLit")}</li>
+                  </ul>
+                </div>
+              )}
             </div>
           )}
         </div>

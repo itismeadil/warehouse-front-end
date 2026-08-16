@@ -8,6 +8,9 @@ import {
   getAccountingReports,
   clearAccountingReports,
 } from "../../api/accountant";
+import AlertModal from "../AlertModal";
+import { useAlert } from "../../hooks/useAlert";
+import { useAuth } from "../../context/AuthContext";
 
 const Spinner = () => (
   <div
@@ -45,6 +48,8 @@ const ServiceErrorBanner = ({ message }) => (
 
 export default function CalculationsTab() {
   const { t } = useTranslation();
+  const { alert, showAlert, hideAlert } = useAlert();
+  const { user } = useAuth();
 
   const [tasks, setTasks] = useState([]);
   const [taskKey, setTaskKey] = useState("");
@@ -153,7 +158,10 @@ export default function CalculationsTab() {
       setActiveReport(null);
       setShowClearConfirm(false);
     } catch (err) {
-      alert(err.response?.data?.message || err.message);
+      showAlert(err.response?.data?.message || err.message, {
+        type: "error",
+        title: t("error", "Error"),
+      });
     } finally {
       setClearing(false);
     }
@@ -164,6 +172,23 @@ export default function CalculationsTab() {
 
   return (
     <div>
+      {/* Helpful Hint */}
+      <div className="mb-4 rounded-lg bg-blue-50 px-4 py-3 border border-blue-200">
+        <div className="flex items-start gap-3">
+          <div className="flex-shrink-0">
+            <Calculator className="h-5 w-5 text-blue-600" />
+          </div>
+          <div className="flex-1">
+            <h4 className="text-sm font-semibold text-blue-900 mb-1">
+              {t("calculationsHintTitle")}
+            </h4>
+            <p className="text-xs text-blue-800 leading-relaxed">
+              {t("calculationsHint")}
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Controls */}
       <form
         onSubmit={handleRun}
@@ -226,9 +251,7 @@ export default function CalculationsTab() {
           </div>
         </div>
 
-        {runError && (
-          <p className="mt-3 text-sm text-red-600">{runError}</p>
-        )}
+        {runError && <p className="mt-3 text-sm text-red-600">{runError}</p>}
 
         <button
           type="submit"
@@ -357,17 +380,20 @@ export default function CalculationsTab() {
                     </div>
                     <div className="divide-y divide-graphite-100">
                       {activeReport.items.map((row) => (
-                        <div
-                          key={row.itemId}
-                          className="px-4 py-3 text-sm"
-                        >
+                        <div key={row.itemId} className="px-4 py-3 text-sm">
                           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-4">
                             <span className="col-span-2 truncate font-medium text-graphite-900 sm:col-span-1">
                               {row.itemName}
                             </span>
-                            <span className="text-graphite-600">{row.totalQuantity}</span>
-                            <span className="text-graphite-600">{row.totalRevenue}</span>
-                            <span className="text-graphite-600">{row.averagePrice}</span>
+                            <span className="text-graphite-600">
+                              {row.totalQuantity}
+                            </span>
+                            <span className="text-graphite-600">
+                              {row.totalRevenue}
+                            </span>
+                            <span className="text-graphite-600">
+                              {row.averagePrice}
+                            </span>
                           </div>
                           {row.priceBreakdown?.length > 0 && (
                             <div className="mt-2 rounded-lg bg-graphite-50 p-2">
@@ -380,7 +406,9 @@ export default function CalculationsTab() {
                                     key={idx}
                                     className="flex items-center gap-2 text-xs text-graphite-600"
                                   >
-                                    <span>{pb.quantity} × {pb.price}</span>
+                                    <span>
+                                      {pb.quantity} × {pb.price}
+                                    </span>
                                     <span>= {pb.revenue}</span>
                                   </div>
                                 ))}
@@ -427,7 +455,9 @@ export default function CalculationsTab() {
                           <span className="text-graphite-600">
                             {row.reserved}
                           </span>
-                          <span className="text-graphite-600">{row.damaged}</span>
+                          <span className="text-graphite-600">
+                            {row.damaged}
+                          </span>
                           <span className="text-graphite-600">
                             {row.totalUnits}
                           </span>
@@ -531,6 +561,18 @@ export default function CalculationsTab() {
           </div>
         </div>
       )}
+
+      <AlertModal
+        isOpen={!!alert}
+        onClose={hideAlert}
+        title={alert?.title}
+        message={alert?.message}
+        type={alert?.type}
+        showCancel={alert?.showCancel}
+        confirmText={alert?.confirmText}
+        cancelText={alert?.cancelText}
+        onConfirm={alert?.onConfirm}
+      />
     </div>
   );
 }

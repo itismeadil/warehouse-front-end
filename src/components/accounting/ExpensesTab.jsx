@@ -9,6 +9,9 @@ import {
   getExpenseSummary,
 } from "../../api/accountant";
 import DatePicker from "../DatePicker";
+import AlertModal from "../AlertModal";
+import { useAlert } from "../../hooks/useAlert";
+import { useAuth } from "../../context/AuthContext";
 
 const Spinner = () => (
   <div
@@ -49,6 +52,8 @@ const PAYMENT_METHODS = [
 
 export default function ExpensesTab() {
   const { t } = useTranslation();
+  const { alert, showAlert, hideAlert, showConfirm } = useAlert();
+  const { user } = useAuth();
 
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -156,7 +161,9 @@ export default function ExpensesTab() {
       currency: expense.currency || "SAR",
       category: expense.category,
       description: expense.description || "",
-      date: expense.date ? new Date(expense.date).toISOString().split("T")[0] : "",
+      date: expense.date
+        ? new Date(expense.date).toISOString().split("T")[0]
+        : "",
       paymentMethod: expense.paymentMethod || "",
       attachmentUrl: expense.attachmentUrl || "",
     });
@@ -164,14 +171,30 @@ export default function ExpensesTab() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm("Are you sure you want to delete this expense?")) return;
+    const confirmed = await showConfirm(
+      t(
+        "confirmDeleteExpense",
+        "Are you sure you want to delete this expense?",
+      ),
+      {
+        title: t("deleteExpense", "Delete Expense"),
+        type: "warning",
+        confirmText: t("delete", "Delete"),
+        cancelText: t("cancel", "Cancel"),
+      },
+    );
+
+    if (!confirmed) return;
 
     try {
       await deleteExpense(id);
       loadExpenses();
       loadSummary();
     } catch (err) {
-      alert(err.response?.data?.message || err.message);
+      showAlert(err.response?.data?.message || err.message, {
+        type: "error",
+        title: t("error", "Error"),
+      });
     }
   };
 
@@ -189,27 +212,47 @@ export default function ExpensesTab() {
     setFormError("");
   };
 
-  const totalExpenses = expenses.reduce((sum, exp) => sum + (exp.amount || 0), 0);
+  const totalExpenses = expenses.reduce(
+    (sum, exp) => sum + (exp.amount || 0),
+    0,
+  );
 
   return (
     <div>
       {/* Summary Stats */}
       <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
         <StatCard
-          label="Total Expenses"
+          label={t("totalExpenses")}
           value={`${totalExpenses.toFixed(2)} SAR`}
           icon={TrendingUp}
         />
         <StatCard
-          label="This Month"
+          label={t("thisMonth")}
           value={expenses.length}
           icon={Calendar}
         />
         <StatCard
-          label="Categories"
+          label={t("categories")}
           value={summary.length}
           icon={TrendingUp}
         />
+      </div>
+
+      {/* Helpful Hint */}
+      <div className="mb-4 rounded-lg bg-rose-50 px-4 py-3 border border-rose-200">
+        <div className="flex items-start gap-3">
+          <div className="flex-shrink-0">
+            <TrendingUp className="h-5 w-5 text-rose-600" />
+          </div>
+          <div className="flex-1">
+            <h4 className="text-sm font-semibold text-rose-900 mb-1">
+              {t("expensesHintTitle")}
+            </h4>
+            <p className="text-xs text-rose-800 leading-relaxed">
+              {t("expensesHint")}
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Form */}
@@ -219,7 +262,7 @@ export default function ExpensesTab() {
       >
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-sm font-semibold text-graphite-900">
-            {editingId ? "Edit Expense" : "Add New Expense"}
+            {editingId ? t("editExpense") : t("addNewExpense")}
           </h2>
           {editingId && (
             <button
@@ -227,7 +270,7 @@ export default function ExpensesTab() {
               onClick={handleCancelEdit}
               className="text-xs font-medium text-graphite-500 hover:text-graphite-700"
             >
-              Cancel Edit
+              {t("cancelEdit")}
             </button>
           )}
         </div>
@@ -235,40 +278,46 @@ export default function ExpensesTab() {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label className="block text-sm font-medium text-graphite-700">
-              Amount *
+              {t("amount")}
             </label>
             <input
               type="number"
               min="0"
               step="0.01"
               value={formData.amount}
-              onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, amount: e.target.value })
+              }
               className="mt-1.5 block w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-graphite-700">
-              Currency
+              {t("currency")}
             </label>
             <input
               type="text"
               value={formData.currency}
-              onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, currency: e.target.value })
+              }
               className="mt-1.5 block w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-graphite-700">
-              Category *
+              {t("category")}
             </label>
             <select
               value={formData.category}
-              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, category: e.target.value })
+              }
               className="mt-1.5 block w-full rounded-lg border border-graphite-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
             >
-              <option value="">Select category</option>
+              <option value="">{t("selectCategory")}</option>
               {EXPENSE_CATEGORIES.map((cat) => (
                 <option key={cat.value} value={cat.value}>
                   {cat.label}
@@ -279,25 +328,27 @@ export default function ExpensesTab() {
 
           <div>
             <label className="block text-sm font-medium text-graphite-700">
-              Date *
+              {t("date")}
             </label>
             <DatePicker
               value={formData.date}
               onChange={(date) => setFormData({ ...formData, date })}
-              placeholder="Select date"
+              placeholder={t("selectDate")}
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-graphite-700">
-              Payment Method
+              {t("paymentMethod")}
             </label>
             <select
               value={formData.paymentMethod}
-              onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, paymentMethod: e.target.value })
+              }
               className="mt-1.5 block w-full rounded-lg border border-graphite-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
             >
-              <option value="">Select method</option>
+              <option value="">{t("selectMethod")}</option>
               {PAYMENT_METHODS.map((method) => (
                 <option key={method.value} value={method.value}>
                   {method.label}
@@ -308,12 +359,14 @@ export default function ExpensesTab() {
 
           <div>
             <label className="block text-sm font-medium text-graphite-700">
-              Attachment URL
+              {t("attachmentUrl")}
             </label>
             <input
               type="url"
               value={formData.attachmentUrl}
-              onChange={(e) => setFormData({ ...formData, attachmentUrl: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, attachmentUrl: e.target.value })
+              }
               placeholder="https://..."
               className="mt-1.5 block w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
             />
@@ -321,13 +374,15 @@ export default function ExpensesTab() {
 
           <div className="sm:col-span-2">
             <label className="block text-sm font-medium text-graphite-700">
-              Description
+              {t("description")}
             </label>
             <textarea
               value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, description: e.target.value })
+              }
               rows={3}
-              placeholder="Expense details..."
+              placeholder={t("expenseDetailsPlaceholder")}
               className="mt-1.5 block w-full resize-none rounded-lg border border-graphite-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
             />
           </div>
@@ -341,24 +396,30 @@ export default function ExpensesTab() {
           className="mt-4 flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {saving && <Spinner />}
-          {saving ? "Saving..." : editingId ? "Update Expense" : "Add Expense"}
+          {saving
+            ? t("saving")
+            : editingId
+              ? t("updateExpense")
+              : t("addExpense")}
         </button>
       </form>
 
       {/* Filters */}
       <div className="mb-5 rounded-xl border border-graphite-200 bg-white p-4 shadow-sm">
-        <h3 className="mb-3 text-sm font-semibold text-graphite-900">Filters</h3>
+        <h3 className="mb-3 text-sm font-semibold text-graphite-900">
+          {t("filters")}
+        </h3>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <div>
             <label className="block text-xs font-medium text-graphite-700 mb-1">
-              Category
+              {t("category")}
             </label>
             <select
               value={filterCategory}
               onChange={(e) => setFilterCategory(e.target.value)}
               className="block w-full rounded-lg border border-graphite-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
             >
-              <option value="">All categories</option>
+              <option value="">{t("allCategories")}</option>
               {EXPENSE_CATEGORIES.map((cat) => (
                 <option key={cat.value} value={cat.value}>
                   {cat.label}
@@ -369,23 +430,23 @@ export default function ExpensesTab() {
 
           <div>
             <label className="block text-xs font-medium text-graphite-700 mb-1">
-              From Date
+              {t("fromDate")}
             </label>
             <DatePicker
               value={filterFromDate}
               onChange={setFilterFromDate}
-              placeholder="Start date"
+              placeholder={t("startDate")}
             />
           </div>
 
           <div>
             <label className="block text-xs font-medium text-graphite-700 mb-1">
-              To Date
+              {t("toDate")}
             </label>
             <DatePicker
               value={filterToDate}
               onChange={setFilterToDate}
-              placeholder="End date"
+              placeholder={t("endDate")}
             />
           </div>
         </div>
@@ -395,7 +456,7 @@ export default function ExpensesTab() {
       {summary.length > 0 && (
         <div className="mb-5 rounded-xl border border-graphite-200 bg-white p-4 shadow-sm">
           <h3 className="mb-3 text-sm font-semibold text-graphite-900">
-            Summary by Category
+            {t("summaryByCategory")}
           </h3>
           <div className="space-y-2">
             {summary.map((item) => (
@@ -407,7 +468,9 @@ export default function ExpensesTab() {
                   {item._id}
                 </span>
                 <div className="flex items-center gap-3">
-                  <span className="text-xs text-graphite-500">{item.count} expenses</span>
+                  <span className="text-xs text-graphite-500">
+                    {t("expensesCount", { count: item.count })}
+                  </span>
                   <span className="text-sm font-semibold text-graphite-900">
                     {item.total.toFixed(2)} SAR
                   </span>
@@ -421,17 +484,17 @@ export default function ExpensesTab() {
       {/* Expenses List */}
       <div>
         <h2 className="mb-3 text-sm font-semibold text-graphite-900">
-          Expense History
+          {t("expenseHistory")}
         </h2>
         {loading ? (
           <div className="flex items-center gap-2">
             <Spinner />
-            <p className="text-sm text-graphite-500">Loading expenses...</p>
+            <p className="text-sm text-graphite-500">{t("loadingExpenses")}</p>
           </div>
         ) : error ? (
           <p className="text-sm text-red-600">{error}</p>
         ) : expenses.length === 0 ? (
-          <p className="text-sm text-graphite-500">No expenses yet</p>
+          <p className="text-sm text-graphite-500">{t("noExpensesYet")}</p>
         ) : (
           <div className="divide-y divide-graphite-200 rounded-xl border border-graphite-200 bg-white">
             {expenses.map((expense) => (
@@ -454,11 +517,11 @@ export default function ExpensesTab() {
                     </p>
                   )}
                   <div className="mt-1 flex items-center gap-3 text-xs text-graphite-500">
-                    <span>
-                      {new Date(expense.date).toLocaleDateString()}
-                    </span>
+                    <span>{new Date(expense.date).toLocaleDateString()}</span>
                     {expense.paymentMethod && (
-                      <span className="capitalize">{expense.paymentMethod}</span>
+                      <span className="capitalize">
+                        {expense.paymentMethod}
+                      </span>
                     )}
                   </div>
                 </div>
@@ -483,6 +546,18 @@ export default function ExpensesTab() {
           </div>
         )}
       </div>
+
+      <AlertModal
+        isOpen={!!alert}
+        onClose={hideAlert}
+        title={alert?.title}
+        message={alert?.message}
+        type={alert?.type}
+        showCancel={alert?.showCancel}
+        confirmText={alert?.confirmText}
+        cancelText={alert?.cancelText}
+        onConfirm={alert?.onConfirm}
+      />
     </div>
   );
 }

@@ -1,12 +1,22 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { getFloors, createFloor, getFloorOccupancy } from "../api/floors";
+import { Trash2, RotateCcw } from "lucide-react";
+import {
+  getFloors,
+  createFloor,
+  getFloorOccupancy,
+  deleteFloor,
+  restoreFloor,
+} from "../api/floors";
 import { FLOOR_SIZE_PRESETS } from "../floorSizePresets";
 import { encodeShape, decodeShape, areaSize } from "../lib/floorShape";
 import FloorShapeEditor from "./FloorShapeEditor";
+import FloorShapeTemplatePicker from "./FloorShapeTemplatePicker";
 import FloorGrid from "./FloorGrid";
+import AlertModal from "./AlertModal";
+import { useAlert } from "../hooks/useAlert";
 
-function FloorCard({ floor, occupancy }) {
+function FloorCard({ floor, occupancy, onDelete, onRestore }) {
   const shapeCells = useMemo(
     () => decodeShape(floor.rows, floor.cols, floor.shape),
     [floor],
@@ -20,18 +30,117 @@ function FloorCard({ floor, occupancy }) {
     [occupancy],
   );
 
+  const totalCells = shapeCells.length;
+  const occupancyPercentage =
+    totalCells > 0 ? Math.round((occupiedCount / totalCells) * 100) : 0;
+
+  const isDeleted = !!floor.deletedAt;
+  const daysSinceDeletion = isDeleted
+    ? Math.floor(
+        (Date.now() - new Date(floor.deletedAt).getTime()) /
+          (24 * 60 * 60 * 1000),
+      )
+    : 0;
+  const daysUntilPermanentDelete = isDeleted
+    ? Math.max(0, 3 - daysSinceDeletion)
+    : 0;
+
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className="font-semibold text-slate-900">{floor.name}</h2>
+    <div
+      className={`group rounded-2xl border bg-gradient-to-br from-white to-slate-50 p-6 shadow-lg transition-all duration-300 hover:shadow-xl ${
+        isDeleted
+          ? "border-red-200 from-red-50 to-white"
+          : "border-slate-200 hover:border-primary-300"
+      }`}
+    >
+      <div className="mb-5 flex items-start justify-between">
+        <div className="flex-1">
+          <div className="flex items-center gap-3">
+            <h2
+              className={`text-xl font-bold ${isDeleted ? "text-red-900" : "text-slate-900"}`}
+            >
+              {floor.name}
+            </h2>
+            {!isDeleted && (
+              <span className="inline-flex items-center rounded-full bg-primary-100 px-2.5 py-0.5 text-xs font-medium text-primary-700">
+                {floor.rows}×{floor.cols}
+              </span>
+            )}
+          </div>
+
+          {!isDeleted && (
+            <div className="mt-2 flex items-center gap-4 text-sm">
+              <div className="flex items-center gap-2">
+                <div className="h-2 w-2 rounded-full bg-violet-500"></div>
+                <span className="text-slate-600">{occupiedCount} occupied</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="h-2 w-2 rounded-full bg-slate-300"></div>
+                <span className="text-slate-600">
+                  {totalCells - occupiedCount} free
+                </span>
+              </div>
+              <div className="ml-auto text-sm font-medium text-slate-700">
+                {occupancyPercentage}% full
+              </div>
+            </div>
+          )}
+
+          {isDeleted && (
+            <div className="mt-2 flex items-center gap-2">
+              <span className="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-700">
+                Deleted
+              </span>
+              <p className="text-xs text-red-600">
+                {daysSinceDeletion === 0
+                  ? "today"
+                  : `${daysSinceDeletion} day(s) ago`}{" "}
+                •{" "}
+                {daysUntilPermanentDelete === 0
+                  ? "Will be deleted permanently soon"
+                  : `${daysUntilPermanentDelete} day(s) until permanent deletion`}
+              </p>
+            </div>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2">
+          {!isDeleted && (
+            <button
+              onClick={() => onDelete(floor)}
+              className="rounded-lg p-2 text-slate-400 transition-all duration-200 hover:bg-red-50 hover:text-red-600 hover:shadow-md"
+              title="Delete floor"
+            >
+              <Trash2 className="h-5 w-5" />
+            </button>
+          )}
+          {isDeleted && (
+            <button
+              onClick={() => onRestore(floor)}
+              className="rounded-lg p-2 text-red-400 transition-all duration-200 hover:bg-green-50 hover:text-green-600 hover:shadow-md"
+              title="Restore floor"
+            >
+              <RotateCcw className="h-5 w-5" />
+            </button>
+          )}
+        </div>
       </div>
-      {occupancy && (
-        <FloorGrid
-          rows={floor.rows}
-          cols={floor.cols}
-          shapeCells={shapeCells}
-          occupied={occupancy.occupied}
-        />
+
+      {!isDeleted && (
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-inner">
+          {occupancy ? (
+            <FloorGrid
+              rows={floor.rows}
+              cols={floor.cols}
+              shapeCells={shapeCells}
+              occupied={occupancy.occupied}
+            />
+          ) : (
+            <div className="flex items-center justify-center py-8 text-slate-400">
+              <p className="text-sm">Loading occupancy data...</p>
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
@@ -42,25 +151,30 @@ export default function FloorsMap() {
   const [occupancyByFloor, setOccupancyByFloor] = useState({});
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [showDeleted, setShowDeleted] = useState(false);
 
   const [name, setName] = useState("");
   const [preset, setPreset] = useState(null);
+  const [template, setTemplate] = useState(null);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState(null);
   const editorRef = useRef(null);
   const toastTimeoutRef = useRef(null);
 
   const { t } = useTranslation();
+  const { alert, showAlert, hideAlert, showConfirm } = useAlert();
 
   const loadFloors = async () => {
     setLoading(true);
     try {
-      const data = await getFloors();
+      const data = await getFloors(showDeleted);
       const sortedData = data.sort((a, b) => b.name.localeCompare(a.name));
       setFloors(sortedData);
 
+      // Only load occupancy for non-deleted floors
+      const nonDeletedFloors = sortedData.filter((floor) => !floor.deletedAt);
       const occupancyEntries = await Promise.all(
-        sortedData.map((floor) =>
+        nonDeletedFloors.map((floor) =>
           getFloorOccupancy(floor._id).then((res) => [floor._id, res]),
         ),
       );
@@ -74,11 +188,12 @@ export default function FloorsMap() {
 
   useEffect(() => {
     loadFloors();
-  }, []);
+  }, [showDeleted]);
 
   const resetForm = () => {
     setName("");
     setPreset(null);
+    setTemplate(null);
     setShowForm(false);
   };
 
@@ -95,6 +210,10 @@ export default function FloorsMap() {
     }
     if (!preset) {
       showToast("Pick a size first");
+      return;
+    }
+    if (!template) {
+      showToast("Pick a starting layout first");
       return;
     }
 
@@ -123,11 +242,50 @@ export default function FloorsMap() {
     }
   };
 
+  const handleDeleteFloor = async (floor) => {
+    const confirmed = await showConfirm(
+      `${t("confirmDeleteFloor", "Are you sure you want to delete")} "${floor.name}"? ${t("undoWarning", "You can undo this action within 3 days.")}`,
+      {
+        title: t("deleteFloor", "Delete Floor"),
+        type: "warning",
+        confirmText: t("delete", "Delete"),
+        cancelText: t("cancel", "Cancel"),
+      },
+    );
+
+    if (!confirmed) return;
+
+    try {
+      await deleteFloor(floor._id);
+      showToast(
+        t("floorDeleted", "Floor deleted. You can undo this within 3 days."),
+      );
+      loadFloors();
+    } catch (error) {
+      showToast(
+        t("error", "Error") +
+          ": " +
+          (error.response?.data?.message || error.message),
+      );
+    }
+  };
+
+  const handleRestoreFloor = async (floor) => {
+    try {
+      await restoreFloor(floor._id);
+      showToast("Floor restored successfully.");
+      setShowDeleted(false); // Switch back to showing active floors
+      loadFloors();
+    } catch (error) {
+      showToast("Error: " + (error.response?.data?.message || error.message));
+    }
+  };
+
   return (
-    <div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <div className="fixed inset-x-0 top-4 z-50 flex justify-center pointer-events-none">
         {toast && (
-          <div className="pointer-events-auto rounded-xl bg-slate-900 px-4 py-2 text-sm text-white shadow-lg">
+          <div className="pointer-events-auto rounded-xl bg-slate-900/95 px-6 py-3 text-sm text-white shadow-xl backdrop-blur-sm">
             {toast}
           </div>
         )}
@@ -135,146 +293,241 @@ export default function FloorsMap() {
 
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">
+          <h1 className="text-3xl font-bold text-slate-900">
             {t("floorMaps")}
           </h1>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-2 text-sm text-slate-600">
             {t("floorMapsDescription")}
           </p>
         </div>
 
-        <button
-          onClick={() => setShowForm((v) => !v)}
-          className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-        >
-          <span className="text-base leading-none">+</span>
-          {t("addFloor")}
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={() => setShowDeleted((v) => !v)}
+            className={`inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-medium shadow-md transition-all duration-200 ${
+              showDeleted
+                ? "bg-red-600 text-white hover:bg-red-700 hover:shadow-lg"
+                : "bg-white text-slate-700 hover:bg-slate-50 border border-slate-200"
+            }`}
+          >
+            {showDeleted ? "Hide Deleted" : "Show Deleted"}
+          </button>
+          <button
+            onClick={() => setShowForm((v) => !v)}
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary-600 px-5 py-2.5 text-sm font-medium text-white shadow-md transition-all duration-200 hover:bg-primary-700 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+          >
+            <span className="text-lg leading-none">+</span>
+            {t("addFloor")}
+          </button>
+        </div>
       </div>
 
       {showForm && (
-        <div className="mb-8 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-sm font-semibold text-slate-900">
-            {t("newFloor")}
-          </h2>
-
-          <div className="mt-4">
-            <label className="block text-sm font-medium text-slate-700">
-              {t("name")}
-            </label>
-
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder={t("floorNamePlaceholder")}
-              className="mt-1.5 block w-full max-w-xs rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-            />
+        <div className="mb-8 rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-8 shadow-lg">
+          <div className="mb-6">
+            <h2 className="text-xl font-bold text-slate-900">
+              {t("newFloor")}
+            </h2>
+            <p className="mt-1 text-sm text-slate-600">
+              Create a new warehouse floor map
+            </p>
           </div>
 
-          <div className="mt-5">
-            <label className="block text-sm font-medium text-slate-700">
-              {t("size")}
-            </label>
-
-            <div className="mt-2 flex items-end gap-4">
-              {FLOOR_SIZE_PRESETS.map((p) => (
-                <button
-                  key={p.id}
-                  type="button"
-                  onClick={() => setPreset(p)}
-                  className={`flex h-16 w-16 items-center justify-center rounded-lg border-2 transition-colors ${
-                    preset?.id === p.id
-                      ? "border-blue-500 bg-blue-50"
-                      : "border-slate-200 bg-slate-50 hover:border-slate-300"
-                  }`}
-                >
-                  <span
-                    className={`rounded-sm ${
-                      preset?.id === p.id ? "bg-blue-600" : "bg-slate-400"
-                    }`}
-                    style={{
-                      width: p.previewPx,
-                      height: p.previewPx,
-                    }}
-                  />
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {preset && (
-            <div className="mt-5">
-              <label className="block text-sm font-medium text-slate-700">
-                {t("drawFloorShape")}
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-semibold text-slate-700">
+                {t("name")}
               </label>
 
-              <div className="mt-2">
-                <FloorShapeEditor
-                  key={preset.id}
-                  ref={editorRef}
-                  rows={preset.rows}
-                  cols={preset.cols}
-                />
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder={t("floorNamePlaceholder")}
+                className="mt-2 block w-full max-w-md rounded-xl border border-slate-300 px-4 py-3 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 transition-all duration-200"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-slate-700">
+                {t("size")}
+              </label>
+
+              <div className="mt-3 flex items-end gap-4">
+                {FLOOR_SIZE_PRESETS.map((p) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => {
+                      setPreset(p);
+                      setTemplate(null); // changing size invalidates the previous template pick
+                    }}
+                    className={`flex h-20 w-20 flex-col items-center justify-center gap-2 rounded-xl border-2 transition-all duration-200 ${
+                      preset?.id === p.id
+                        ? "border-primary-500 bg-primary-50 shadow-md"
+                        : "border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm"
+                    }`}
+                  >
+                    <span
+                      className={`rounded-md transition-all duration-200 ${
+                        preset?.id === p.id ? "bg-primary-600" : "bg-slate-400"
+                      }`}
+                      style={{
+                        width: p.previewPx,
+                        height: p.previewPx,
+                      }}
+                    />
+                    <span className="text-xs font-medium text-slate-600">
+                      {p.label}
+                    </span>
+                  </button>
+                ))}
               </div>
+            </div>
+
+            {preset && (
+              <div>
+                <label className="block text-sm font-semibold text-slate-700">
+                  {t("chooseStartingLayout", "Starting layout")}
+                </label>
+                <p className="mt-1 text-sm text-slate-500">
+                  {t(
+                    "chooseStartingLayoutHelp",
+                    "Pick the shape closest to your floor. You can still fine-tune it below.",
+                  )}
+                </p>
+
+                <div className="mt-3">
+                  <FloorShapeTemplatePicker
+                    rows={preset.rows}
+                    cols={preset.cols}
+                    selectedId={template?.id}
+                    onSelect={setTemplate}
+                  />
+                </div>
+              </div>
+            )}
+
+            {preset && template && (
+              <div>
+                <label className="block text-sm font-semibold text-slate-700">
+                  {t("drawFloorShape")}
+                </label>
+                <p className="mt-1 text-sm text-slate-500">
+                  {t(
+                    "fineTuneShapeHelp",
+                    "Tap dots to add or remove cells and adjust the edges.",
+                  )}
+                </p>
+
+                <div className="mt-3">
+                  <FloorShapeEditor
+                    // Re-key on both preset and template so switching either
+                    // remounts the editor with a fresh, pre-filled starting shape.
+                    key={`${preset.id}-${template.id}`}
+                    ref={editorRef}
+                    rows={preset.rows}
+                    cols={preset.cols}
+                    initialCells={template.getCells(preset.rows, preset.cols)}
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => editorRef.current?.clear()}
+                  className="mt-3 text-sm font-medium text-slate-500 transition-colors hover:text-red-600"
+                >
+                  {t("clearDrawing")}
+                </button>
+              </div>
+            )}
+
+            <div className="flex gap-3 pt-4 border-t border-slate-200">
+              <button
+                type="button"
+                onClick={resetForm}
+                className="rounded-xl border border-slate-300 px-6 py-2.5 text-sm font-medium text-slate-700 transition-all duration-200 hover:bg-slate-50 hover:shadow-sm"
+              >
+                {t("cancel")}
+              </button>
 
               <button
                 type="button"
-                onClick={() => editorRef.current?.clear()}
-                className="mt-2 text-sm text-slate-500 transition-colors hover:text-red-600"
+                onClick={handleCreateFloor}
+                disabled={saving}
+                className="rounded-xl bg-primary-600 px-6 py-2.5 text-sm font-medium text-white transition-all duration-200 hover:bg-primary-700 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {t("clearDrawing")}
+                {saving ? t("saving") : t("createFloor")}
               </button>
             </div>
-          )}
-
-          <div className="mt-5 flex gap-2">
-            <button
-              type="button"
-              onClick={resetForm}
-              className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
-            >
-              {t("cancel")}
-            </button>
-
-            <button
-              type="button"
-              onClick={handleCreateFloor}
-              disabled={saving}
-              className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {saving ? t("saving") : t("createFloor")}
-            </button>
           </div>
         </div>
       )}
 
       {loading ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-slate-200 bg-slate-50 py-12">
-          <div className="flex flex-col items-center gap-3 rounded-md bg-graphite-50 px-6 py-8 text-center">
+        <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white py-16 shadow-sm">
+          <div className="flex flex-col items-center gap-4 rounded-xl bg-white px-8 py-10 text-center shadow-md">
             <div
-              className="h-8 w-8 animate-spin rounded-full border-4 border-current border-t-transparent"
-              style={{ color: "#45a1a1" }}
+              className="h-10 w-10 animate-spin rounded-full border-4 border-current border-t-transparent"
+              style={{ color: "#317272" }}
               aria-hidden
             />
-            <p className="text-sm text-graphite-600">{t("loading")}</p>
+            <p className="text-base font-medium text-slate-700">
+              {t("loading")}
+            </p>
           </div>
         </div>
       ) : floors.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-slate-300 bg-white py-12 text-center">
-          <p className="text-sm text-slate-500">{t("noFloors")}</p>
+        <div className="rounded-2xl border-2 border-dashed border-slate-300 bg-gradient-to-br from-white to-slate-50 py-16 text-center shadow-sm">
+          <div className="flex flex-col items-center gap-3">
+            <div className="rounded-full bg-slate-100 p-4">
+              <svg
+                className="h-8 w-8 text-slate-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 7m0 13V7"
+                />
+              </svg>
+            </div>
+            <p className="text-base font-medium text-slate-600">
+              {t("noFloors")}
+            </p>
+            <p className="text-sm text-slate-500">
+              Get started by creating your first floor map
+            </p>
+          </div>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-2">
           {floors.map((floor) => (
             <FloorCard
               key={floor._id}
               floor={floor}
               occupancy={occupancyByFloor[floor._id]}
+              onDelete={handleDeleteFloor}
+              onRestore={handleRestoreFloor}
             />
           ))}
         </div>
       )}
+
+      <AlertModal
+        isOpen={!!alert}
+        onClose={hideAlert}
+        title={alert?.title}
+        message={alert?.message}
+        type={alert?.type}
+        showCancel={alert?.showCancel}
+        confirmText={alert?.confirmText}
+        cancelText={alert?.cancelText}
+        onConfirm={alert?.onConfirm}
+      />
     </div>
   );
 }

@@ -3,10 +3,15 @@ import { expandArea } from "../lib/floorShape";
 
 const PITCH = 6;
 const RADIUS = 2.4;
+const RECT_SIZE = 4; // Size of rectangle cells for empty cells
+const FILLED_SIZE = 5; // Size for filled cells (small gap between them)
 
 const EMPTY_COLOR = "#e2e8f0"; // slate-200
-const OCCUPIED_COLOR = "#2563eb"; // blue-600
+const OCCUPIED_COLOR = "#6366f1"; // indigo-500 (modern purple)
+const SAVED_PART_COLOR = "#f59e0b"; // amber-500
 const SELECTED_COLOR = "#10b981"; // emerald-500
+const BORDER_COLOR = "#ffffff"; // white border between parts
+const HIGHLIGHT_COLOR = "#f472b6"; // pink-400 for hover effects
 
 // Renders a floor's drawn shape as dots. Only cells the person actually
 // painted in (shapeCells — already decoded from the floor's bitmap) are
@@ -34,6 +39,7 @@ export default function FloorGrid({
   onSelectionChange,
 }) {
   const canvasRef = useRef(null);
+  const containerRef = useRef(null);
   const [hover, setHover] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState(null);
@@ -87,15 +93,95 @@ export default function FloorGrid({
 
       const isSelected = selectedSet.has(key);
       const isOccupied = occupiedMap.has(key);
+      const isHovered =
+        hover &&
+        hover.entry &&
+        occupiedMap.get(key)?.partId === hover.entry.partId;
 
       let color = EMPTY_COLOR;
+      let partId = null;
       if (isSelected) color = SELECTED_COLOR;
-      else if (isOccupied) color = OCCUPIED_COLOR;
+      else if (isHovered) color = HIGHLIGHT_COLOR;
+      else if (isOccupied) {
+        const entry = occupiedMap.get(key);
+        color = entry?.isSavedPart ? SAVED_PART_COLOR : OCCUPIED_COLOR;
+        partId = entry?.partId || entry?.area?.partId;
+      }
 
-      ctx.beginPath();
-      ctx.arc(cx, cy, RADIUS, 0, Math.PI * 2);
+      // For selected/occupied cells, use larger size with small gaps
+      // For empty cells, use smaller rectangles with larger gaps
+      const isFilled = isSelected || isOccupied || isHovered;
+      const size = isFilled ? FILLED_SIZE : RECT_SIZE;
+      const rectX = cx - size / 2;
+      const rectY = cy - size / 2;
+
+      // Add subtle shadow for filled cells
+      if (isFilled) {
+        ctx.shadowColor = "rgba(0, 0, 0, 0.1)";
+        ctx.shadowBlur = 2;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 1;
+      } else {
+        ctx.shadowColor = "transparent";
+      }
+
       ctx.fillStyle = color;
-      ctx.fill();
+      ctx.fillRect(rectX, rectY, size, size);
+
+      // Reset shadow
+      ctx.shadowColor = "transparent";
+
+      // Draw borders between different parts
+      if (isFilled && partId) {
+        const directions = [
+          { dr: -1, dc: 0 }, // top
+          { dr: 1, dc: 0 }, // bottom
+          { dr: 0, dc: -1 }, // left
+          { dr: 0, dc: 1 }, // right
+        ];
+
+        directions.forEach(({ dr, dc }) => {
+          const neighborKey = `${row + dr}-${col + dc}`;
+          const neighborEntry = occupiedMap.get(neighborKey);
+          const neighborPartId =
+            neighborEntry?.partId || neighborEntry?.area?.partId;
+
+          // If neighbor exists and belongs to a different part, draw border
+          if (neighborEntry && neighborPartId !== partId) {
+            ctx.strokeStyle = BORDER_COLOR;
+            ctx.lineWidth = 1;
+
+            const borderX = cx - size / 2;
+            const borderY = cy - size / 2;
+
+            if (dr === -1) {
+              // top border
+              ctx.beginPath();
+              ctx.moveTo(borderX, borderY);
+              ctx.lineTo(borderX + size, borderY);
+              ctx.stroke();
+            } else if (dr === 1) {
+              // bottom border
+              ctx.beginPath();
+              ctx.moveTo(borderX, borderY + size);
+              ctx.lineTo(borderX + size, borderY + size);
+              ctx.stroke();
+            } else if (dc === -1) {
+              // left border
+              ctx.beginPath();
+              ctx.moveTo(borderX, borderY);
+              ctx.lineTo(borderX, borderY + size);
+              ctx.stroke();
+            } else if (dc === 1) {
+              // right border
+              ctx.beginPath();
+              ctx.moveTo(borderX + size, borderY);
+              ctx.lineTo(borderX + size, borderY + size);
+              ctx.stroke();
+            }
+          }
+        });
+      }
     });
 
     // Draw drag selection rectangle in squares mode
@@ -129,6 +215,7 @@ export default function FloorGrid({
     isDragging,
     dragStart,
     dragEnd,
+    hover,
   ]);
 
   const cellFromEvent = (e) => {
@@ -139,6 +226,12 @@ export default function FloorGrid({
       row: Math.floor(y / PITCH) + minRow,
       col: Math.floor(x / PITCH) + minCol,
     };
+  };
+
+  const entryFromEvent = (e) => {
+    const { row, col } = cellFromEvent(e);
+    const key = `${row}-${col}`;
+    return occupiedMap.get(key);
   };
 
   const handleClick = (e) => {
@@ -156,7 +249,10 @@ export default function FloorGrid({
     if (!shapeSet.has(key)) return;
 
     const isSelected = selectedSet.has(key);
-    if (occupiedMap.has(key) && !isSelected) return;
+    const occupiedEntry = occupiedMap.get(key);
+    // Allow selecting cells that are occupied by saved parts of the same item
+    // but not cells occupied by other items
+    if (occupiedEntry && !isSelected && !occupiedEntry.isSavedPart) return;
 
     onCellClick(row, col);
   };
@@ -186,11 +282,7 @@ export default function FloorGrid({
       return;
     }
 
-    if (!entry) {
-      setHover(null);
-      return;
-    }
-
+    // Always set hover for tooltip positioning, even if no entry
     setHover({
       entry,
       x: (col - minCol) * PITCH + PITCH / 2,
@@ -233,8 +325,12 @@ export default function FloorGrid({
           for (let c = startCol; c <= endCol; c++) {
             const key = `${r}-${c}`;
             if (shapeSet.has(key)) {
-              const isOccupied = occupiedMap.has(key);
-              if (!isOccupied) {
+              const occupiedEntry = occupiedMap.get(key);
+              // Allow selecting cells that are occupied by saved parts of the same item
+              // but not cells occupied by other items
+              const isOccupiedByOther =
+                occupiedEntry && !occupiedEntry.isSavedPart;
+              if (!isOccupiedByOther) {
                 newSelectedCells.push({ row: r, col: c });
               }
             }
@@ -265,7 +361,10 @@ export default function FloorGrid({
   };
 
   return (
-    <div className="relative inline-block max-w-full overflow-auto rounded-lg border border-slate-200 bg-white p-2">
+    <div
+      ref={containerRef}
+      className="relative inline-block max-w-full overflow-auto rounded-xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-3 shadow-md"
+    >
       <canvas
         ref={canvasRef}
         width={width}
@@ -291,21 +390,64 @@ export default function FloorGrid({
               : ""
         }
       />
-      {hover && (
+      {hover && hover.entry && containerRef.current && (
         <div
-          className="pointer-events-none absolute whitespace-nowrap rounded bg-slate-900 px-2 py-1 text-xs text-white shadow"
+          className="pointer-events-none absolute whitespace-nowrap rounded-lg bg-slate-900/95 px-3 py-2 text-xs text-white shadow-xl backdrop-blur-sm z-10 border border-slate-700/50"
           style={{
-            left: hover.x + 8, // +8 accounts for the container's p-2 padding
+            left: hover.x + 8,
             top: hover.y + 8,
-            transform: "translate(-50%, calc(-100% - 8px))",
+            transform: (() => {
+              const containerRect =
+                containerRef.current.getBoundingClientRect();
+              const tooltipX = hover.x + 8;
+              const tooltipY = hover.y + 8;
+
+              // Check if tooltip would be too close to right edge
+              const tooCloseToRight = tooltipX > containerRect.width - 100;
+              // Check if tooltip would be too close to left edge
+              const tooCloseToLeft = tooltipX < 100;
+              // Check if tooltip would be too close to top edge
+              const tooCloseToTop = tooltipY < 50;
+
+              let transform = "translate(-50%, calc(-100% - 8px))";
+
+              if (tooCloseToRight) {
+                transform = "translate(-100%, calc(-100% - 8px))";
+              } else if (tooCloseToLeft) {
+                transform = "translate(0%, calc(-100% - 8px))";
+              }
+
+              if (tooCloseToTop) {
+                // Show below instead of above
+                transform = transform.replace("calc(-100% - 8px)", "8px");
+              }
+
+              return transform;
+            })(),
+            maxWidth: "250px",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
           }}
         >
-          {hover.entry.itemName}
-          {hover.entry.partName ? ` — ${hover.entry.partName}` : ""}
-          {" · SN: #"}
-          {hover.entry.serialNumber}
-          {" · Qty: "}
-          {hover.entry.stock}
+          {hover.entry.isSavedPart ? (
+            <div className="flex items-center gap-2">
+              <span className="font-semibold">
+                Part {hover.entry.partIndex}
+              </span>
+            </div>
+          ) : (
+            <div className="space-y-1">
+              <div className="font-semibold">{hover.entry.itemName}</div>
+              {hover.entry.partName && (
+                <div className="text-slate-300">{hover.entry.partName}</div>
+              )}
+              <div className="flex items-center gap-2 text-slate-300">
+                <span>SN: #{hover.entry.serialNumber}</span>
+                <span>·</span>
+                <span>Qty: {hover.entry.stock}</span>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

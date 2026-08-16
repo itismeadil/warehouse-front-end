@@ -14,6 +14,8 @@ import { partLabel } from "../lib/Partlabel";
 import { useAuth } from "../context/AuthContext";
 import FloorGrid from "./FloorGrid";
 import FloorPickerModal from "./FloorPickerModal";
+import AlertModal from "./AlertModal";
+import { useAlert } from "../hooks/useAlert";
 
 // Parts only track damage now — stock/reserved/sold live on the item and
 // are read-only here (editable up in ItemDetail instead). Damaged is the
@@ -66,6 +68,7 @@ export default function PartDetail({
   const { t } = useTranslation();
   const { user } = useAuth();
   const canEdit = user?.role === "admin" || user?.role === "manager";
+  const { alert, showAlert, hideAlert, showConfirm } = useAlert();
 
   const [activeTab, setActiveTab] = useState("location");
   const [partFloorMap, setPartFloorMap] = useState(null);
@@ -102,7 +105,10 @@ export default function PartDetail({
 
     const accepted = files.slice(0, remainingSlots);
     if (files.length > accepted.length) {
-      alert(t("photoLimitReached", { count: maxPhotos }));
+      showAlert(t("photoLimitReached", { count: maxPhotos }), {
+        type: "warning",
+        title: t("warning", "Warning"),
+      });
     }
     if (accepted.length === 0) return;
 
@@ -114,7 +120,10 @@ export default function PartDetail({
       const updated = await uploadPartPhotos(item._id, part._id, formData);
       onPartUpdated?.(updated);
     } catch (error) {
-      alert(error.response?.data?.message || error.message);
+      showAlert(error.response?.data?.message || error.message, {
+        type: "error",
+        title: t("error", "Error"),
+      });
     } finally {
       setUploadingPhotos(false);
     }
@@ -126,7 +135,10 @@ export default function PartDetail({
       const updated = await deletePartPhoto(item._id, part._id, photoId);
       onPartUpdated?.(updated);
     } catch (error) {
-      alert(error.response?.data?.message || error.message);
+      showAlert(error.response?.data?.message || error.message, {
+        type: "error",
+        title: t("error", "Error"),
+      });
     } finally {
       setDeletingPhotoId(null);
     }
@@ -144,7 +156,10 @@ export default function PartDetail({
       });
       onPartUpdated?.(updated);
     } catch (error) {
-      alert(error.response?.data?.message || error.message);
+      showAlert(error.response?.data?.message || error.message, {
+        type: "error",
+        title: t("error", "Error"),
+      });
     } finally {
       setSavingDescription(false);
     }
@@ -187,14 +202,24 @@ export default function PartDetail({
       onPartUpdated?.(updated);
       setShowPicker(false);
     } catch (error) {
-      alert(error.response?.data?.message || error.message);
+      showAlert(error.response?.data?.message || error.message, {
+        type: "error",
+        title: t("error", "Error"),
+      });
     } finally {
       setSavingLocation(false);
     }
   };
 
   const handleClearLocation = async () => {
-    if (!confirm(t("confirmClearLocation"))) return;
+    const confirmed = await showConfirm(t("confirmClearLocation"), {
+      title: t("clearLocation", "Clear Location"),
+      type: "warning",
+      confirmText: t("clear", "Clear"),
+      cancelText: t("cancel", "Cancel"),
+    });
+
+    if (!confirmed) return;
 
     setSavingLocation(true);
     try {
@@ -204,7 +229,10 @@ export default function PartDetail({
       });
       onPartUpdated?.(updated);
     } catch (error) {
-      alert(error.response?.data?.message || error.message);
+      showAlert(error.response?.data?.message || error.message, {
+        type: "error",
+        title: t("error", "Error"),
+      });
     } finally {
       setSavingLocation(false);
     }
@@ -504,6 +532,18 @@ export default function PartDetail({
           onConfirm={handleLocationConfirm}
         />
       )}
+
+      <AlertModal
+        isOpen={!!alert}
+        onClose={hideAlert}
+        title={alert?.title}
+        message={alert?.message}
+        type={alert?.type}
+        showCancel={alert?.showCancel}
+        confirmText={alert?.confirmText}
+        cancelText={alert?.cancelText}
+        onConfirm={alert?.onConfirm}
+      />
     </div>
   );
 }

@@ -3,10 +3,13 @@ import { useTranslation } from "react-i18next";
 import { X } from "lucide-react";
 import { getUsers, createUser, deleteUser } from "../api/users";
 import { useAuth } from "../context/AuthContext";
+import AlertModal from "./AlertModal";
+import { useAlert } from "../hooks/useAlert";
 
 export default function ManageUsers() {
   const { t } = useTranslation();
   const { user: currentUser } = useAuth();
+  const { alert, showAlert, hideAlert, showConfirm } = useAlert();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -39,7 +42,10 @@ export default function ManageUsers() {
       setRole("supplier");
       loadUsers();
     } catch (error) {
-      alert(error.response?.data?.message || error.message);
+      showAlert(error.response?.data?.message || error.message, {
+        type: "error",
+        title: "Error",
+      });
     } finally {
       setSaving(false);
     }
@@ -47,15 +53,30 @@ export default function ManageUsers() {
 
   const handleDelete = async (id) => {
     if (id === currentUser.id) {
-      alert(t("cannotDeleteOwnAccount"));
+      showAlert(t("cannotDeleteOwnAccount"), {
+        type: "error",
+        title: t("error", "Error"),
+      });
       return;
     }
-    if (!confirm(t("confirmDeleteUser"))) return;
+
+    const confirmed = await showConfirm(t("confirmDeleteUser"), {
+      title: t("deleteUser", "Delete User"),
+      type: "warning",
+      confirmText: t("delete", "Delete"),
+      cancelText: t("cancel", "Cancel"),
+    });
+
+    if (!confirmed) return;
+
     try {
       await deleteUser(id);
       loadUsers();
     } catch (error) {
-      alert(error.response?.data?.message || error.message);
+      showAlert(error.response?.data?.message || error.message, {
+        type: "error",
+        title: t("error", "Error"),
+      });
     }
   };
 
@@ -178,6 +199,18 @@ export default function ManageUsers() {
           </div>
         )}
       </div>
+
+      <AlertModal
+        isOpen={!!alert}
+        onClose={hideAlert}
+        title={alert?.title}
+        message={alert?.message}
+        type={alert?.type}
+        showCancel={alert?.showCancel}
+        confirmText={alert?.confirmText}
+        cancelText={alert?.cancelText}
+        onConfirm={alert?.onConfirm}
+      />
     </div>
   );
 }
