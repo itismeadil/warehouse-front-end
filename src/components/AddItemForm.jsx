@@ -16,6 +16,27 @@ const emptyPart = (id) => ({
   area: null,
 });
 
+// Maps a raw backend error into { field, message } so the UI can show a
+// human-readable message and highlight the offending field, instead of
+// surfacing a raw Mongo/driver error like:
+// "E11000 duplicate key error collection: test.items index: serialNumber_1 dup key: { serialNumber: \"1522\" }"
+const parseItemError = (error, t, serialNumber) => {
+  const raw = error.response?.data?.message || error.message || "";
+
+  if (raw.includes("E11000") && raw.includes("serialNumber")) {
+    return {
+      field: "serialNumber",
+      message: t("duplicateSerialNumberError", { serial: serialNumber }),
+    };
+  }
+
+  if (raw.includes("E11000")) {
+    return { field: null, message: t("duplicateEntryError") };
+  }
+
+  return { field: null, message: t("itemAddedError", { message: raw }) };
+};
+
 export default function AddItemForm() {
   const { t } = useTranslation();
 
@@ -44,6 +65,7 @@ export default function AddItemForm() {
 
   const [loading, setLoading] = useState(false);
   const [floors, setFloors] = useState([]);
+  const [fieldErrors, setFieldErrors] = useState({});
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -103,11 +125,11 @@ export default function AddItemForm() {
       );
       toast.success(t("itemAddedSuccess"));
     } catch (error) {
-      toast.error(
-        t("itemAddedError", {
-          message: error.response?.data?.message || error.message,
-        }),
-      );
+      const { field, message } = parseItemError(error, t, itemSerialNumber);
+      if (field) {
+        setFieldErrors((prev) => ({ ...prev, [field]: message }));
+      }
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -188,12 +210,30 @@ export default function AddItemForm() {
                     value={itemSerialNumber}
                     autoComplete="off"
                     disabled={Boolean(itemId)}
-                    onChange={(e) => setItemSerialNumber(e.target.value)}
+                    onChange={(e) => {
+                      setItemSerialNumber(e.target.value);
+                      if (fieldErrors.serialNumber) {
+                        setFieldErrors((prev) => ({
+                          ...prev,
+                          serialNumber: null,
+                        }));
+                      }
+                    }}
                     placeholder={t("serialNumberPlaceholder")}
                     required
-                    className="block w-full rounded-xl border border-graphite-300 px-4 py-3 text-sm text-graphite-900 placeholder:text-graphite-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 disabled:bg-graphite-50 disabled:text-graphite-500 transition-all"
+                    aria-invalid={Boolean(fieldErrors.serialNumber)}
+                    className={`block w-full rounded-xl border px-4 py-3 text-sm text-graphite-900 placeholder:text-graphite-400 focus:outline-none focus:ring-2 disabled:bg-graphite-50 disabled:text-graphite-500 transition-all ${
+                      fieldErrors.serialNumber
+                        ? "border-red-400 focus:border-red-500 focus:ring-red-500/20"
+                        : "border-graphite-300 focus:border-primary-500 focus:ring-primary-500/20"
+                    }`}
                   />
                 </div>
+                {fieldErrors.serialNumber && (
+                  <p className="mt-1.5 text-xs text-red-600">
+                    {fieldErrors.serialNumber}
+                  </p>
+                )}
               </div>
 
               <div className="sm:col-span-2">

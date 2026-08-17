@@ -370,5 +370,8 @@
   "expensesCount": "{{count}} expenses",
   "expenseHistory": "Expense History",
   "loadingExpenses": "Loading expenses...",
-  "noExpensesYet": "No expenses yet"
+  "noExpensesYet": "No expenses yet",
+
+  "duplicateSerialNumberError": "An item with serial number \"{{serial}}\" already exists. Please use a different serial number.",
+  "duplicateEntryError": "This entry already exists. Please check for duplicates."
 }

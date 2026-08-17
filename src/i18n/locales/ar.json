@@ -372,5 +372,8 @@
   "expensesCount": "{{count}} مصروف",
   "expenseHistory": "سجل المصروفات",
   "loadingExpenses": "جارٍ تحميل المصروفات...",
-  "noExpensesYet": "لا توجد مصروفات بعد"
+  "noExpensesYet": "لا توجد مصروفات بعد",
+
+  "duplicateSerialNumberError": "عنصر يحمل الرقم التسلسلي \"{{serial}}\" موجود بالفعل. يرجى استخدام رقم تسلسلي مختلف.",
+  "duplicateEntryError": "هذا الإدخال موجود بالفعل. يرجى التحقق من التكرارات."
 }
