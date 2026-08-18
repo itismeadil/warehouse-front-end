@@ -25,7 +25,7 @@ function TemplateThumbnail({ rows, cols, cells }) {
           height={cellPx}
           rx={1}
           className={
-            filled.has(`${r}-${c}`) ? "fill-blue-400" : "fill-slate-100"
+            filled.has(`${r}-${c}`) ? "fill-blue-400" : "fill-graphite-100"
           }
         />,
       );
@@ -65,12 +65,12 @@ export default function FloorShapeTemplatePicker({
             onClick={() => onSelect(template)}
             className={`flex flex-col items-center gap-2 rounded-lg border-2 p-3 text-center transition-colors ${
               isSelected
-                ? "border-blue-500 bg-blue-50"
-                : "border-slate-200 bg-slate-50 hover:border-slate-300"
+                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30"
+                : "border-graphite-200 bg-graphite-50 hover:border-graphite-300 dark:border-graphite-700 dark:bg-graphite-900 dark:hover:border-graphite-600"
             }`}
           >
             <TemplateThumbnail rows={rows} cols={cols} cells={cells} />
-            <span className="text-xs font-medium text-slate-700">
+            <span className="text-xs font-medium text-graphite-700 dark:text-graphite-300">
               {template.label}
             </span>
           </button>

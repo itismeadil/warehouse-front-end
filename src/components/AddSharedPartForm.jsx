@@ -1,7 +1,11 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Link2, Plus } from "lucide-react";
-import { getSharedParts, createSharedPart, linkSharedPart } from "../api/sharedParts";
+import {
+  getSharedParts,
+  createSharedPart,
+  linkSharedPart,
+} from "../api/sharedParts";
 import { areasSize } from "../lib/floorShape";
 import FloorPickerModal from "./FloorPickerModal";
 
@@ -90,7 +94,7 @@ export default function AddSharedPartForm({
   };
 
   return (
-    <div className="rounded-xl border-2 border-dashed border-primary-300 bg-primary-50/50 p-4">
+    <div className="rounded-xl border-2 border-dashed border-primary-300 bg-primary-50/50 p-4 dark:bg-primary-900/20 dark:border-primary-700">
       <div className="mb-3 flex gap-2">
         <button
           type="button"
@@ -98,7 +102,7 @@ export default function AddSharedPartForm({
           className={`flex-1 rounded-lg py-2 text-sm font-semibold transition ${
             mode === "link"
               ? "bg-primary-600 text-white"
-              : "border border-graphite-300 bg-white text-graphite-700"
+              : "border border-graphite-300 bg-white text-graphite-700 dark:border-graphite-600 dark:bg-graphite-800 dark:text-graphite-300"
           }`}
         >
           <Link2 className="me-1.5 inline h-4 w-4" />
@@ -110,7 +114,7 @@ export default function AddSharedPartForm({
           className={`flex-1 rounded-lg py-2 text-sm font-semibold transition ${
             mode === "new"
               ? "bg-primary-600 text-white"
-              : "border border-graphite-300 bg-white text-graphite-700"
+              : "border border-graphite-300 bg-white text-graphite-700 dark:border-graphite-600 dark:bg-graphite-800 dark:text-graphite-300"
           }`}
         >
           <Plus className="me-1.5 inline h-4 w-4" />
@@ -120,16 +124,18 @@ export default function AddSharedPartForm({
 
       {mode === "link" ? (
         <div>
-          <p className="mb-2 text-xs text-graphite-500">
+          <p className="mb-2 text-xs text-graphite-500 dark:text-graphite-400">
             {t(
               "linkSharedPartHint",
               "Reuse a part that's already placed for another color of this item — no new location needed.",
             )}
           </p>
           {loadingAvailable ? (
-            <p className="text-sm text-graphite-500">{t("loading")}</p>
+            <p className="text-sm text-graphite-500 dark:text-graphite-400">
+              {t("loading")}
+            </p>
           ) : available.length === 0 ? (
-            <p className="text-sm text-graphite-500">
+            <p className="text-sm text-graphite-500 dark:text-graphite-400">
               {t(
                 "noSharedPartsAvailable",
                 "No shared parts exist yet — create one instead.",
@@ -142,8 +148,8 @@ export default function AddSharedPartForm({
                   key={sp._id}
                   className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2 text-sm transition ${
                     selectedId === sp._id
-                      ? "border-primary-400 bg-primary-50"
-                      : "border-graphite-200 bg-white hover:bg-graphite-50"
+                      ? "border-primary-400 bg-primary-50 dark:bg-primary-900/30"
+                      : "border-graphite-200 bg-white hover:bg-graphite-50 dark:border-graphite-700 dark:bg-graphite-800 dark:hover:bg-graphite-800"
                   }`}
                 >
                   <input
@@ -152,13 +158,13 @@ export default function AddSharedPartForm({
                     value={sp._id}
                     checked={selectedId === sp._id}
                     onChange={() => setSelectedId(sp._id)}
-                    className="text-primary-600"
+                    className="text-primary-600 dark:text-primary-400"
                   />
                   <div className="flex-1">
-                    <div className="font-medium text-graphite-900">
+                    <div className="font-medium text-graphite-900 dark:text-graphite-100">
                       {sp.name || t("sharedPart", "Shared part")}
                     </div>
-                    <div className="text-xs text-graphite-500">
+                    <div className="text-xs text-graphite-500 dark:text-graphite-400">
                       {sp.floorId?.name ?? t("floor")} ·{" "}
                       {t("usedBy", "Used by")}:{" "}
                       {(sp.linkedItems || [])
@@ -171,7 +177,11 @@ export default function AddSharedPartForm({
             </div>
           )}
 
-          {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
+          {error && (
+            <p className="mt-2 text-xs text-red-600 dark:text-red-400">
+              {error}
+            </p>
+          )}
 
           <div className="mt-4 flex gap-2">
             <button
@@ -186,7 +196,7 @@ export default function AddSharedPartForm({
               type="button"
               onClick={onCancel}
               disabled={linking}
-              className="rounded-lg border border-graphite-300 bg-white px-4 py-2 text-sm font-medium text-graphite-700 transition-colors hover:bg-graphite-50"
+              className="rounded-lg border border-graphite-300 bg-white px-4 py-2 text-sm font-medium text-graphite-700 transition-colors hover:bg-graphite-50 dark:border-graphite-600 dark:bg-graphite-800 dark:text-graphite-300 dark:hover:bg-graphite-800"
             >
               {t("cancel")}
             </button>
@@ -194,9 +204,9 @@ export default function AddSharedPartForm({
         </div>
       ) : (
         <div>
-          <label className="block text-sm font-medium text-graphite-700">
+          <label className="block text-sm font-medium text-graphite-700 dark:text-graphite-300">
             {t("sharedPartName", "Part name")}{" "}
-            <span className="font-normal text-graphite-400">
+            <span className="font-normal text-graphite-400 dark:text-graphite-500">
               ({t("optional")})
             </span>
           </label>
@@ -205,21 +215,21 @@ export default function AddSharedPartForm({
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder={t("sharedPartNamePlaceholder", "e.g. Bottom, Legs")}
-            className="mt-1.5 block w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm text-graphite-900 placeholder:text-graphite-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+            className="mt-1.5 block w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm text-graphite-900 placeholder:text-graphite-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-graphite-600 dark:text-graphite-100 dark:placeholder:text-graphite-500 bg-white dark:bg-graphite-800"
           />
 
-          <label className="mt-3 block text-sm font-medium text-graphite-700">
+          <label className="mt-3 block text-sm font-medium text-graphite-700 dark:text-graphite-300">
             {t("location")}
           </label>
           <div className="mt-1.5 flex items-center gap-2">
-            <div className="flex-1 rounded-lg border border-graphite-300 bg-white px-3 py-2 text-sm text-graphite-900">
+            <div className="flex-1 rounded-lg border border-graphite-300 bg-white px-3 py-2 text-sm text-graphite-900 dark:border-graphite-600 dark:bg-graphite-800 dark:text-graphite-100">
               {floorId && areas.length > 0 ? (
                 <>
                   {floorName ?? t("floor")} · {areasSize(areas)}{" "}
                   {areasSize(areas) === 1 ? t("square") : t("squares")}
                 </>
               ) : (
-                <span className="text-graphite-400">
+                <span className="text-graphite-400 dark:text-graphite-500">
                   {t("noLocationSet")}
                 </span>
               )}
@@ -227,13 +237,17 @@ export default function AddSharedPartForm({
             <button
               type="button"
               onClick={() => setShowPicker(true)}
-              className="whitespace-nowrap rounded-lg border border-graphite-300 px-3 py-2 text-sm font-medium text-graphite-700 transition-colors hover:bg-graphite-100"
+              className="whitespace-nowrap rounded-lg border border-graphite-300 px-3 py-2 text-sm font-medium text-graphite-700 transition-colors hover:bg-graphite-100 dark:border-graphite-600 dark:text-graphite-300 dark:hover:bg-graphite-700"
             >
               {floorId ? t("change") : t("choose")}
             </button>
           </div>
 
-          {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
+          {error && (
+            <p className="mt-2 text-xs text-red-600 dark:text-red-400">
+              {error}
+            </p>
+          )}
 
           <div className="mt-4 flex gap-2">
             <button
@@ -248,7 +262,7 @@ export default function AddSharedPartForm({
               type="button"
               onClick={onCancel}
               disabled={creating}
-              className="rounded-lg border border-graphite-300 bg-white px-4 py-2 text-sm font-medium text-graphite-700 transition-colors hover:bg-graphite-50"
+              className="rounded-lg border border-graphite-300 bg-white px-4 py-2 text-sm font-medium text-graphite-700 transition-colors hover:bg-graphite-50 dark:border-graphite-600 dark:bg-graphite-800 dark:text-graphite-300 dark:hover:bg-graphite-800"
             >
               {t("cancel")}
             </button>
@@ -260,7 +274,12 @@ export default function AddSharedPartForm({
               initialFloorId={floorId}
               initialArea={areas.length > 0 ? areas : null}
               onClose={() => setShowPicker(false)}
-              onConfirm={({ floorId: fId, floorName: fName, areas: a, area }) => {
+              onConfirm={({
+                floorId: fId,
+                floorName: fName,
+                areas: a,
+                area,
+              }) => {
                 setFloorId(fId);
                 setFloorName(fName);
                 setAreas(a || (area ? [area] : []));

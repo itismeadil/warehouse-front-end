@@ -333,7 +333,7 @@ export default function ItemDetail() {
                     onChange={(e) =>
                       setEditForm({ ...editForm, name: e.target.value })
                     }
-                    className="block w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm text-graphite-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-graphite-600 dark:text-graphite-100"
+                    className="block w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm text-graphite-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-graphite-600 dark:text-graphite-100 bg-white dark:bg-graphite-800"
                     placeholder={t("itemNamePlaceholder")}
                   />
                   <input
@@ -342,7 +342,7 @@ export default function ItemDetail() {
                     onChange={(e) =>
                       setEditForm({ ...editForm, serialNumber: e.target.value })
                     }
-                    className="block w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm font-mono text-graphite-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-graphite-600 dark:text-graphite-100"
+                    className="block w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm font-mono text-graphite-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-graphite-600 dark:text-graphite-100 bg-white dark:bg-graphite-800"
                     placeholder={t("serialNumberPlaceholder")}
                   />
                   <div className="flex gap-2">

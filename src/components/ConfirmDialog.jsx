@@ -30,21 +30,25 @@ export default function ConfirmDialog({
       onClick={onCancel}
     >
       <div
-        className="w-full max-w-sm rounded-xl bg-white p-6 shadow-lg"
+        className="w-full max-w-sm rounded-xl bg-white p-6 shadow-lg dark:bg-graphite-800"
         onClick={(e) => e.stopPropagation()}
       >
         {title && (
-          <h2 className="text-lg font-semibold text-graphite-900">{title}</h2>
+          <h2 className="text-lg font-semibold text-graphite-900 dark:text-graphite-100">
+            {title}
+          </h2>
         )}
         {message && (
-          <p className="mt-2 text-sm text-graphite-600">{message}</p>
+          <p className="mt-2 text-sm text-graphite-600 dark:text-graphite-400">
+            {message}
+          </p>
         )}
 
         <div className="mt-6 flex justify-end gap-2">
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-lg border border-graphite-300 px-4 py-2 text-sm font-medium text-graphite-700 transition-colors hover:bg-graphite-50"
+            className="rounded-lg border border-graphite-300 px-4 py-2 text-sm font-medium text-graphite-700 transition-colors hover:bg-graphite-50 dark:border-graphite-600 dark:text-graphite-300 dark:hover:bg-graphite-800"
           >
             {cancelLabel ?? t("cancel")}
           </button>

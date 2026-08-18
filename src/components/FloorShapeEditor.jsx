@@ -12,8 +12,8 @@ const ACTIVE_RADIUS = 2.6;
 const RECT_SIZE = 4; // Size of rectangle cells for empty cells
 const FILLED_SIZE = 5; // Size for filled cells (small gap between them)
 
-const DOT_COLOR = "#cbd5e1"; // slate-300, empty
-const ACTIVE_COLOR = "#64748b"; // slate-500, committed part of floor (softer color)
+const DOT_COLOR = "#cbd5e1"; // empty dot
+const ACTIVE_COLOR = "#64748b"; // committed part of floor (softer color)
 const PREVIEW_FILL_COLOR = "#10b981"; // emerald-500, rectangle about to be added
 const PREVIEW_ERASE_COLOR = "#f87171"; // red-400, rectangle about to be removed
 
@@ -163,7 +163,7 @@ const FloorShapeEditor = forwardRef(function FloorShapeEditor(
   }, []);
 
   return (
-    <div className="inline-block max-w-full overflow-auto rounded-lg border border-slate-200 bg-white p-2">
+    <div className="inline-block max-w-full overflow-auto rounded-lg border border-graphite-200 bg-white p-2 dark:bg-graphite-800 dark:border-graphite-700">
       <canvas
         ref={canvasRef}
         width={width}

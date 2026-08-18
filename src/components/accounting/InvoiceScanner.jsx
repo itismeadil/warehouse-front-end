@@ -390,18 +390,18 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-graphite-900/50 p-4">
-      <div className="w-full max-w-2xl rounded-xl bg-white shadow-xl">
+      <div className="w-full max-w-2xl rounded-xl bg-white shadow-xl dark:bg-graphite-800">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-graphite-200 px-6 py-4">
+        <div className="flex items-center justify-between border-b border-graphite-200 px-6 py-4 dark:border-graphite-700">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-100">
-              <Camera className="h-5 w-5 text-primary-600" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-100 dark:bg-primary-900/40">
+              <Camera className="h-5 w-5 text-primary-600 dark:text-primary-400" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-graphite-900">
+              <h2 className="text-lg font-semibold text-graphite-900 dark:text-graphite-100">
                 {t("invoiceScannerTitle")}
               </h2>
-              <p className="text-sm text-graphite-500">
+              <p className="text-sm text-graphite-500 dark:text-graphite-400">
                 {t("invoiceScannerDescription")}
               </p>
             </div>
@@ -409,7 +409,7 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-2 text-graphite-400 hover:bg-graphite-100 hover:text-graphite-600"
+            className="rounded-lg p-2 text-graphite-400 hover:bg-graphite-100 hover:text-graphite-600 dark:text-graphite-500 dark:hover:bg-graphite-700 dark:hover:text-graphite-400"
           >
             <X className="h-5 w-5" />
           </button>
@@ -422,7 +422,7 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
             <div
               onDrop={handleDrop}
               onDragOver={(e) => e.preventDefault()}
-              className="border-2 border-dashed border-graphite-300 rounded-xl p-8 text-center hover:border-primary-400 hover:bg-primary-50/50 transition-colors cursor-pointer"
+              className="border-2 border-dashed border-graphite-300 rounded-xl p-8 text-center hover:border-primary-400 hover:bg-primary-50/50 transition-colors cursor-pointer dark:border-graphite-600"
               onClick={() => fileInputRef.current?.click()}
             >
               <input
@@ -432,13 +432,13 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
                 onChange={handleFileSelect}
                 className="hidden"
               />
-              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-graphite-100">
-                <Upload className="h-6 w-6 text-graphite-500" />
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-graphite-100 dark:bg-graphite-700">
+                <Upload className="h-6 w-6 text-graphite-500 dark:text-graphite-400" />
               </div>
-              <p className="text-sm font-medium text-graphite-900">
+              <p className="text-sm font-medium text-graphite-900 dark:text-graphite-100">
                 {t("uploadInvoice")}
               </p>
-              <p className="mt-1 text-xs text-graphite-500">
+              <p className="mt-1 text-xs text-graphite-500 dark:text-graphite-400">
                 {t("uploadInvoiceHint")}
               </p>
             </div>
@@ -450,12 +450,12 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
                 <img
                   src={preview}
                   alt="Invoice preview"
-                  className="h-64 w-full rounded-lg object-contain bg-graphite-50"
+                  className="h-64 w-full rounded-lg object-contain bg-graphite-50 dark:bg-graphite-900"
                 />
                 <button
                   type="button"
                   onClick={handleReset}
-                  className="absolute right-2 top-2 rounded-lg bg-white/90 p-2 text-graphite-600 shadow-sm hover:bg-white"
+                  className="absolute right-2 top-2 rounded-lg bg-white/90 p-2 text-graphite-600 shadow-sm hover:bg-white dark:text-graphite-400"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -463,10 +463,10 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
 
               {/* Processing Status */}
               {processing && (
-                <div className="flex items-center gap-3 rounded-lg bg-primary-50 px-4 py-3">
+                <div className="flex items-center gap-3 rounded-lg bg-primary-50 px-4 py-3 dark:bg-primary-900/30">
                   <Spinner />
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-primary-900">
+                    <p className="text-sm font-medium text-primary-900 dark:text-primary-200">
                       {t("processingImage")}
                     </p>
                     <div className="mt-1 h-2 w-full rounded-full bg-primary-200">
@@ -475,25 +475,27 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
                         style={{ width: `${progress}%` }}
                       />
                     </div>
-                    <p className="mt-1 text-xs text-primary-700">{progress}%</p>
+                    <p className="mt-1 text-xs text-primary-700 dark:text-primary-300">
+                      {progress}%
+                    </p>
                   </div>
                 </div>
               )}
 
               {/* Error Message */}
               {error && (
-                <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3">
-                  <AlertCircle className="mt-0.5 h-4 w-4 text-red-600 shrink-0" />
+                <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 dark:bg-red-900/30 dark:border-red-800">
+                  <AlertCircle className="mt-0.5 h-4 w-4 text-red-600 shrink-0 dark:text-red-400" />
                   <p className="text-sm text-red-800">{error}</p>
                 </div>
               )}
 
               {/* Extracted Data Preview */}
               {extractedData && !isEditing && (
-                <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3">
+                <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 dark:bg-green-900/30 dark:border-green-800">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-green-600" />
+                      <Check className="h-4 w-4 text-green-600 dark:text-green-400" />
                       <p className="text-sm font-medium text-green-900">
                         Data extracted successfully
                       </p>
@@ -501,7 +503,7 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
                     <button
                       type="button"
                       onClick={handleEditToggle}
-                      className="text-xs font-medium text-green-700 hover:text-green-900 flex items-center gap-1"
+                      className="text-xs font-medium text-green-700 hover:text-green-900 flex items-center gap-1 dark:text-green-300"
                     >
                       <Edit2 className="h-3 w-3" />
                       {t("editExtractedData")}
@@ -513,7 +515,7 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
                     <div className="mb-3 grid grid-cols-2 gap-2">
                       {imageQuality && (
                         <div className="rounded bg-green-100 px-2 py-1 text-xs">
-                          <span className="text-green-700">
+                          <span className="text-green-700 dark:text-green-300">
                             {t("imageQuality")}:{" "}
                           </span>
                           <span
@@ -521,8 +523,8 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
                               imageQuality.recommendation === "high"
                                 ? "text-green-900"
                                 : imageQuality.recommendation === "medium"
-                                  ? "text-amber-700"
-                                  : "text-red-700"
+                                  ? "text-amber-700 dark:text-amber-300"
+                                  : "text-red-700 dark:text-red-300"
                             }`}
                           >
                             {imageQuality.recommendation}
@@ -531,7 +533,7 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
                       )}
                       {ocrConfidence && (
                         <div className="rounded bg-green-100 px-2 py-1 text-xs">
-                          <span className="text-green-700">
+                          <span className="text-green-700 dark:text-green-300">
                             {t("ocrConfidence")}:{" "}
                           </span>
                           <span
@@ -539,8 +541,8 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
                               ocrConfidence > 80
                                 ? "text-green-900"
                                 : ocrConfidence > 60
-                                  ? "text-amber-700"
-                                  : "text-red-700"
+                                  ? "text-amber-700 dark:text-amber-300"
+                                  : "text-red-700 dark:text-red-300"
                             }`}
                           >
                             {Math.round(ocrConfidence)}%
@@ -555,7 +557,7 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
                     extractedData.warnings.length > 0 && (
                       <div className="mb-3 rounded bg-amber-100 px-3 py-2">
                         <div className="flex items-start gap-2">
-                          <AlertCircle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                          <AlertCircle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5 dark:text-amber-400" />
                           <div className="text-xs">
                             <p className="font-medium text-amber-900">
                               {t("warnings")}:
@@ -573,7 +575,7 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
                   <div className="space-y-2 text-sm">
                     {extractedData.invoiceNumber && (
                       <div className="flex justify-between">
-                        <span className="text-green-700">
+                        <span className="text-green-700 dark:text-green-300">
                           {t("invoiceScannerInvoiceNumber")}:
                         </span>
                         <span className="font-medium text-green-900">
@@ -583,7 +585,7 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
                     )}
                     {extractedData.date && (
                       <div className="flex justify-between">
-                        <span className="text-green-700">
+                        <span className="text-green-700 dark:text-green-300">
                           {t("invoiceScannerDate")}:
                         </span>
                         <span className="font-medium text-green-900">
@@ -593,7 +595,7 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
                     )}
                     {extractedData.total && (
                       <div className="flex justify-between">
-                        <span className="text-green-700">
+                        <span className="text-green-700 dark:text-green-300">
                           {t("invoiceScannerTotal")}:
                         </span>
                         <span className="font-medium text-green-900">
@@ -603,7 +605,7 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
                     )}
                     {extractedData.taxRate && (
                       <div className="flex justify-between">
-                        <span className="text-green-700">
+                        <span className="text-green-700 dark:text-green-300">
                           {t("invoiceScannerTaxRate")}:
                         </span>
                         <span className="font-medium text-green-900">
@@ -613,7 +615,7 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
                     )}
                     {extractedData.lineItems.length > 0 && (
                       <div>
-                        <span className="text-green-700">
+                        <span className="text-green-700 dark:text-green-300">
                           {t("lineItems")}:
                         </span>
                         <div className="mt-1 space-y-1">
@@ -646,10 +648,10 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
 
               {/* Editable Form */}
               {isEditing && editableData && (
-                <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3">
+                <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 dark:bg-blue-900/30 dark:border-blue-800">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
-                      <Edit2 className="h-4 w-4 text-blue-600" />
+                      <Edit2 className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                       <p className="text-sm font-medium text-blue-900">
                         {t("editExtractedData")}
                       </p>
@@ -657,7 +659,7 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
                     <button
                       type="button"
                       onClick={handleEditToggle}
-                      className="text-xs font-medium text-blue-700 hover:text-blue-900 flex items-center gap-1"
+                      className="text-xs font-medium text-blue-700 hover:text-blue-900 flex items-center gap-1 dark:text-blue-300"
                     >
                       <Check className="h-3 w-3" />
                       {t("invoiceScannerSaveChanges")}
@@ -667,7 +669,7 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
                   <div className="space-y-3 text-sm">
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-xs font-medium text-blue-700 mb-1">
+                        <label className="block text-xs font-medium text-blue-700 mb-1 dark:text-blue-300">
                           {t("invoiceScannerInvoiceNumber")}
                         </label>
                         <input
@@ -683,7 +685,7 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-blue-700 mb-1">
+                        <label className="block text-xs font-medium text-blue-700 mb-1 dark:text-blue-300">
                           {t("invoiceScannerDate")}
                         </label>
                         <input
@@ -700,7 +702,7 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
 
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-xs font-medium text-blue-700 mb-1">
+                        <label className="block text-xs font-medium text-blue-700 mb-1 dark:text-blue-300">
                           {t("invoiceScannerTotal")}
                         </label>
                         <input
@@ -713,7 +715,7 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-blue-700 mb-1">
+                        <label className="block text-xs font-medium text-blue-700 mb-1 dark:text-blue-300">
                           {t("invoiceScannerTaxRate")} (%)
                         </label>
                         <input
@@ -729,13 +731,13 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
 
                     <div>
                       <div className="flex items-center justify-between mb-2">
-                        <label className="block text-xs font-medium text-blue-700">
+                        <label className="block text-xs font-medium text-blue-700 dark:text-blue-300">
                           {t("lineItems")}
                         </label>
                         <button
                           type="button"
                           onClick={addLineItem}
-                          className="text-xs font-medium text-blue-600 hover:text-blue-800"
+                          className="text-xs font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400"
                         >
                           + {t("invoiceScannerAddLineItem")}
                         </button>
@@ -744,13 +746,13 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
                         {editableData.lineItems.map((item, idx) => (
                           <div key={idx} className="rounded bg-blue-100 p-2">
                             <div className="flex items-center justify-between mb-2">
-                              <span className="text-xs font-medium text-blue-700">
+                              <span className="text-xs font-medium text-blue-700 dark:text-blue-300">
                                 Item {idx + 1}
                               </span>
                               <button
                                 type="button"
                                 onClick={() => removeLineItem(idx)}
-                                className="text-xs text-red-600 hover:text-red-800"
+                                className="text-xs text-red-600 hover:text-red-800 dark:text-red-400"
                               >
                                 {t("remove")}
                               </button>
@@ -831,7 +833,7 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
                     <button
                       type="button"
                       onClick={handleReset}
-                      className="flex-1 rounded-lg border border-graphite-300 px-4 py-2.5 text-sm font-medium text-graphite-700 hover:bg-graphite-50 transition-colors"
+                      className="flex-1 rounded-lg border border-graphite-300 px-4 py-2.5 text-sm font-medium text-graphite-700 hover:bg-graphite-50 transition-colors dark:border-graphite-600 dark:text-graphite-300 dark:hover:bg-graphite-800"
                     >
                       {t("scanDifferent")}
                     </button>
@@ -856,7 +858,7 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
                         );
                         setIsEditing(false);
                       }}
-                      className="flex-1 rounded-lg border border-graphite-300 px-4 py-2.5 text-sm font-medium text-graphite-700 hover:bg-graphite-50 transition-colors flex items-center justify-center gap-2"
+                      className="flex-1 rounded-lg border border-graphite-300 px-4 py-2.5 text-sm font-medium text-graphite-700 hover:bg-graphite-50 transition-colors flex items-center justify-center gap-2 dark:border-graphite-600 dark:text-graphite-300 dark:hover:bg-graphite-800"
                     >
                       <RotateCcw className="h-4 w-4" />
                       {t("cancel")}
@@ -875,11 +877,11 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
 
               {/* Tips for better OCR */}
               {!processing && !extractedData && (
-                <div className="mt-4 rounded-lg bg-graphite-50 px-4 py-3">
-                  <p className="text-xs font-medium text-graphite-900 mb-2">
+                <div className="mt-4 rounded-lg bg-graphite-50 px-4 py-3 dark:bg-graphite-900">
+                  <p className="text-xs font-medium text-graphite-900 mb-2 dark:text-graphite-100">
                     {t("tipsForBetterResults")}:
                   </p>
-                  <ul className="text-xs text-graphite-600 space-y-1">
+                  <ul className="text-xs text-graphite-600 space-y-1 dark:text-graphite-400">
                     <li>• {t("tipHighResolution")}</li>
                     <li>• {t("tipGoodLighting")}</li>
                     <li>• {t("tipParallelCamera")}</li>

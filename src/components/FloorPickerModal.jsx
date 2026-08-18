@@ -207,36 +207,36 @@ export default function FloorPickerModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-graphite-900/50 p-4"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-2xl rounded-xl bg-white p-6 shadow-lg"
+        className="w-full max-w-2xl rounded-xl bg-white p-6 shadow-lg dark:bg-graphite-800"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-slate-900">
+          <h2 className="text-lg font-semibold text-graphite-900 dark:text-graphite-100">
             {t("pickLocation")}
           </h2>
 
           <button
             onClick={onClose}
             aria-label={t("close")}
-            className="rounded-md p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+            className="rounded-md p-1 text-graphite-400 transition-colors hover:bg-graphite-100 hover:text-graphite-600 dark:text-graphite-500 dark:hover:bg-graphite-700 dark:hover:text-graphite-400"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
         <div className="mt-4">
-          <label className="block text-sm font-medium text-slate-700">
+          <label className="block text-sm font-medium text-graphite-700 dark:text-graphite-300">
             {t("floor")}
           </label>
 
           <select
             value={floorId}
             onChange={(e) => setFloorId(e.target.value)}
-            className="mt-1.5 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            className="mt-1.5 block w-full rounded-lg border border-graphite-300 bg-white px-3 py-2 text-sm text-graphite-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:bg-graphite-800 dark:border-graphite-600 dark:text-graphite-100"
           >
             <option value="">{t("selectFloor")}</option>
 
@@ -250,32 +250,34 @@ export default function FloorPickerModal({
 
         <div className="mt-4">
           {!floorId ? (
-            <p className="py-8 text-center text-sm text-slate-500">
+            <p className="py-8 text-center text-sm text-graphite-500 dark:text-graphite-400">
               {t("chooseFloorToSeeMap")}
             </p>
           ) : loading || !occupancy ? (
-            <div className="flex flex-col items-center gap-3 rounded-md bg-graphite-50 px-6 py-8 text-center">
+            <div className="flex flex-col items-center gap-3 rounded-md bg-graphite-50 px-6 py-8 text-center dark:bg-graphite-900">
               <div
                 className="h-8 w-8 animate-spin rounded-full border-4 border-current border-t-transparent"
                 style={{ color: "#45a1a1" }}
                 aria-hidden
               />
-              <p className="text-sm text-graphite-600">{t("loading")}</p>
+              <p className="text-sm text-graphite-600 dark:text-graphite-400">
+                {t("loading")}
+              </p>
             </div>
           ) : (
             <>
               <div className="mb-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-medium text-slate-600">
+                  <span className="text-xs font-medium text-graphite-600 dark:text-graphite-400">
                     Selection Mode:
                   </span>
-                  <div className="flex rounded-lg border border-slate-200 bg-slate-50 p-1">
+                  <div className="flex rounded-lg border border-graphite-200 bg-graphite-50 p-1 dark:border-graphite-700 dark:bg-graphite-900">
                     <button
                       onClick={() => setSelectionMode("dots")}
                       className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
                         selectionMode === "dots"
-                          ? "bg-white text-slate-900 shadow-sm"
-                          : "text-slate-500 hover:text-slate-700"
+                          ? "bg-white text-graphite-900 shadow-sm dark:bg-graphite-800 dark:text-graphite-100"
+                          : "text-graphite-500 hover:text-graphite-700 dark:text-graphite-400 dark:hover:text-graphite-300"
                       }`}
                     >
                       Click Dots
@@ -284,8 +286,8 @@ export default function FloorPickerModal({
                       onClick={() => setSelectionMode("squares")}
                       className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
                         selectionMode === "squares"
-                          ? "bg-white text-slate-900 shadow-sm"
-                          : "text-slate-500 hover:text-slate-700"
+                          ? "bg-white text-graphite-900 shadow-sm dark:bg-graphite-800 dark:text-graphite-100"
+                          : "text-graphite-500 hover:text-graphite-700 dark:text-graphite-400 dark:hover:text-graphite-300"
                       }`}
                     >
                       Drag Squares
@@ -295,15 +297,15 @@ export default function FloorPickerModal({
 
                 <button
                   onClick={clearSelection}
-                  className="text-sm text-slate-500 transition-colors hover:text-red-600"
+                  className="text-sm text-graphite-500 transition-colors hover:text-red-600 dark:text-graphite-400"
                 >
                   {t("clear")}
                 </button>
               </div>
 
-              <div className="mb-3 flex items-center gap-4 text-xs text-slate-500">
+              <div className="mb-3 flex items-center gap-4 text-xs text-graphite-500 dark:text-graphite-400">
                 <span className="inline-flex items-center gap-1.5">
-                  <span className="h-3 w-3 rounded-full border border-slate-300 bg-slate-200" />
+                  <span className="h-3 w-3 rounded-full border border-graphite-300 bg-graphite-200 dark:border-graphite-600" />
                   {t("empty")}
                 </span>
 
@@ -325,7 +327,7 @@ export default function FloorPickerModal({
                 </span>
               </div>
 
-              <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+              <div className="rounded-lg border border-graphite-200 bg-graphite-50 p-3 dark:border-graphite-700 dark:bg-graphite-900">
                 <FloorGrid
                   rows={occupancy.floor.rows}
                   cols={occupancy.floor.cols}
@@ -338,7 +340,7 @@ export default function FloorPickerModal({
                 />
               </div>
 
-              <p className="mt-3 text-sm text-slate-600">
+              <p className="mt-3 text-sm text-graphite-600 dark:text-graphite-400">
                 {selectedCells.length}{" "}
                 {selectedCells.length === 1 ? t("square") : t("squares")}{" "}
                 {t("selected")}
@@ -350,7 +352,7 @@ export default function FloorPickerModal({
         <div className="mt-6 flex justify-end gap-2">
           <button
             onClick={onClose}
-            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+            className="rounded-lg border border-graphite-300 px-4 py-2 text-sm font-medium text-graphite-700 transition-colors hover:bg-graphite-50 dark:border-graphite-600 dark:text-graphite-300 dark:hover:bg-graphite-800"
           >
             {t("cancel")}
           </button>

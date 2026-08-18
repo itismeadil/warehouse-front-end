@@ -66,10 +66,10 @@ export default function Accounting() {
       <div className="mb-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-graphite-900">
+            <h1 className="text-lg font-semibold text-graphite-900 dark:text-graphite-100">
               {t("accountingTitle")}
             </h1>
-            <p className="mt-1 text-sm text-graphite-500">
+            <p className="mt-1 text-sm text-graphite-500 dark:text-graphite-400">
               {t("accountingDescription")}
             </p>
           </div>
@@ -78,14 +78,14 @@ export default function Accounting() {
             className="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-primary-700 hover:shadow-md"
           >
             <FileText className="h-4 w-4" />
-            Invoice Summary
+            {t("invoiceSummary")}
           </button>
         </div>
       </div>
 
       {/* Modern Tab Navigation */}
-      <div className="mb-6 overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-graphite-200">
-        <nav className="flex border-b border-graphite-200">
+      <div className="mb-6 overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-graphite-200 dark:ring-graphite-700 dark:bg-graphite-800">
+        <nav className="flex border-b border-graphite-200 dark:border-graphite-700">
           {TABS.map((tab) => {
             const Icon = tab.icon;
             return (
@@ -95,15 +95,15 @@ export default function Accounting() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`group relative flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
                   activeTab === tab.id
-                    ? "text-primary-600"
-                    : "text-graphite-600 hover:text-graphite-900 hover:bg-graphite-50"
+                    ? "text-primary-600 dark:text-primary-400"
+                    : "text-graphite-600 hover:text-graphite-900 hover:bg-graphite-50 dark:text-graphite-400 dark:hover:bg-graphite-800 dark:hover:text-graphite-100"
                 }`}
               >
                 <Icon
                   className={`h-4 w-4 transition-colors ${
                     activeTab === tab.id
-                      ? "text-primary-600"
-                      : "text-graphite-400 group-hover:text-graphite-600"
+                      ? "text-primary-600 dark:text-primary-400"
+                      : "text-graphite-400 group-hover:text-graphite-600 dark:text-graphite-500 dark:group-hover:text-graphite-300"
                   }`}
                 />
                 <span>{t(tab.label)}</span>
@@ -117,8 +117,8 @@ export default function Accounting() {
       </div>
 
       {/* Tab Description */}
-      <div className="mb-6 rounded-lg bg-blue-50 px-4 py-3 border border-blue-200">
-        <p className="text-sm text-blue-700">
+      <div className="mb-6 rounded-lg bg-blue-50 px-4 py-3 border border-blue-200 dark:bg-blue-900/30 dark:border-blue-800">
+        <p className="text-sm text-blue-700 dark:text-blue-300">
           {t(TABS.find((tab) => tab.id === activeTab).description)}
         </p>
       </div>

@@ -12,10 +12,10 @@ export default function AlertModal({
   showCancel = false,
 }) {
   const typeColors = {
-    info: "text-blue-600",
-    success: "text-green-600",
-    error: "text-red-600",
-    warning: "text-amber-600",
+    info: "text-blue-600 dark:text-blue-400",
+    success: "text-green-600 dark:text-green-400",
+    error: "text-red-600 dark:text-red-400",
+    warning: "text-amber-600 dark:text-amber-400",
   };
 
   const handleConfirm = () => {
@@ -36,7 +36,7 @@ export default function AlertModal({
           {showCancel && (
             <button
               onClick={handleCancel}
-              className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+              className="rounded-lg border border-graphite-300 px-4 py-2 text-sm font-medium text-graphite-700 transition-colors hover:bg-graphite-50 dark:border-graphite-600 dark:text-graphite-300 dark:hover:bg-graphite-800"
             >
               {cancelText}
             </button>

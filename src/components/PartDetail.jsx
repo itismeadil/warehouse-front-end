@@ -24,32 +24,34 @@ const STATS = [{ key: "damaged", label: "damaged", editable: true }];
 
 function StatCard({ label, value, editable, onDecrement, onIncrement, t }) {
   return (
-    <div className="rounded-lg border border-graphite-200 bg-white p-3">
-      <p className="text-xs text-graphite-500">{label}</p>
+    <div className="rounded-lg border border-graphite-200 bg-white p-3 dark:border-graphite-700 dark:bg-graphite-800">
+      <p className="text-xs text-graphite-500 dark:text-graphite-400">
+        {label}
+      </p>
       {editable ? (
         <div className="mt-1.5 flex items-center justify-between">
           <button
             type="button"
             onClick={onDecrement}
             aria-label={t("decrease")}
-            className="flex h-7 w-7 items-center justify-center rounded-md border border-graphite-300 bg-white text-graphite-600 transition-colors hover:bg-graphite-100 focus:outline-none focus:ring-2 focus:ring-primary-500/30"
+            className="flex h-7 w-7 items-center justify-center rounded-md border border-graphite-300 bg-white text-graphite-600 transition-colors hover:bg-graphite-100 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-graphite-600 dark:bg-graphite-800 dark:text-graphite-400 dark:hover:bg-graphite-700"
           >
             <Minus className="h-3.5 w-3.5" />
           </button>
-          <span className="text-lg font-semibold text-graphite-900">
+          <span className="text-lg font-semibold text-graphite-900 dark:text-graphite-100">
             {value || 0}
           </span>
           <button
             type="button"
             onClick={onIncrement}
             aria-label={t("increase")}
-            className="flex h-7 w-7 items-center justify-center rounded-md border border-graphite-300 bg-white text-graphite-600 transition-colors hover:bg-graphite-100 focus:outline-none focus:ring-2 focus:ring-primary-500/30"
+            className="flex h-7 w-7 items-center justify-center rounded-md border border-graphite-300 bg-white text-graphite-600 transition-colors hover:bg-graphite-100 focus:outline-none focus:ring-2 focus:ring-primary-500/30 dark:border-graphite-600 dark:bg-graphite-800 dark:text-graphite-400 dark:hover:bg-graphite-700"
           >
             <Plus className="h-3.5 w-3.5" />
           </button>
         </div>
       ) : (
-        <p className="mt-1.5 text-lg font-semibold text-graphite-900">
+        <p className="mt-1.5 text-lg font-semibold text-graphite-900 dark:text-graphite-100">
           {value ?? 0}
         </p>
       )}
@@ -244,7 +246,7 @@ export default function PartDetail({
         <>
           <button
             onClick={onBack}
-            className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-graphite-600 transition-colors hover:text-graphite-900"
+            className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-graphite-600 transition-colors hover:text-graphite-900 dark:text-graphite-400 dark:hover:text-graphite-100"
           >
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
             {t("backTo")} {item?.name || t("item")}
@@ -252,17 +254,17 @@ export default function PartDetail({
 
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-primary-600">
+              <p className="text-xs font-semibold uppercase tracking-wide text-primary-600 dark:text-primary-400">
                 {item?.name}
               </p>
 
-              <h2 className="mt-0.5 text-2xl font-bold text-graphite-900">
+              <h2 className="mt-0.5 text-2xl font-bold text-graphite-900 dark:text-graphite-100">
                 {partLabel(item, part)}
               </h2>
             </div>
 
             {hasLocation && (
-              <span className="mt-1 shrink-0 rounded-full border border-graphite-200 bg-graphite-200 px-3 py-1 text-xs font-semibold text-graphite-700">
+              <span className="mt-1 shrink-0 rounded-full border border-graphite-200 bg-graphite-200 px-3 py-1 text-xs font-semibold text-graphite-700 dark:border-graphite-700 dark:text-graphite-300">
                 {part.floorId.name}
               </span>
             )}
@@ -286,8 +288,8 @@ export default function PartDetail({
               onClick={() => setActiveTab(tab.id)}
               className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
                 activeTab === tab.id
-                  ? "bg-white text-graphite-900 shadow-sm"
-                  : "text-graphite-500 hover:text-graphite-900"
+                  ? "bg-white text-graphite-900 shadow-sm dark:bg-graphite-800 dark:text-graphite-100"
+                  : "text-graphite-500 hover:text-graphite-900 dark:text-graphite-400 dark:hover:text-graphite-100"
               }`}
             >
               {tab.label}
@@ -297,21 +299,21 @@ export default function PartDetail({
       </div>
 
       {activeTab === "location" && (
-        <div className="mt-4 overflow-hidden rounded-xl border border-graphite-200 bg-graphite-50 shadow-sm">
-          <div className="flex items-center justify-between border-b border-graphite-200 px-4 py-3">
+        <div className="mt-4 overflow-hidden rounded-xl border border-graphite-200 bg-graphite-50 shadow-sm dark:border-graphite-700 dark:bg-graphite-900">
+          <div className="flex items-center justify-between border-b border-graphite-200 px-4 py-3 dark:border-graphite-700">
             <div className="flex items-center gap-2">
-              <h3 className="text-sm font-semibold text-graphite-700">
+              <h3 className="text-sm font-semibold text-graphite-700 dark:text-graphite-300">
                 {t("floorLocation")}
               </h3>
               {hasLocation && (
-                <span className="rounded-full border border-graphite-200 bg-graphite-100 px-2 py-0.5 text-xs font-medium text-graphite-600">
+                <span className="rounded-full border border-graphite-200 bg-graphite-100 px-2 py-0.5 text-xs font-medium text-graphite-600 dark:border-graphite-700 dark:bg-graphite-700 dark:text-graphite-400">
                   {part.floorId.name}
                 </span>
               )}
             </div>
 
             {hasLocation && (
-              <span className="text-xs font-medium text-graphite-500">
+              <span className="text-xs font-medium text-graphite-500 dark:text-graphite-400">
                 {totalSize} {totalSize === 1 ? t("square") : t("squares")}
                 {part.areas &&
                   part.areas.length > 1 &&
@@ -322,20 +324,22 @@ export default function PartDetail({
 
           <div className="p-4">
             {!hasLocation ? (
-              <p className="py-8 text-center text-sm text-graphite-500">
+              <p className="py-8 text-center text-sm text-graphite-500 dark:text-graphite-400">
                 {t("noLocationAssigned")}
               </p>
             ) : partFloorMapLoading || !partFloorMap ? (
-              <div className="flex flex-col items-center gap-3 rounded-md bg-graphite-50 px-6 py-8 text-center">
+              <div className="flex flex-col items-center gap-3 rounded-md bg-graphite-50 px-6 py-8 text-center dark:bg-graphite-900">
                 <div
                   className="h-8 w-8 animate-spin rounded-full border-4 border-current border-t-transparent"
                   style={{ color: "#45a1a1" }}
                   aria-hidden
                 />
-                <p className="text-sm text-graphite-600">{t("loading")}</p>
+                <p className="text-sm text-graphite-600 dark:text-graphite-400">
+                  {t("loading")}
+                </p>
               </div>
             ) : (
-              <div className="flex justify-center rounded-lg bg-white p-3 shadow-inner">
+              <div className="flex justify-center rounded-lg bg-white p-3 shadow-inner dark:bg-graphite-800">
                 <FloorGrid
                   rows={partFloorMap.floor.rows}
                   cols={partFloorMap.floor.cols}
@@ -359,7 +363,7 @@ export default function PartDetail({
                     type="button"
                     onClick={handleClearLocation}
                     disabled={savingLocation}
-                    className="flex-1 rounded-lg border border-red-200 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex-1 rounded-lg border border-red-200 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-800 dark:hover:bg-red-900/30 dark:text-red-400"
                   >
                     {t("clearLocation")}
                   </button>
@@ -368,7 +372,7 @@ export default function PartDetail({
                     type="button"
                     onClick={() => setShowPicker(true)}
                     disabled={savingLocation}
-                    className="flex-1 rounded-lg border border-graphite-300 py-2 text-sm font-medium text-graphite-700 transition-colors hover:bg-graphite-100 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex-1 rounded-lg border border-graphite-300 py-2 text-sm font-medium text-graphite-700 transition-colors hover:bg-graphite-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-graphite-600 dark:text-graphite-300 dark:hover:bg-graphite-700"
                   >
                     {t("setLocation")}
                   </button>
@@ -380,11 +384,11 @@ export default function PartDetail({
       )}
 
       {activeTab === "stats" && (
-        <div className="mt-4 rounded-xl border border-graphite-200 bg-graphite-50 p-4 shadow-sm">
+        <div className="mt-4 rounded-xl border border-graphite-200 bg-graphite-50 p-4 shadow-sm dark:border-graphite-700 dark:bg-graphite-900">
           {/* Damaged — the only thing this component edits, and it's
               part-level. Changing it never touches stock/sold/reserved. */}
           <div className="mb-4">
-            <h3 className="text-sm font-semibold text-graphite-700">
+            <h3 className="text-sm font-semibold text-graphite-700 dark:text-graphite-300">
               {t("damage")}
             </h3>
           </div>
@@ -405,18 +409,18 @@ export default function PartDetail({
       )}
 
       {activeTab === "pictures" && (
-        <div className="mt-4 rounded-xl border border-graphite-200 bg-graphite-50 p-4 shadow-sm">
+        <div className="mt-4 rounded-xl border border-graphite-200 bg-graphite-50 p-4 shadow-sm dark:border-graphite-700 dark:bg-graphite-900">
           <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-graphite-700">
+            <h3 className="text-sm font-semibold text-graphite-700 dark:text-graphite-300">
               {t("damagePhotos")}
             </h3>
-            <span className="text-xs text-graphite-500">
+            <span className="text-xs text-graphite-500 dark:text-graphite-400">
               {t("photoCount", { count: photos.length, max: maxPhotos })}
             </span>
           </div>
 
           {maxPhotos === 0 ? (
-            <p className="py-8 text-center text-sm text-graphite-500">
+            <p className="py-8 text-center text-sm text-graphite-500 dark:text-graphite-400">
               {t("noDamagedItems")}
             </p>
           ) : (
@@ -425,10 +429,10 @@ export default function PartDetail({
                 <div className="mb-4">
                   <label
                     htmlFor={`damage-desc-${part._id}`}
-                    className="mb-1.5 block text-xs font-medium text-graphite-600"
+                    className="mb-1.5 block text-xs font-medium text-graphite-600 dark:text-graphite-400"
                   >
                     {t("damageDescription")}{" "}
-                    <span className="font-normal text-graphite-400">
+                    <span className="font-normal text-graphite-400 dark:text-graphite-500">
                       ({t("optional")})
                     </span>
                   </label>
@@ -438,7 +442,7 @@ export default function PartDetail({
                     onChange={(e) => setDamageDescription(e.target.value)}
                     rows={3}
                     placeholder={t("damageDescriptionPlaceholder")}
-                    className="w-full resize-none rounded-lg border border-graphite-300 bg-white px-3 py-2 text-sm text-graphite-900 placeholder:text-graphite-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                    className="w-full resize-none rounded-lg border border-graphite-300 bg-white px-3 py-2 text-sm text-graphite-900 placeholder:text-graphite-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-graphite-600 dark:bg-graphite-800 dark:text-graphite-100 dark:placeholder:text-graphite-500"
                   />
                   {descriptionDirty && (
                     <button
@@ -457,7 +461,7 @@ export default function PartDetail({
                 {photos.map((photo) => (
                   <div
                     key={photo.id}
-                    className="group relative aspect-square overflow-hidden rounded-lg border border-graphite-200 bg-white"
+                    className="group relative aspect-square overflow-hidden rounded-lg border border-graphite-200 bg-white dark:border-graphite-700 dark:bg-graphite-800"
                   >
                     <img
                       src={photo.url}
@@ -489,7 +493,7 @@ export default function PartDetail({
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={uploadingPhotos || deletingPhotoId !== null}
-                    className="flex aspect-square flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-graphite-300 text-graphite-400 transition-colors hover:border-primary-400 hover:bg-primary-50 hover:text-primary-600 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex aspect-square flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-graphite-300 text-graphite-400 transition-colors hover:border-primary-400 hover:bg-primary-50 hover:text-primary-600 disabled:cursor-not-allowed disabled:opacity-50 dark:border-graphite-600 dark:text-graphite-500 dark:hover:bg-primary-900/30"
                   >
                     {uploadingPhotos ? (
                       <span className="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent" />
@@ -513,7 +517,7 @@ export default function PartDetail({
                 className="hidden"
               />
 
-              <p className="mt-3 text-xs text-graphite-400">
+              <p className="mt-3 text-xs text-graphite-400 dark:text-graphite-500">
                 {remainingSlots > 0
                   ? t("photoSlotsRemaining", { count: remainingSlots })
                   : t("photoLimitReached", { count: maxPhotos })}

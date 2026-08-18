@@ -5,11 +5,15 @@ export default function NotFound() {
   const navigate = useNavigate();
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-graphite-50 px-4">
+    <div className="flex min-h-screen items-center justify-center bg-graphite-50 px-4 dark:bg-graphite-900">
       <div className="text-center">
-        <h1 className="text-6xl font-bold text-graphite-900">404</h1>
-        <p className="mt-4 text-xl text-graphite-600">Page not found</p>
-        <p className="mt-2 text-sm text-graphite-500">
+        <h1 className="text-6xl font-bold text-graphite-900 dark:text-graphite-100">
+          404
+        </h1>
+        <p className="mt-4 text-xl text-graphite-600 dark:text-graphite-400">
+          Page not found
+        </p>
+        <p className="mt-2 text-sm text-graphite-500 dark:text-graphite-400">
           The page you're looking for doesn't exist or has been moved.
         </p>
         <button
