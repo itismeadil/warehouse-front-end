@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Trash2, RotateCcw } from "lucide-react";
+import { Trash2, RotateCcw, Map } from "lucide-react";
 import {
   getFloors,
   createFloor,
@@ -15,6 +15,7 @@ import FloorShapeTemplatePicker from "./FloorShapeTemplatePicker";
 import FloorGrid from "./FloorGrid";
 import AlertModal from "./AlertModal";
 import { useAlert } from "../hooks/useAlert";
+import EmptyState from "./EmptyState";
 
 function FloorCard({ floor, occupancy, onDelete, onRestore }) {
   const shapeCells = useMemo(
@@ -47,17 +48,17 @@ function FloorCard({ floor, occupancy, onDelete, onRestore }) {
 
   return (
     <div
-      className={`group rounded-2xl border bg-gradient-to-br from-white to-slate-50 p-6 shadow-lg transition-all duration-300 hover:shadow-xl ${
+      className={`group rounded-2xl border bg-gradient-to-br from-white to-graphite-50 p-6 shadow-lg transition-all duration-300 hover:shadow-xl dark:from-graphite-800 dark:to-graphite-900 ${
         isDeleted
-          ? "border-red-200 from-red-50 to-white"
-          : "border-slate-200 hover:border-primary-300"
+          ? "border-red-200 from-red-50 to-white dark:border-red-900/70 dark:from-red-950/40 dark:to-graphite-800"
+          : "border-graphite-200 hover:border-primary-300 dark:border-graphite-700"
       }`}
     >
       <div className="mb-5 flex items-start justify-between">
         <div className="flex-1">
           <div className="flex items-center gap-3">
             <h2
-              className={`text-xl font-bold ${isDeleted ? "text-red-900" : "text-slate-900"}`}
+              className={`text-xl font-bold ${isDeleted ? "text-red-900 dark:text-red-200" : "text-graphite-900 dark:text-graphite-100"}`}
             >
               {floor.name}
             </h2>
@@ -72,15 +73,15 @@ function FloorCard({ floor, occupancy, onDelete, onRestore }) {
             <div className="mt-2 flex items-center gap-4 text-sm">
               <div className="flex items-center gap-2">
                 <div className="h-2 w-2 rounded-full bg-violet-500"></div>
-                <span className="text-slate-600">{occupiedCount} occupied</span>
+                <span className="text-graphite-600 dark:text-graphite-300">{occupiedCount} occupied</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-slate-300"></div>
-                <span className="text-slate-600">
+                <div className="h-2 w-2 rounded-full bg-graphite-300 dark:bg-graphite-600"></div>
+                <span className="text-graphite-600 dark:text-graphite-300">
                   {totalCells - occupiedCount} free
                 </span>
               </div>
-              <div className="ml-auto text-sm font-medium text-slate-700">
+              <div className="ml-auto text-sm font-medium text-graphite-700 dark:text-graphite-200">
                 {occupancyPercentage}% full
               </div>
             </div>
@@ -108,7 +109,7 @@ function FloorCard({ floor, occupancy, onDelete, onRestore }) {
           {!isDeleted && (
             <button
               onClick={() => onDelete(floor)}
-              className="rounded-lg p-2 text-slate-400 transition-all duration-200 hover:bg-red-50 hover:text-red-600 hover:shadow-md"
+              className="rounded-lg p-2 text-graphite-400 transition-all duration-200 hover:bg-red-50 hover:text-red-600 hover:shadow-md dark:hover:bg-red-950/40"
               title="Delete floor"
             >
               <Trash2 className="h-5 w-5" />
@@ -127,7 +128,7 @@ function FloorCard({ floor, occupancy, onDelete, onRestore }) {
       </div>
 
       {!isDeleted && (
-        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-inner">
+        <div className="rounded-xl border border-graphite-200 bg-white p-4 shadow-inner dark:border-graphite-700 dark:bg-graphite-800">
           {occupancy ? (
             <FloorGrid
               rows={floor.rows}
@@ -136,7 +137,7 @@ function FloorCard({ floor, occupancy, onDelete, onRestore }) {
               occupied={occupancy.occupied}
             />
           ) : (
-            <div className="flex items-center justify-center py-8 text-slate-400">
+            <div className="flex items-center justify-center py-8 text-graphite-400">
               <p className="text-sm">Loading occupancy data...</p>
             </div>
           )}
@@ -282,21 +283,21 @@ export default function FloorsMap() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="min-h-screen bg-gradient-to-br from-graphite-50 to-graphite-100 dark:from-graphite-950 dark:to-graphite-900">
       <div className="fixed inset-x-0 top-4 z-50 flex justify-center pointer-events-none">
         {toast && (
-          <div className="pointer-events-auto rounded-xl bg-slate-900/95 px-6 py-3 text-sm text-white shadow-xl backdrop-blur-sm">
+          <div className="pointer-events-auto rounded-xl bg-graphite-900/95 px-6 py-3 text-sm text-white shadow-xl backdrop-blur-sm">
             {toast}
           </div>
         )}
       </div>
 
-      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">
+          <h1 className="text-3xl font-bold text-graphite-900 dark:text-graphite-100">
             {t("floorMaps")}
           </h1>
-          <p className="mt-2 text-sm text-slate-600">
+          <p className="mt-2 text-sm text-graphite-600 dark:text-graphite-300">
             {t("floorMapsDescription")}
           </p>
         </div>
@@ -307,7 +308,7 @@ export default function FloorsMap() {
             className={`inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-medium shadow-md transition-all duration-200 ${
               showDeleted
                 ? "bg-red-600 text-white hover:bg-red-700 hover:shadow-lg"
-                : "bg-white text-slate-700 hover:bg-slate-50 border border-slate-200"
+                : "border border-graphite-200 bg-white text-graphite-700 hover:bg-graphite-50 dark:border-graphite-700 dark:bg-graphite-800 dark:text-graphite-200 dark:hover:bg-graphite-700"
             }`}
           >
             {showDeleted ? "Hide Deleted" : "Show Deleted"}
@@ -323,19 +324,19 @@ export default function FloorsMap() {
       </div>
 
       {showForm && (
-        <div className="mb-8 rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-8 shadow-lg">
+        <div className="mb-5 rounded-2xl border border-graphite-200 bg-gradient-to-br from-white to-graphite-50 p-8 shadow-lg dark:border-graphite-700 dark:from-graphite-800 dark:to-graphite-900">
           <div className="mb-6">
-            <h2 className="text-xl font-bold text-slate-900">
+            <h2 className="text-xl font-bold text-graphite-900 dark:text-graphite-100">
               {t("newFloor")}
             </h2>
-            <p className="mt-1 text-sm text-slate-600">
-              Create a new warehouse floor map
+            <p className="mt-1 text-sm text-graphite-600 dark:text-graphite-300">
+              {t("createFloorDescription")}
             </p>
           </div>
 
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-semibold text-slate-700">
+              <label className="block text-sm font-semibold text-graphite-700 dark:text-graphite-200">
                 {t("name")}
               </label>
 
@@ -344,12 +345,12 @@ export default function FloorsMap() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder={t("floorNamePlaceholder")}
-                className="mt-2 block w-full max-w-md rounded-xl border border-slate-300 px-4 py-3 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 transition-all duration-200"
+                className="mt-2 block w-full max-w-md rounded-xl border border-graphite-300 bg-white px-4 py-3 text-sm text-graphite-900 transition-all duration-200 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-graphite-600 dark:bg-graphite-900 dark:text-graphite-100"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-slate-700">
+              <label className="block text-sm font-semibold text-graphite-700 dark:text-graphite-200">
                 {t("size")}
               </label>
 
@@ -365,19 +366,19 @@ export default function FloorsMap() {
                     className={`flex h-20 w-20 flex-col items-center justify-center gap-2 rounded-xl border-2 transition-all duration-200 ${
                       preset?.id === p.id
                         ? "border-primary-500 bg-primary-50 shadow-md"
-                        : "border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm"
+                        : "border-graphite-200 bg-white hover:border-graphite-300 hover:shadow-sm dark:border-graphite-700 dark:bg-graphite-900 dark:hover:border-graphite-600"
                     }`}
                   >
                     <span
                       className={`rounded-md transition-all duration-200 ${
-                        preset?.id === p.id ? "bg-primary-600" : "bg-slate-400"
+                        preset?.id === p.id ? "bg-primary-600" : "bg-graphite-400 dark:bg-graphite-600"
                       }`}
                       style={{
                         width: p.previewPx,
                         height: p.previewPx,
                       }}
                     />
-                    <span className="text-xs font-medium text-slate-600">
+                    <span className="text-xs font-medium text-graphite-600 dark:text-graphite-300">
                       {p.label}
                     </span>
                   </button>
@@ -387,10 +388,10 @@ export default function FloorsMap() {
 
             {preset && (
               <div>
-                <label className="block text-sm font-semibold text-slate-700">
+                <label className="block text-sm font-semibold text-graphite-700 dark:text-graphite-200">
                   {t("chooseStartingLayout", "Starting layout")}
                 </label>
-                <p className="mt-1 text-sm text-slate-500">
+                <p className="mt-1 text-sm text-graphite-500 dark:text-graphite-400">
                   {t(
                     "chooseStartingLayoutHelp",
                     "Pick the shape closest to your floor. You can still fine-tune it below.",
@@ -410,10 +411,10 @@ export default function FloorsMap() {
 
             {preset && template && (
               <div>
-                <label className="block text-sm font-semibold text-slate-700">
+                <label className="block text-sm font-semibold text-graphite-700 dark:text-graphite-200">
                   {t("drawFloorShape")}
                 </label>
-                <p className="mt-1 text-sm text-slate-500">
+                <p className="mt-1 text-sm text-graphite-500 dark:text-graphite-400">
                   {t(
                     "fineTuneShapeHelp",
                     "Tap dots to add or remove cells and adjust the edges.",
@@ -435,18 +436,18 @@ export default function FloorsMap() {
                 <button
                   type="button"
                   onClick={() => editorRef.current?.clear()}
-                  className="mt-3 text-sm font-medium text-slate-500 transition-colors hover:text-red-600"
+                  className="mt-3 text-sm font-medium text-graphite-500 transition-colors hover:text-red-600 dark:text-graphite-400"
                 >
                   {t("clearDrawing")}
                 </button>
               </div>
             )}
 
-            <div className="flex gap-3 pt-4 border-t border-slate-200">
+            <div className="flex gap-3 border-t border-graphite-200 pt-4 dark:border-graphite-700">
               <button
                 type="button"
                 onClick={resetForm}
-                className="rounded-xl border border-slate-300 px-6 py-2.5 text-sm font-medium text-slate-700 transition-all duration-200 hover:bg-slate-50 hover:shadow-sm"
+                className="rounded-xl border border-graphite-300 px-6 py-2.5 text-sm font-medium text-graphite-700 transition-all duration-200 hover:bg-graphite-50 hover:shadow-sm dark:border-graphite-600 dark:text-graphite-200 dark:hover:bg-graphite-700"
               >
                 {t("cancel")}
               </button>
@@ -465,44 +466,28 @@ export default function FloorsMap() {
       )}
 
       {loading ? (
-        <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white py-16 shadow-sm">
-          <div className="flex flex-col items-center gap-4 rounded-xl bg-white px-8 py-10 text-center shadow-md">
+        <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-graphite-200 bg-gradient-to-br from-graphite-50 to-white py-16 shadow-sm dark:border-graphite-700 dark:from-graphite-900 dark:to-graphite-800">
+          <div className="flex flex-col items-center gap-4 rounded-xl bg-white px-8 py-10 text-center shadow-md dark:bg-graphite-800">
             <div
               className="h-10 w-10 animate-spin rounded-full border-4 border-current border-t-transparent"
               style={{ color: "#317272" }}
               aria-hidden
             />
-            <p className="text-base font-medium text-slate-700">
+            <p className="text-base font-medium text-graphite-700 dark:text-graphite-200">
               {t("loading")}
             </p>
           </div>
         </div>
       ) : floors.length === 0 ? (
-        <div className="rounded-2xl border-2 border-dashed border-slate-300 bg-gradient-to-br from-white to-slate-50 py-16 text-center shadow-sm">
-          <div className="flex flex-col items-center gap-3">
-            <div className="rounded-full bg-slate-100 p-4">
-              <svg
-                className="h-8 w-8 text-slate-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 7m0 13V7"
-                />
-              </svg>
-            </div>
-            <p className="text-base font-medium text-slate-600">
-              {t("noFloors")}
-            </p>
-            <p className="text-sm text-slate-500">
-              Get started by creating your first floor map
-            </p>
-          </div>
-        </div>
+        <EmptyState
+          icon={Map}
+          title={t("noFloors")}
+          description={t("createFirstFloorDescription")}
+          action={{
+            label: t("addFloor"),
+            onClick: () => setShowForm(true),
+          }}
+        />
       ) : (
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-2">
           {floors.map((floor) => (

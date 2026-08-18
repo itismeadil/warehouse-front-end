@@ -301,7 +301,7 @@ export default function ItemDetail() {
     <div className="mx-auto max-w-2xl">
       <button
         onClick={() => navigate("/")}
-        className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-graphite-600 transition-colors hover:text-graphite-900"
+        className="mb-5 inline-flex items-center gap-1.5 text-sm font-medium text-graphite-600 transition-colors hover:text-graphite-900 dark:text-graphite-300 dark:hover:text-graphite-100"
       >
         {translation.dir() === "rtl" ? (
           <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -312,7 +312,7 @@ export default function ItemDetail() {
       </button>
 
       {/* Item summary card */}
-      <div className="rounded-lg border border-graphite-200 bg-white p-4 shadow-sm">
+      <div className="rounded-lg border border-graphite-200 bg-white p-4 shadow-sm dark:border-graphite-700 dark:bg-graphite-800">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3 flex-1">
             <span
@@ -329,7 +329,7 @@ export default function ItemDetail() {
                     onChange={(e) =>
                       setEditForm({ ...editForm, name: e.target.value })
                     }
-                    className="block w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm text-graphite-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                    className="block w-full rounded-lg border border-graphite-300 bg-white px-3 py-2 text-sm text-graphite-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-graphite-600 dark:bg-graphite-900 dark:text-graphite-100"
                     placeholder={t("itemNamePlaceholder")}
                   />
                   <input
@@ -338,7 +338,7 @@ export default function ItemDetail() {
                     onChange={(e) =>
                       setEditForm({ ...editForm, serialNumber: e.target.value })
                     }
-                    className="block w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm font-mono text-graphite-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                    className="block w-full rounded-lg border border-graphite-300 bg-white px-3 py-2 text-sm font-mono text-graphite-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-graphite-600 dark:bg-graphite-900 dark:text-graphite-100"
                     placeholder={t("serialNumberPlaceholder")}
                   />
                   <div className="flex gap-2">
@@ -348,7 +348,7 @@ export default function ItemDetail() {
                       onChange={(e) =>
                         setEditForm({ ...editForm, color: e.target.value })
                       }
-                      className="flex-1 rounded-lg border border-graphite-300 px-3 py-2 text-sm text-graphite-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                      className="flex-1 rounded-lg border border-graphite-300 bg-white px-3 py-2 text-sm text-graphite-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-graphite-600 dark:bg-graphite-900 dark:text-graphite-100"
                       placeholder={t("colorPlaceholder")}
                     />
                     <input
@@ -357,7 +357,7 @@ export default function ItemDetail() {
                       onChange={(e) =>
                         setEditForm({ ...editForm, stock: e.target.value })
                       }
-                      className="w-24 rounded-lg border border-graphite-300 px-3 py-2 text-sm text-graphite-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                      className="w-24 rounded-lg border border-graphite-300 bg-white px-3 py-2 text-sm text-graphite-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-graphite-600 dark:bg-graphite-900 dark:text-graphite-100"
                       placeholder={t("stock")}
                       min="0"
                     />
@@ -367,7 +367,7 @@ export default function ItemDetail() {
                     onChange={(e) =>
                       setEditForm({ ...editForm, supplierId: e.target.value })
                     }
-                    className="block w-full rounded-lg border border-graphite-300 bg-white px-3 py-2 text-sm text-graphite-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                    className="block w-full rounded-lg border border-graphite-300 bg-white px-3 py-2 text-sm text-graphite-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-graphite-600 dark:bg-graphite-900 dark:text-graphite-100"
                   >
                     <option value="">{t("noSupplier")}</option>
                     {suppliers.map((s) => (
@@ -379,7 +379,7 @@ export default function ItemDetail() {
                 </div>
               ) : (
                 <>
-                  <h1 className="truncate text-base font-semibold text-graphite-900">
+                  <h1 className="truncate text-base font-semibold text-graphite-900 dark:text-graphite-100">
                     {item.name}
                   </h1>
                   <p className="mt-0.5 font-mono text-xs text-graphite-500">
@@ -405,7 +405,7 @@ export default function ItemDetail() {
                   <button
                     onClick={handleEditCancel}
                     disabled={saving}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-graphite-200 px-3 py-1.5 text-sm font-medium text-graphite-600 transition-colors hover:bg-graphite-50 disabled:opacity-50"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-graphite-200 px-3 py-1.5 text-sm font-medium text-graphite-600 transition-colors hover:bg-graphite-50 disabled:opacity-50 dark:border-graphite-700 dark:text-graphite-300 dark:hover:bg-graphite-700"
                   >
                     <X className="h-4 w-4" />
                     <span className="hidden sm:inline">{t("cancelEdit")}</span>
@@ -435,7 +435,7 @@ export default function ItemDetail() {
       </div>
 
       {/* Item-level stock/sold/reserved - read-only, synced from accountant */}
-      <div className="mt-6 rounded-xl border border-graphite-200 bg-graphite-50 p-4 shadow-sm">
+      <div className="mt-5 rounded-xl border border-graphite-200 bg-graphite-50 p-4 shadow-sm dark:border-graphite-700 dark:bg-graphite-900">
         <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-graphite-500">
           {t("stock")}
         </h3>
@@ -447,10 +447,10 @@ export default function ItemDetail() {
           ].map(({ key, label }) => (
             <div
               key={key}
-              className="rounded-lg border border-graphite-200 bg-white p-3"
+              className="rounded-lg border border-graphite-200 bg-white p-3 dark:border-graphite-700 dark:bg-graphite-800"
             >
               <p className="text-xs text-graphite-500">{label}</p>
-              <p className="mt-1.5 text-lg font-semibold text-graphite-900">
+              <p className="mt-1.5 text-lg font-semibold text-graphite-900 dark:text-graphite-100">
                 {item[key] ?? 0}
               </p>
             </div>
@@ -465,7 +465,7 @@ export default function ItemDetail() {
       {!(item.stock === 0 && !item.parts?.some((part) => part.damaged > 0)) && (
         <div>
           {/* Legend for floor grid colors */}
-          <div className="mt-6 rounded-xl border border-graphite-200 bg-white p-4 shadow-sm">
+          <div className="mt-5 rounded-xl border border-graphite-200 bg-white p-4 shadow-sm dark:border-graphite-700 dark:bg-graphite-800">
             <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-graphite-500">
               {t("locationLegend")}
             </h3>
@@ -486,7 +486,7 @@ export default function ItemDetail() {
           </div>
 
           {/* Parts: each is a card; clicking expands Location/Stats tabs inline */}
-          <div className="mt-6">
+          <div className="mt-5">
             <div className="mb-3 flex items-center justify-between">
               <h3 className="text-xs font-semibold uppercase tracking-wide text-graphite-500">
                 {t("parts")}
@@ -526,7 +526,7 @@ export default function ItemDetail() {
                     <button
                       onClick={handleAddPartCancel}
                       disabled={addingPart}
-                      className="rounded-lg border border-graphite-300 bg-white px-4 py-2 text-sm font-medium text-graphite-700 transition-colors hover:bg-graphite-50 disabled:opacity-50"
+                    className="rounded-lg border border-graphite-300 bg-white px-4 py-2 text-sm font-medium text-graphite-700 transition-colors hover:bg-graphite-50 disabled:opacity-50 dark:border-graphite-600 dark:bg-graphite-800 dark:text-graphite-200 dark:hover:bg-graphite-700"
                     >
                       {t("cancel")}
                     </button>
@@ -539,7 +539,7 @@ export default function ItemDetail() {
                 return (
                   <div
                     key={part._id}
-                    className="overflow-hidden rounded-xl border border-graphite-200 bg-white shadow-sm"
+                    className="overflow-hidden rounded-xl border border-graphite-200 bg-white shadow-sm dark:border-graphite-700 dark:bg-graphite-800"
                   >
                     <button
                       type="button"
@@ -548,7 +548,7 @@ export default function ItemDetail() {
                       }
                       className="flex w-full items-center justify-between px-4 py-3 text-start"
                     >
-                      <span className="text-sm font-semibold text-graphite-900 truncate">
+                      <span className="truncate text-sm font-semibold text-graphite-900 dark:text-graphite-100">
                         PCS/CTN: {partLabel(item, part)}
                       </span>
                       <span className="ml-auto shrink-0 text-sm text-graphite-500 mr-3">
@@ -562,7 +562,7 @@ export default function ItemDetail() {
                     </button>
 
                     {isExpanded && (
-                      <div className="border-t border-graphite-200 px-4 py-4">
+                      <div className="border-t border-graphite-200 px-4 py-4 dark:border-graphite-700">
                         <PartDetail
                           embedded
                           item={item}
@@ -582,7 +582,7 @@ export default function ItemDetail() {
               or more color variants of this same product (e.g. legs that
               look the same whether the top is silver or gold) — stored
               once, with one location, instead of duplicated per color. */}
-          <div className="mt-6">
+          <div className="mt-5">
             <div className="mb-3 flex items-center justify-between">
               <div>
                 <h3 className="text-xs font-semibold uppercase tracking-wide text-graphite-500">
@@ -619,7 +619,7 @@ export default function ItemDetail() {
               )}
 
               {(item.sharedParts || []).length === 0 && !showAddSharedPart && (
-                <p className="rounded-xl border border-dashed border-graphite-200 px-4 py-6 text-center text-sm text-graphite-400">
+                <p className="rounded-xl border border-dashed border-graphite-200 px-4 py-6 text-center text-sm text-graphite-400 dark:border-graphite-700">
                   {t("noSharedPartsYet", "No shared parts yet")}
                 </p>
               )}
@@ -640,7 +640,7 @@ export default function ItemDetail() {
                       }
                       className="flex w-full items-center justify-between px-4 py-3 text-start"
                     >
-                      <span className="text-sm font-semibold text-graphite-900 truncate">
+                      <span className="truncate text-sm font-semibold text-graphite-900 dark:text-graphite-100">
                         PCS/CTN: {partLabel(item, sharedPart)}
                         {sharedPart.name ? ` — ${sharedPart.name}` : ""}
                       </span>
@@ -655,7 +655,7 @@ export default function ItemDetail() {
                     </button>
 
                     {isExpanded && (
-                      <div className="border-t border-graphite-200 px-4 py-4">
+                      <div className="border-t border-graphite-200 px-4 py-4 dark:border-graphite-700">
                         <SharedPartDetail
                           sharedPart={sharedPart}
                           currentItemId={item._id}

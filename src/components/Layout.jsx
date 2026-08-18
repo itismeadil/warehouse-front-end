@@ -11,8 +11,11 @@ import {
   Newspaper,
   ChevronDown,
   Calculator,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { useTheme } from "../context/ThemeContext";
 
 const ALL_NAV_ITEMS = [
   {
@@ -64,6 +67,7 @@ export default function Layout({ children }) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   const navItems = ALL_NAV_ITEMS.filter((item) =>
@@ -88,17 +92,17 @@ export default function Layout({ children }) {
   }, []);
 
   return (
-    <div className="min-h-screen bg-graphite-50 pb-20 sm:pb-0">
+    <div className="min-h-screen bg-graphite-50 pb-20 dark:bg-graphite-950 sm:pb-0">
       <div className="flex">
         {/* Sidebar - desktop */}
-        <aside className="sticky top-0 hidden h-screen w-64 flex-col border-r border-graphite-200 bg-white sm:flex">
+        <aside className="sticky top-0 hidden h-screen w-64 flex-col border-r border-graphite-200 bg-white dark:border-graphite-700 dark:bg-graphite-800 sm:flex">
           {/* Logo section */}
-          <div className="flex items-center gap-2.5 border-b border-graphite-200 px-6 py-4">
+          <div className="flex items-center gap-2.5 border-b border-graphite-200 px-6 py-4 dark:border-graphite-700">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-600 text-base font-bold text-white shadow-sm">
               ق
             </span>
             <div className="leading-tight">
-              <p className="text-base font-semibold tracking-tight text-graphite-900">
+              <p className="text-base font-semibold tracking-tight text-graphite-900 dark:text-graphite-100">
                 {t("brandName")}
               </p>
               <p className="text-[11px] font-medium uppercase tracking-wide text-graphite-500">
@@ -117,8 +121,8 @@ export default function Layout({ children }) {
                   to={item.to}
                   className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
                     active
-                      ? "bg-primary-50 text-primary-700"
-                      : "text-graphite-600 hover:bg-graphite-50 hover:text-graphite-900"
+                      ? "bg-primary-50 text-primary-700 dark:bg-primary-900/40 dark:text-primary-300"
+                      : "text-graphite-600 hover:bg-graphite-50 hover:text-graphite-900 dark:text-graphite-300 dark:hover:bg-graphite-700 dark:hover:text-graphite-100"
                   }`}
                 >
                   <item.icon className="h-5 w-5" aria-hidden="true" />
@@ -129,13 +133,13 @@ export default function Layout({ children }) {
           </nav>
 
           {/* User section at bottom */}
-          <div className="border-t border-graphite-200 px-3 py-4">
+          <div className="border-t border-graphite-200 px-3 py-4 dark:border-graphite-700">
             <div className="flex items-center gap-3 rounded-lg px-3 py-2">
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-100 text-sm font-semibold text-primary-700">
                 {user?.name?.charAt(0).toUpperCase()}
               </span>
               <div className="flex-1 min-w-0">
-                <p className="truncate text-sm font-medium text-graphite-900">
+                <p className="truncate text-sm font-medium text-graphite-900 dark:text-graphite-100">
                   {user?.name}
                 </p>
                 <p className="text-xs capitalize text-graphite-500">
@@ -146,14 +150,27 @@ export default function Layout({ children }) {
             <div className="mt-2 space-y-1 px-3">
               <button
                 onClick={toggleLanguage}
-                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-graphite-600 transition-colors hover:bg-graphite-50"
+                aria-label={t("toggleLanguage")}
+                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-graphite-600 transition-colors hover:bg-graphite-50 dark:text-graphite-300 dark:hover:bg-graphite-700"
               >
                 <Languages className="h-4 w-4" aria-hidden="true" />
                 {i18n.language === "ar" ? "English" : "العربية"}
               </button>
               <button
+                onClick={toggleTheme}
+                aria-label={t("toggleTheme")}
+                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-graphite-600 transition-colors hover:bg-graphite-50 dark:text-graphite-300 dark:hover:bg-graphite-700"
+              >
+                {theme === "dark" ? (
+                  <Sun className="h-4 w-4" aria-hidden="true" />
+                ) : (
+                  <Moon className="h-4 w-4" aria-hidden="true" />
+                )}
+                {t("theme")}
+              </button>
+              <button
                 onClick={handleLogout}
-                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
+                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 dark:hover:bg-red-950/40"
               >
                 <LogOut className="h-4 w-4" aria-hidden="true" />
                 {t("logout")}
@@ -185,9 +202,21 @@ export default function Layout({ children }) {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={toggleLanguage}
+                    aria-label={t("toggleLanguage")}
                     className="flex shrink-0 items-center gap-2 rounded-lg border border-white/20 bg-white/10 px-2.5 py-2 text-sm font-medium text-white transition-colors hover:bg-white/20"
                   >
                     <Languages className="h-4 w-4" aria-hidden="true" />
+                  </button>
+                  <button
+                    onClick={toggleTheme}
+                    aria-label={t("toggleTheme")}
+                    className="flex shrink-0 items-center justify-center rounded-lg border border-white/20 bg-white/10 px-2.5 py-2 text-white transition-colors hover:bg-white/20"
+                  >
+                    {theme === "dark" ? (
+                      <Sun className="h-4 w-4" aria-hidden="true" />
+                    ) : (
+                      <Moon className="h-4 w-4" aria-hidden="true" />
+                    )}
                   </button>
 
                   <div
@@ -209,19 +238,19 @@ export default function Layout({ children }) {
                     </button>
 
                     {userMenuOpen && (
-                      <div className="absolute right-0 top-full z-50 mt-2 w-48 rounded-xl border border-graphite-200 bg-white p-1.5 shadow-lg">
+                      <div className="absolute right-0 top-full z-50 mt-2 w-48 rounded-xl border border-graphite-200 bg-white p-1.5 shadow-lg dark:border-graphite-700 dark:bg-graphite-800">
                         <div className="px-3 py-2">
-                          <p className="truncate text-sm font-medium text-graphite-900">
+                          <p className="truncate text-sm font-medium text-graphite-900 dark:text-graphite-100">
                             {user?.name}
                           </p>
-                          <p className="text-xs capitalize text-graphite-500">
+                          <p className="text-xs capitalize text-graphite-500 dark:text-graphite-400">
                             {user?.role}
                           </p>
                         </div>
                         <div className="my-1 border-t border-graphite-100" />
                         <button
                           onClick={handleLogout}
-                          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-graphite-700 transition-colors hover:bg-graphite-50"
+                          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-graphite-700 transition-colors hover:bg-graphite-50 dark:text-graphite-200 dark:hover:bg-graphite-700"
                         >
                           <LogOut className="h-4 w-4" />
                           {t("logout")}
@@ -234,7 +263,7 @@ export default function Layout({ children }) {
             </header>
 
             {/* Nav items: fixed bottom tab bar on mobile */}
-            <nav className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-around border-t border-graphite-200 bg-white px-1 py-1.5 shadow-[0_-2px_8px_rgba(0,0,0,0.04)] sm:hidden">
+            <nav className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-around border-t border-graphite-200 bg-white px-1 py-1.5 shadow-[0_-2px_8px_rgba(0,0,0,0.04)] dark:border-graphite-700 dark:bg-graphite-800 sm:hidden">
               {navItems.map((item) => {
                 const active = item.match(pathname);
                 return (
@@ -244,7 +273,7 @@ export default function Layout({ children }) {
                     className={`flex flex-1 flex-col items-center gap-0.5 rounded-lg px-2 py-1.5 text-[11px] font-medium transition-colors ${
                       active
                         ? "bg-primary-600 text-white"
-                        : "text-graphite-500 hover:text-graphite-900"
+                        : "text-graphite-500 hover:text-graphite-900 dark:text-graphite-400 dark:hover:text-graphite-100"
                     }`}
                   >
                     <item.icon className="h-5 w-5" aria-hidden="true" />
