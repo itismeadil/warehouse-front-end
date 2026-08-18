@@ -4,6 +4,7 @@ import { Newspaper, ImageOff, ZoomIn, Download, Loader2 } from "lucide-react";
 import { getItems } from "../api/items";
 import { partLabel } from "../lib/Partlabel";
 import PhotoLightbox from "./PhotoLightbox";
+import EmptyState from "./EmptyState";
 
 // Fetches the image as a blob and forces a real download, instead of just
 // opening it in a new tab (which is what a plain <a download> does for
@@ -45,7 +46,7 @@ function Tile({ photo, className = "", overlay = null, onOpen }) {
     <button
       type="button"
       onClick={() => onOpen(photo.url)}
-      className={`group relative overflow-hidden bg-graphite-100 ${className}`}
+      className={`group relative overflow-hidden bg-graphite-100 dark:bg-graphite-700 ${className}`}
     >
       <img
         src={photo.url}
@@ -160,28 +161,29 @@ export default function SupplierItems() {
   return (
     <div className="mx-auto max-w-xl px-3 sm:px-0">
       <div className="mb-5 flex items-center gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary-600">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary-600 dark:bg-primary-900/40 dark:text-primary-300">
           <Newspaper className="h-5 w-5" />
         </div>
         <div className="min-w-0">
-          <h1 className="text-lg font-semibold text-graphite-900">
+          <h1 className="text-lg font-semibold text-graphite-900 dark:text-graphite-100">
             {t("supplierDamagedTitle")}
           </h1>
-          <p className="truncate text-sm text-graphite-500">
+          <p className="truncate text-sm text-graphite-500 dark:text-graphite-400">
             {t("supplierDamagedDescription")}
           </p>
         </div>
       </div>
 
       {loading ? (
-        <p className="text-sm text-graphite-500">{t("loading")}</p>
+        <p className="text-sm text-graphite-500 dark:text-graphite-400">
+          {t("loading")}
+        </p>
       ) : damagedEntries.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-graphite-300 bg-white py-16 text-center">
-          <ImageOff className="mx-auto h-8 w-8 text-graphite-300" />
-          <p className="mt-3 text-sm text-graphite-500">
-            {t("supplierNoDamagedParts")}
-          </p>
-        </div>
+        <EmptyState
+          icon={ImageOff}
+          title={t("supplierNoDamagedParts")}
+          description={t("supplierNoDamagedPartsDescription")}
+        />
       ) : (
         <div className="space-y-4">
           {damagedEntries.map(({ item, part }) => {
@@ -189,49 +191,51 @@ export default function SupplierItems() {
             return (
               <div
                 key={part._id}
-                className="overflow-hidden rounded-2xl border border-graphite-200 bg-white shadow-sm"
+                className="overflow-hidden rounded-xl border border-graphite-200 bg-white shadow-sm dark:border-graphite-700 dark:bg-graphite-800"
               >
                 {/* Post-style header: avatar + name + meta line */}
                 <div className="flex items-start gap-3 px-4 py-3">
                   <span
-                    className="h-11 w-11 shrink-0 rounded-full border border-graphite-200 shadow-sm"
+                    className="h-11 w-11 shrink-0 rounded-full border border-graphite-200 shadow-sm dark:border-graphite-600"
                     style={{ backgroundColor: item.color }}
                     title={item.color}
                   />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-semibold text-graphite-900">
+                    <p className="truncate font-semibold text-graphite-900 dark:text-graphite-100">
                       {item.name}
                     </p>
-                    <p className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-graphite-500">
+                    <p className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-graphite-500 dark:text-graphite-400">
                       <span className="font-mono">{item.serialNumber}</span>
-                      <span className="text-graphite-300">·</span>
+                      <span className="text-graphite-300 dark:text-graphite-600">
+                        ·
+                      </span>
                       <span>PCS/CTN {partLabel(item, part)}</span>
                     </p>
                   </div>
-                  <span className="shrink-0 rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-600">
+                  <span className="shrink-0 rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-600 dark:bg-red-900/30 dark:text-red-300">
                     {t("damagedCount", { count: part.damaged })}
                   </span>
                 </div>
 
                 {/* Caption */}
                 {part.damageDescription && (
-                  <p className="px-4 pb-3 text-sm leading-relaxed text-graphite-700">
+                  <p className="px-4 pb-3 text-sm leading-relaxed text-graphite-700 dark:text-graphite-300">
                     {part.damageDescription}
                   </p>
                 )}
 
                 {/* Photos */}
                 {photos.length === 0 ? (
-                  <div className="mx-4 mb-4 rounded-lg border border-dashed border-graphite-200 py-8 text-center">
-                    <ImageOff className="mx-auto h-6 w-6 text-graphite-300" />
-                    <p className="mt-2 text-sm text-graphite-400">
+                  <div className="mx-4 mb-4 rounded-lg border border-dashed border-graphite-200 py-8 text-center dark:border-graphite-600">
+                    <ImageOff className="mx-auto h-6 w-6 text-graphite-300 dark:text-graphite-600" />
+                    <p className="mt-2 text-sm text-graphite-400 dark:text-graphite-500">
                       {t("supplierNoPhotosYet")}
                     </p>
                   </div>
                 ) : (
                   <>
                     <PhotoGrid photos={photos} onOpen={setOpenPhoto} />
-                    <p className="px-4 py-2 text-xs text-graphite-400">
+                    <p className="px-4 py-2 text-xs text-graphite-400 dark:text-graphite-500">
                       {t("photoCount", {
                         count: photos.length,
                         max: part.damaged,

@@ -6,7 +6,7 @@ const RADIUS = 2.4;
 const RECT_SIZE = 4; // Size of rectangle cells for empty cells
 const FILLED_SIZE = 5; // Size for filled cells (small gap between them)
 
-const EMPTY_COLOR = "#e2e8f0"; // slate-200
+const EMPTY_COLOR = "#e2e8f0"; // empty cell
 const OCCUPIED_COLOR = "#6366f1"; // indigo-500 (modern purple)
 const SAVED_PART_COLOR = "#f59e0b"; // amber-500
 const SELECTED_COLOR = "#10b981"; // emerald-500
@@ -363,7 +363,7 @@ export default function FloorGrid({
   return (
     <div
       ref={containerRef}
-      className="relative inline-block max-w-full overflow-auto rounded-xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-3 shadow-md"
+      className="relative inline-block max-w-full overflow-auto rounded-xl border border-graphite-200 bg-white p-3 shadow-sm dark:border-graphite-700 dark:bg-graphite-900"
     >
       <canvas
         ref={canvasRef}
@@ -392,7 +392,7 @@ export default function FloorGrid({
       />
       {hover && hover.entry && containerRef.current && (
         <div
-          className="pointer-events-none absolute whitespace-nowrap rounded-lg bg-slate-900/95 px-3 py-2 text-xs text-white shadow-xl backdrop-blur-sm z-10 border border-slate-700/50"
+          className="pointer-events-none absolute whitespace-nowrap rounded-lg bg-graphite-900/95 px-3 py-2 text-xs text-white shadow-xl backdrop-blur-sm z-10 border border-graphite-700/50"
           style={{
             left: hover.x + 8,
             top: hover.y + 8,
@@ -439,13 +439,13 @@ export default function FloorGrid({
             <div className="space-y-1">
               <div className="font-semibold">{hover.entry.itemName}</div>
               {hover.entry.partName && (
-                <div className="text-slate-300">{hover.entry.partName}</div>
+                <div className="text-graphite-300">{hover.entry.partName}</div>
               )}
               {/* Shared parts (see sharedPartId) have no serial number or
                   single item stock of their own — they belong to more
                   than one item at once, so skip this line for them. */}
               {hover.entry.serialNumber != null && (
-                <div className="flex items-center gap-2 text-slate-300">
+                <div className="flex items-center gap-2 text-graphite-300">
                   <span>SN: #{hover.entry.serialNumber}</span>
                   <span>·</span>
                   <span>Qty: {hover.entry.stock}</span>
