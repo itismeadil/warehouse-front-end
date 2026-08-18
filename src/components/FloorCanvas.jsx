@@ -238,30 +238,30 @@ const FloorCanvas = forwardRef(function FloorCanvas(
   };
 
   return (
-    <div className="inline-block max-w-full rounded-lg border border-stone-300 bg-white">
-      <div className="flex items-center justify-between border-b border-stone-200 px-2 py-1.5">
-        <span className="text-xs text-stone-500">
+    <div className="inline-block max-w-full rounded-lg border border-graphite-300 bg-white dark:border-graphite-600 dark:bg-graphite-800">
+      <div className="flex items-center justify-between border-b border-graphite-200 px-2 py-1.5 dark:border-graphite-700">
+        <span className="text-xs text-graphite-500 dark:text-graphite-400">
           {rows} × {cols} · {Math.round(zoom * 100)}%
         </span>
         <div className="flex items-center gap-1">
           <button
             type="button"
             onClick={zoomOut}
-            className="flex h-6 w-6 items-center justify-center rounded border border-stone-300 text-sm text-stone-600 hover:bg-stone-100"
+            className="flex h-6 w-6 items-center justify-center rounded border border-graphite-300 text-sm text-graphite-600 hover:bg-graphite-100 dark:border-graphite-600 dark:text-graphite-400 dark:hover:bg-graphite-700"
           >
             −
           </button>
           <button
             type="button"
             onClick={zoomReset}
-            className="rounded border border-stone-300 px-1.5 text-xs text-stone-600 hover:bg-stone-100"
+            className="rounded border border-graphite-300 px-1.5 text-xs text-graphite-600 hover:bg-graphite-100 dark:border-graphite-600 dark:text-graphite-400 dark:hover:bg-graphite-700"
           >
             Reset
           </button>
           <button
             type="button"
             onClick={zoomIn}
-            className="flex h-6 w-6 items-center justify-center rounded border border-stone-300 text-sm text-stone-600 hover:bg-stone-100"
+            className="flex h-6 w-6 items-center justify-center rounded border border-graphite-300 text-sm text-graphite-600 hover:bg-graphite-100 dark:border-graphite-600 dark:text-graphite-400 dark:hover:bg-graphite-700"
           >
             +
           </button>

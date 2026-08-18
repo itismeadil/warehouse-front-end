@@ -8,6 +8,7 @@ import { createItem, addPart } from "../api/items";
 import { getFloors } from "../api/floors";
 import { getUsers } from "../api/users";
 import AddItemPartForm from "./AddItemPartForm";
+import { useTheme } from "../context/ThemeContext";
 
 const emptyPart = (id) => ({
   id,
@@ -39,6 +40,7 @@ const parseItemError = (error, t, serialNumber) => {
 
 export default function AddItemForm() {
   const { t } = useTranslation();
+  const { theme } = useTheme();
 
   const [itemSerialNumber, setItemSerialNumber] = useState("");
   const [itemName, setItemName] = useState("");
@@ -181,17 +183,17 @@ export default function AddItemForm() {
             <Package className="h-6 w-6" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-graphite-900">
+            <h1 className="text-lg font-semibold text-graphite-900 dark:text-graphite-100">
               {t("addNewItem")}
             </h1>
-            <p className="text-sm text-graphite-500">
+            <p className="text-sm text-graphite-500 dark:text-graphite-400">
               {t("addItemDescription")}
             </p>
           </div>
         </div>
       </div>
 
-      <div className="rounded-2xl border border-graphite-200 bg-white p-6 shadow-lg sm:p-8">
+      <div className="rounded-2xl border border-graphite-200 bg-white p-6 shadow-lg sm:p-8 dark:border-graphite-700 dark:bg-graphite-800">
         <form onSubmit={handleCreateItem}>
           {/* Item Details Section */}
           <div className="mb-8">
@@ -199,7 +201,7 @@ export default function AddItemForm() {
               <div className="sm:col-span-2">
                 <label
                   htmlFor="serialNumber"
-                  className="block text-sm font-medium text-graphite-700 mb-1.5"
+                  className="block text-sm font-medium text-graphite-700 mb-1.5 dark:text-graphite-300"
                 >
                   {t("serialNumber")}
                 </label>
@@ -225,12 +227,12 @@ export default function AddItemForm() {
                     className={`block w-full rounded-xl border px-4 py-3 text-sm text-graphite-900 placeholder:text-graphite-400 focus:outline-none focus:ring-2 disabled:bg-graphite-50 disabled:text-graphite-500 transition-all ${
                       fieldErrors.serialNumber
                         ? "border-red-400 focus:border-red-500 focus:ring-red-500/20"
-                        : "border-graphite-300 focus:border-primary-500 focus:ring-primary-500/20"
+                        : "border-graphite-300 focus:border-primary-500 focus:ring-primary-500/20 dark:border-graphite-600"
                     }`}
                   />
                 </div>
                 {fieldErrors.serialNumber && (
-                  <p className="mt-1.5 text-xs text-red-600">
+                  <p className="mt-1.5 text-xs text-red-600 dark:text-red-400">
                     {fieldErrors.serialNumber}
                   </p>
                 )}
@@ -239,7 +241,7 @@ export default function AddItemForm() {
               <div className="sm:col-span-2">
                 <label
                   htmlFor="itemName"
-                  className="block text-sm font-medium text-graphite-700 mb-1.5"
+                  className="block text-sm font-medium text-graphite-700 mb-1.5 dark:text-graphite-300"
                 >
                   {t("itemName")}
                 </label>
@@ -252,14 +254,14 @@ export default function AddItemForm() {
                   onChange={(e) => setItemName(e.target.value)}
                   placeholder={t("itemNamePlaceholder")}
                   required
-                  className="block w-full rounded-xl border border-graphite-300 px-4 py-3 text-sm text-graphite-900 placeholder:text-graphite-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 disabled:bg-graphite-50 disabled:text-graphite-500 transition-all"
+                  className="block w-full rounded-xl border border-graphite-300 px-4 py-3 text-sm text-graphite-900 placeholder:text-graphite-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 disabled:bg-graphite-50 disabled:text-graphite-500 transition-all dark:border-graphite-600 dark:text-graphite-100 dark:placeholder:text-graphite-500 dark:disabled:bg-graphite-900 dark:disabled:text-graphite-400 bg-white dark:bg-graphite-800"
                 />
               </div>
 
               <div>
                 <label
                   htmlFor="itemColor"
-                  className="block text-sm font-medium text-graphite-700 mb-1.5"
+                  className="block text-sm font-medium text-graphite-700 mb-1.5 dark:text-graphite-300"
                 >
                   {t("color")}
                 </label>
@@ -272,14 +274,14 @@ export default function AddItemForm() {
                   onChange={(e) => setItemColor(e.target.value)}
                   placeholder={t("colorPlaceholder")}
                   required
-                  className="block w-full rounded-xl border border-graphite-300 px-4 py-3 text-sm text-graphite-900 placeholder:text-graphite-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 disabled:bg-graphite-50 disabled:text-graphite-500 transition-all"
+                  className="block w-full rounded-xl border border-graphite-300 px-4 py-3 text-sm text-graphite-900 placeholder:text-graphite-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 disabled:bg-graphite-50 disabled:text-graphite-500 transition-all dark:border-graphite-600 dark:text-graphite-100 dark:placeholder:text-graphite-500 dark:disabled:bg-graphite-900 dark:disabled:text-graphite-400 bg-white dark:bg-graphite-800"
                 />
               </div>
 
               <div>
                 <label
                   htmlFor="itemStock"
-                  className="block text-sm font-medium text-graphite-700 mb-1.5"
+                  className="block text-sm font-medium text-graphite-700 mb-1.5 dark:text-graphite-300"
                 >
                   {t("stock")}
                 </label>
@@ -293,17 +295,17 @@ export default function AddItemForm() {
                   placeholder="0"
                   min="0"
                   required
-                  className="block w-full rounded-xl border border-graphite-300 px-4 py-3 text-sm text-graphite-900 placeholder:text-graphite-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 disabled:bg-graphite-50 disabled:text-graphite-500 transition-all"
+                  className="block w-full rounded-xl border border-graphite-300 px-4 py-3 text-sm text-graphite-900 placeholder:text-graphite-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 disabled:bg-graphite-50 disabled:text-graphite-500 transition-all dark:border-graphite-600 dark:text-graphite-100 dark:placeholder:text-graphite-500 dark:disabled:bg-graphite-900 dark:disabled:text-graphite-400 bg-white dark:bg-graphite-800"
                 />
               </div>
 
               <div className="sm:col-span-2">
                 <label
                   htmlFor="itemSupplier"
-                  className="block text-sm font-medium text-graphite-700 mb-1.5"
+                  className="block text-sm font-medium text-graphite-700 mb-1.5 dark:text-graphite-300"
                 >
                   {t("supplier")}{" "}
-                  <span className="font-normal text-graphite-400">
+                  <span className="font-normal text-graphite-400 dark:text-graphite-500">
                     ({t("optional")})
                   </span>
                 </label>
@@ -312,7 +314,7 @@ export default function AddItemForm() {
                   value={itemSupplierId}
                   disabled={Boolean(itemId)}
                   onChange={(e) => setItemSupplierId(e.target.value)}
-                  className="block w-full rounded-xl border border-graphite-300 bg-white px-4 py-3 text-sm text-graphite-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 disabled:bg-graphite-50 disabled:text-graphite-500 transition-all"
+                  className="block w-full rounded-xl border border-graphite-300 bg-white px-4 py-3 text-sm text-graphite-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 disabled:bg-graphite-50 disabled:text-graphite-500 transition-all dark:border-graphite-600 dark:bg-graphite-800 dark:text-graphite-100 dark:disabled:bg-graphite-900 dark:disabled:text-graphite-400"
                 >
                   <option value="">{t("noSupplier")}</option>
                   {suppliers.map((s) => (
@@ -326,14 +328,14 @@ export default function AddItemForm() {
           </div>
 
           {/* Parts Section */}
-          <div className="border-t border-graphite-200 pt-8">
+          <div className="border-t border-graphite-200 pt-8 dark:border-graphite-700">
             <div className="mb-4 flex items-center gap-2">
-              <Box className="h-5 w-5 text-primary-600" />
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-graphite-900">
+              <Box className="h-5 w-5 text-primary-600 dark:text-primary-400" />
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-graphite-900 dark:text-graphite-100">
                 {t("parts")}
               </h3>
               {savedParts.length > 0 && (
-                <span className="ml-auto flex items-center gap-1.5 rounded-full bg-primary-50 px-3 py-1 text-xs font-medium text-primary-700">
+                <span className="ml-auto flex items-center gap-1.5 rounded-full bg-primary-50 px-3 py-1 text-xs font-medium text-primary-700 dark:bg-primary-900/30 dark:text-primary-300">
                   <Check className="h-3.5 w-3.5" />
                   {savedParts.length}{" "}
                   {savedParts.length === 1 ? t("part") : t("parts")}
@@ -347,19 +349,21 @@ export default function AddItemForm() {
                 {savedParts.map((part, index) => (
                   <div
                     key={part._id}
-                    className="flex items-center gap-3 rounded-xl border border-primary-200 bg-primary-50 px-4 py-3 text-sm text-primary-900"
+                    className="flex items-center gap-3 rounded-xl border border-primary-200 bg-primary-50 px-4 py-3 text-sm text-primary-900 dark:bg-primary-900/30 dark:border-primary-800 dark:text-primary-200"
                   >
                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-600 text-xs font-bold text-white">
                       {index + 1}
                     </div>
                     <div className="flex-1">
                       <span className="font-medium">PCS/CTN {index + 1}</span>
-                      <span className="mx-2 text-primary-400">•</span>
-                      <span className="text-primary-700">
+                      <span className="mx-2 text-primary-400 dark:text-primary-500">
+                        •
+                      </span>
+                      <span className="text-primary-700 dark:text-primary-300">
                         {part.floorId?.name ?? t("floor")}
                       </span>
                     </div>
-                    <Check className="h-5 w-5 text-primary-600" />
+                    <Check className="h-5 w-5 text-primary-600 dark:text-primary-400" />
                   </div>
                 ))}
               </div>
@@ -367,7 +371,7 @@ export default function AddItemForm() {
 
             {/* Draft part: only shown before the item is created */}
             {!itemId && (
-              <div className="rounded-xl border-2 border-dashed border-graphite-300 bg-graphite-50/50 p-4">
+              <div className="rounded-xl border-2 border-dashed border-graphite-300 bg-graphite-50/50 p-4 dark:border-graphite-600 dark:bg-graphite-900/40">
                 <AddItemPartForm
                   part={draftPart}
                   index={0}
@@ -405,10 +409,10 @@ export default function AddItemForm() {
 
         {/* Phase 2: item already exists — ask about more parts */}
         {itemId && (
-          <div className="mt-6 border-t border-graphite-200 pt-6">
+          <div className="mt-6 border-t border-graphite-200 pt-6 dark:border-graphite-700">
             {addingAnother ? (
               <>
-                <div className="rounded-xl border-2 border-dashed border-primary-300 bg-primary-50/50 p-4">
+                <div className="rounded-xl border-2 border-dashed border-primary-300 bg-primary-50/50 p-4 dark:bg-primary-900/20 dark:border-primary-700">
                   <AddItemPartForm
                     part={draftPart}
                     index={savedParts.length}
@@ -441,8 +445,8 @@ export default function AddItemForm() {
               </>
             ) : (
               <>
-                <div className="mb-4 rounded-xl bg-gradient-to-r from-primary-50 to-primary-100/50 p-4">
-                  <p className="text-sm font-medium text-primary-900">
+                <div className="mb-4 rounded-xl bg-gradient-to-r from-primary-50 to-primary-100/50 p-4 dark:from-primary-900/30 dark:to-primary-900/10">
+                  <p className="text-sm font-medium text-primary-900 dark:text-primary-200">
                     {t("anotherPartQuestion")}
                   </p>
                 </div>
@@ -453,7 +457,7 @@ export default function AddItemForm() {
                       setDraftPart(emptyPart(Date.now()));
                       setAddingAnother(true);
                     }}
-                    className="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-dashed border-primary-300 py-3.5 text-sm font-semibold text-primary-600 transition-all hover:border-primary-400 hover:bg-primary-50"
+                    className="flex flex-1 items-center justify-center gap-2 rounded-xl border-2 border-dashed border-primary-300 py-3.5 text-sm font-semibold text-primary-600 transition-all hover:border-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/30 dark:border-primary-700 dark:text-primary-400"
                   >
                     <Plus className="h-4 w-4" />
                     {t("yesAnotherPart")}
@@ -473,6 +477,7 @@ export default function AddItemForm() {
         )}
 
         <ToastContainer
+          theme={theme}
           position="top-right"
           autoClose={5000}
           hideProgressBar={false}

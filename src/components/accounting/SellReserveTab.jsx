@@ -29,11 +29,11 @@ function CancelReasonModal({ reservation, onClose, onConfirm, submitting }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-graphite-900/40 p-4">
-      <div className="w-full max-w-sm rounded-xl bg-white p-5 shadow-lg">
-        <h3 className="text-sm font-semibold text-graphite-900">
+      <div className="w-full max-w-sm rounded-xl bg-white p-5 shadow-lg dark:bg-graphite-800">
+        <h3 className="text-sm font-semibold text-graphite-900 dark:text-graphite-100">
           {t("cancelReservation")}
         </h3>
-        <p className="mt-1 text-xs text-graphite-500">
+        <p className="mt-1 text-xs text-graphite-500 dark:text-graphite-400">
           {reservation.itemName} — {reservation.quantity} {t("units")}
           {reservation.unitPrice != null && (
             <>
@@ -43,7 +43,7 @@ function CancelReasonModal({ reservation, onClose, onConfirm, submitting }) {
           )}
         </p>
 
-        <label className="mt-4 block text-sm font-medium text-graphite-700">
+        <label className="mt-4 block text-sm font-medium text-graphite-700 dark:text-graphite-300">
           {t("cancelReason")}
         </label>
         <textarea
@@ -51,14 +51,14 @@ function CancelReasonModal({ reservation, onClose, onConfirm, submitting }) {
           onChange={(e) => setReason(e.target.value)}
           rows={3}
           placeholder={t("cancelReasonPlaceholder")}
-          className="mt-1.5 w-full resize-none rounded-lg border border-graphite-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+          className="mt-1.5 w-full resize-none rounded-lg border border-graphite-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-graphite-600 bg-white dark:bg-graphite-800 text-graphite-900 dark:text-graphite-100"
         />
 
         <div className="mt-4 flex justify-end gap-2">
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg border border-graphite-300 px-3 py-1.5 text-sm font-medium text-graphite-700 hover:bg-graphite-100"
+            className="rounded-lg border border-graphite-300 px-3 py-1.5 text-sm font-medium text-graphite-700 hover:bg-graphite-100 dark:border-graphite-600 dark:text-graphite-300 dark:hover:bg-graphite-700"
           >
             {t("cancel")}
           </button>
@@ -88,11 +88,11 @@ function FulfillModal({ reservation, onClose, onConfirm, submitting }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-graphite-900/40 p-4">
-      <div className="w-full max-w-sm rounded-xl bg-white p-5 shadow-lg">
-        <h3 className="text-sm font-semibold text-graphite-900">
+      <div className="w-full max-w-sm rounded-xl bg-white p-5 shadow-lg dark:bg-graphite-800">
+        <h3 className="text-sm font-semibold text-graphite-900 dark:text-graphite-100">
           {t("markSold")}
         </h3>
-        <p className="mt-1 text-xs text-graphite-500">
+        <p className="mt-1 text-xs text-graphite-500 dark:text-graphite-400">
           {reservation.itemName} — {reservation.quantity} {t("units")}
           {reservation.unitPrice != null && (
             <>
@@ -102,7 +102,7 @@ function FulfillModal({ reservation, onClose, onConfirm, submitting }) {
           )}
         </p>
 
-        <label className="mt-4 block text-sm font-medium text-graphite-700">
+        <label className="mt-4 block text-sm font-medium text-graphite-700 dark:text-graphite-300">
           {t("vatRate")} (%)
         </label>
         <input
@@ -112,23 +112,23 @@ function FulfillModal({ reservation, onClose, onConfirm, submitting }) {
           step="0.01"
           value={vatRate}
           onChange={(e) => setVatRate(Number(e.target.value))}
-          className="mt-1.5 w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+          className="mt-1.5 w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-graphite-600 bg-white dark:bg-graphite-800 text-graphite-900 dark:text-graphite-100"
         />
 
-        <div className="mt-4 space-y-2 rounded-lg bg-graphite-50 p-3">
-          <div className="flex justify-between text-xs text-graphite-700">
+        <div className="mt-4 space-y-2 rounded-lg bg-graphite-50 p-3 dark:bg-graphite-900">
+          <div className="flex justify-between text-xs text-graphite-700 dark:text-graphite-300">
             <span>{t("subtotal")}</span>
             <span className="font-semibold">{subtotal.toFixed(2)}</span>
           </div>
-          <div className="flex justify-between text-xs text-graphite-700">
+          <div className="flex justify-between text-xs text-graphite-700 dark:text-graphite-300">
             <span>
               {t("vatDeduction")} ({vatRate}%)
             </span>
-            <span className="font-semibold text-red-600">
+            <span className="font-semibold text-red-600 dark:text-red-400">
               -{vatAmount.toFixed(2)}
             </span>
           </div>
-          <div className="flex justify-between text-xs font-medium text-graphite-900 border-t border-graphite-200 pt-2">
+          <div className="flex justify-between text-xs font-medium text-graphite-900 border-t border-graphite-200 pt-2 dark:border-graphite-700 dark:text-graphite-100">
             <span>{t("totalAfterTax")}</span>
             <span className="font-semibold">{totalAfterTax.toFixed(2)}</span>
           </div>
@@ -138,7 +138,7 @@ function FulfillModal({ reservation, onClose, onConfirm, submitting }) {
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg border border-graphite-300 px-3 py-1.5 text-sm font-medium text-graphite-700 hover:bg-graphite-100"
+            className="rounded-lg border border-graphite-300 px-3 py-1.5 text-sm font-medium text-graphite-700 hover:bg-graphite-100 dark:border-graphite-600 dark:text-graphite-300 dark:hover:bg-graphite-700"
           >
             {t("cancel")}
           </button>
@@ -321,10 +321,10 @@ export default function SellReserveTab() {
   return (
     <div>
       {/* Helpful Hint */}
-      <div className="mb-4 rounded-lg bg-amber-50 px-4 py-3 border border-amber-200">
+      <div className="mb-4 rounded-lg bg-amber-50 px-4 py-3 border border-amber-200 dark:bg-amber-900/30 dark:border-amber-800">
         <div className="flex items-start gap-3">
           <div className="flex-shrink-0">
-            <ShoppingCart className="h-5 w-5 text-amber-600" />
+            <ShoppingCart className="h-5 w-5 text-amber-600 dark:text-amber-400" />
           </div>
           <div className="flex-1">
             <h4 className="text-sm font-semibold text-amber-900 mb-1">
@@ -338,16 +338,16 @@ export default function SellReserveTab() {
       </div>
 
       {/* Form */}
-      <div className="rounded-xl border border-graphite-200 bg-white p-6 shadow-sm">
+      <div className="rounded-xl border border-graphite-200 bg-white p-6 shadow-sm dark:border-graphite-700 dark:bg-graphite-800">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div>
-            <label className="block text-sm font-medium text-graphite-700">
+            <label className="block text-sm font-medium text-graphite-700 dark:text-graphite-300">
               {t("item")}
             </label>
             <select
               value={itemId}
               onChange={(e) => setItemId(e.target.value)}
-              className="mt-1.5 block w-full rounded-lg border border-graphite-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+              className="mt-1.5 block w-full rounded-lg border border-graphite-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-graphite-600 dark:bg-graphite-800"
             >
               <option value="">{t("selectItem")}</option>
               {items.map((item) => {
@@ -369,20 +369,22 @@ export default function SellReserveTab() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-graphite-700">
+            <label className="block text-sm font-medium text-graphite-700 dark:text-graphite-300">
               {t("customerName")}{" "}
-              <span className="text-graphite-400">({t("optional")})</span>
+              <span className="text-graphite-400 dark:text-graphite-500">
+                ({t("optional")})
+              </span>
             </label>
             <input
               type="text"
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
-              className="mt-1.5 block w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+              className="mt-1.5 block w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-graphite-600 bg-white dark:bg-graphite-800 text-graphite-900 dark:text-graphite-100"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-graphite-700">
+            <label className="block text-sm font-medium text-graphite-700 dark:text-graphite-300">
               {t("quantity")}
             </label>
             <input
@@ -390,12 +392,12 @@ export default function SellReserveTab() {
               min="1"
               value={quantity}
               onChange={(e) => setQuantity(e.target.value)}
-              className="mt-1.5 block w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+              className="mt-1.5 block w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-graphite-600 bg-white dark:bg-graphite-800 text-graphite-900 dark:text-graphite-100"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-graphite-700">
+            <label className="block text-sm font-medium text-graphite-700 dark:text-graphite-300">
               {t("unitPrice")}
             </label>
             <input
@@ -405,12 +407,12 @@ export default function SellReserveTab() {
               value={price}
               onChange={(e) => setPrice(e.target.value)}
               placeholder={t("unitPricePlaceholder")}
-              className="mt-1.5 block w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+              className="mt-1.5 block w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-graphite-600 bg-white dark:bg-graphite-800 text-graphite-900 dark:text-graphite-100"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-graphite-700">
+            <label className="block text-sm font-medium text-graphite-700 dark:text-graphite-300">
               {t("vatRate")} (%)
             </label>
             <input
@@ -420,36 +422,42 @@ export default function SellReserveTab() {
               step="0.01"
               value={vatRate}
               onChange={(e) => setVatRate(Number(e.target.value))}
-              className="mt-1.5 block w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+              className="mt-1.5 block w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-graphite-600 bg-white dark:bg-graphite-800 text-graphite-900 dark:text-graphite-100"
             />
           </div>
         </div>
 
-        {formError && <p className="mt-3 text-sm text-red-600">{formError}</p>}
+        {formError && (
+          <p className="mt-3 text-sm text-red-600 dark:text-red-400">
+            {formError}
+          </p>
+        )}
         {formSuccess && (
-          <p className="mt-3 text-sm text-green-600">{formSuccess}</p>
+          <p className="mt-3 text-sm text-green-600 dark:text-green-400">
+            {formSuccess}
+          </p>
         )}
 
         {quantity && price && (
-          <div className="mt-4 space-y-2 rounded-lg bg-graphite-50 p-4">
-            <div className="flex justify-between text-sm text-graphite-700">
+          <div className="mt-4 space-y-2 rounded-lg bg-graphite-50 p-4 dark:bg-graphite-900">
+            <div className="flex justify-between text-sm text-graphite-700 dark:text-graphite-300">
               <span>{t("subtotal")}</span>
               <span className="font-semibold">
                 {(Number(quantity) * Number(price)).toFixed(2)}
               </span>
             </div>
-            <div className="flex justify-between text-sm text-graphite-700">
+            <div className="flex justify-between text-sm text-graphite-700 dark:text-graphite-300">
               <span>
                 {t("vatDeduction")} ({vatRate}%)
               </span>
-              <span className="font-semibold text-red-600">
+              <span className="font-semibold text-red-600 dark:text-red-400">
                 -
                 {(Number(quantity) * Number(price) * (vatRate / 100)).toFixed(
                   2,
                 )}
               </span>
             </div>
-            <div className="flex justify-between text-sm font-medium text-graphite-900 border-t border-graphite-200 pt-2">
+            <div className="flex justify-between text-sm font-medium text-graphite-900 border-t border-graphite-200 pt-2 dark:border-graphite-700 dark:text-graphite-100">
               <span>{t("totalAfterTax")}</span>
               <span className="font-semibold">
                 {(
@@ -479,7 +487,7 @@ export default function SellReserveTab() {
             type="button"
             onClick={handleReserve}
             disabled={saving !== false}
-            className="flex items-center gap-2 rounded-lg border border-graphite-300 px-4 py-2 text-sm font-medium text-graphite-700 transition-colors hover:bg-graphite-100 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex items-center gap-2 rounded-lg border border-graphite-300 px-4 py-2 text-sm font-medium text-graphite-700 transition-colors hover:bg-graphite-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-graphite-600 dark:text-graphite-300 dark:hover:bg-graphite-700"
           >
             {saving === "reservation" ? (
               <Spinner />
@@ -489,12 +497,14 @@ export default function SellReserveTab() {
             {t("reserveStock")}
           </button>
         </div>
-        <p className="mt-2 text-xs text-graphite-400">{t("sellReserveHint")}</p>
+        <p className="mt-2 text-xs text-graphite-400 dark:text-graphite-500">
+          {t("sellReserveHint")}
+        </p>
       </div>
 
       {/* Active reservations */}
       <div className="mt-8">
-        <h2 className="text-sm font-semibold text-graphite-900">
+        <h2 className="text-sm font-semibold text-graphite-900 dark:text-graphite-100">
           {t("activeReservations")}
         </h2>
 
@@ -502,24 +512,26 @@ export default function SellReserveTab() {
           {reservationsLoading ? (
             <div className="flex items-center gap-2">
               <Spinner />
-              <p className="text-sm text-graphite-500">{t("loading")}</p>
+              <p className="text-sm text-graphite-500 dark:text-graphite-400">
+                {t("loading")}
+              </p>
             </div>
           ) : reservations.length === 0 ? (
-            <p className="text-sm text-graphite-500">
+            <p className="text-sm text-graphite-500 dark:text-graphite-400">
               {t("noActiveReservations")}
             </p>
           ) : (
-            <div className="divide-y divide-graphite-200 rounded-xl border border-graphite-200 bg-white">
+            <div className="divide-y divide-graphite-200 rounded-xl border border-graphite-200 bg-white dark:border-graphite-700 dark:divide-graphite-700 dark:bg-graphite-800">
               {reservations.map((res) => (
                 <div
                   key={res._id}
                   className="flex flex-wrap items-center justify-between gap-3 px-4 py-3"
                 >
                   <div>
-                    <p className="text-sm font-medium text-graphite-900">
+                    <p className="text-sm font-medium text-graphite-900 dark:text-graphite-100">
                       {res.itemName} · {res.quantity} {t("units")}
                     </p>
-                    <p className="text-xs text-graphite-500">
+                    <p className="text-xs text-graphite-500 dark:text-graphite-400">
                       {res.customerName || t("noCustomerName")}
                       {res.unitPrice != null && (
                         <>
@@ -537,14 +549,14 @@ export default function SellReserveTab() {
                       type="button"
                       onClick={() => handleFulfill(res)}
                       disabled={fulfillingId === res._id}
-                      className="rounded-lg border border-graphite-300 px-3 py-1.5 text-xs font-medium text-graphite-700 transition-colors hover:bg-graphite-100 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="rounded-lg border border-graphite-300 px-3 py-1.5 text-xs font-medium text-graphite-700 transition-colors hover:bg-graphite-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-graphite-600 dark:text-graphite-300 dark:hover:bg-graphite-700"
                     >
                       {fulfillingId === res._id ? t("saving") : t("markSold")}
                     </button>
                     <button
                       type="button"
                       onClick={() => setCancelTarget(res)}
-                      className="flex items-center gap-1 rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 transition-colors hover:bg-red-50"
+                      className="flex items-center gap-1 rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 transition-colors hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-900/30 dark:text-red-400"
                     >
                       <X className="h-3.5 w-3.5" />
                       {t("cancel")}

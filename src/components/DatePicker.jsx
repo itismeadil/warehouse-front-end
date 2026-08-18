@@ -132,21 +132,21 @@ export default function DatePicker({
       <button
         type="button"
         onClick={() => (isOpen ? closeMenu() : setIsOpen(true))}
-        className={`group flex w-48 items-center gap-2 rounded-lg border bg-white px-3 py-2 text-sm text-graphite-900 shadow-sm transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-primary-500/20 ${
+        className={`group flex w-48 items-center gap-2 rounded-lg border bg-white px-3 py-2 text-sm text-graphite-900 shadow-sm dark:bg-graphite-800 dark:text-graphite-100 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-primary-500/20 ${
           isOpen
             ? "border-primary-500 ring-2 ring-primary-500/20"
-            : "border-graphite-300 hover:border-primary-400"
+            : "border-graphite-300 hover:border-primary-400 dark:border-graphite-600"
         }`}
       >
         <Calendar
           className={`h-4 w-4 shrink-0 transition-colors ${
             value
-              ? "text-primary-600"
-              : "text-graphite-400 group-hover:text-primary-500"
+              ? "text-primary-600 dark:text-primary-400"
+              : "text-graphite-400 group-hover:text-primary-500 dark:text-graphite-500"
           }`}
         />
         <span
-          className={`flex-1 truncate text-left ${!value ? "text-graphite-400" : ""}`}
+          className={`flex-1 truncate text-left ${!value ? "text-graphite-400 dark:text-graphite-500" : ""}`}
         >
           {formatDate(value)}
         </span>
@@ -155,7 +155,7 @@ export default function DatePicker({
             role="button"
             tabIndex={0}
             onClick={handleClear}
-            className="rounded p-0.5 text-graphite-300 transition-colors hover:bg-graphite-100 hover:text-graphite-600"
+            className="rounded p-0.5 text-graphite-300 transition-colors hover:bg-graphite-100 hover:text-graphite-600 dark:hover:bg-graphite-700 dark:hover:text-graphite-400"
           >
             <X className="h-3.5 w-3.5" />
           </span>
@@ -164,7 +164,7 @@ export default function DatePicker({
 
       {isOpen && (
         <div
-          className={`absolute ${isArabic ? "right-0 origin-top-right" : "left-0 origin-top-left"} top-full z-50 mt-2 w-72 rounded-2xl border border-graphite-200 bg-white p-4 shadow-lg transition-all duration-150 ${
+          className={`absolute ${isArabic ? "right-0 origin-top-right" : "left-0 origin-top-left"} top-full z-50 mt-2 w-72 rounded-2xl border border-graphite-200 bg-white p-4 shadow-lg dark:border-graphite-700 dark:bg-graphite-800 transition-all duration-150 ${
             closing ? "scale-95 opacity-0" : "scale-100 opacity-100"
           }`}
           style={{ animation: closing ? undefined : "dp-pop 120ms ease-out" }}
@@ -174,7 +174,7 @@ export default function DatePicker({
             <button
               type="button"
               onClick={() => goToMonth(-1)}
-              className="rounded-lg p-1.5 text-graphite-500 transition-colors hover:bg-graphite-100 hover:text-graphite-900"
+              className="rounded-lg p-1.5 text-graphite-500 transition-colors hover:bg-graphite-100 hover:text-graphite-900 dark:text-graphite-400 dark:hover:bg-graphite-700 dark:hover:text-graphite-100"
               aria-label="Previous month"
             >
               {isArabic ? (
@@ -183,13 +183,13 @@ export default function DatePicker({
                 <ChevronLeft className="h-4 w-4" />
               )}
             </button>
-            <p className="text-sm font-semibold text-graphite-900">
+            <p className="text-sm font-semibold text-graphite-900 dark:text-graphite-100">
               {monthLabel}
             </p>
             <button
               type="button"
               onClick={() => goToMonth(1)}
-              className="rounded-lg p-1.5 text-graphite-500 transition-colors hover:bg-graphite-100 hover:text-graphite-900"
+              className="rounded-lg p-1.5 text-graphite-500 transition-colors hover:bg-graphite-100 hover:text-graphite-900 dark:text-graphite-400 dark:hover:bg-graphite-700 dark:hover:text-graphite-100"
               aria-label="Next month"
             >
               {isArabic ? (
@@ -207,7 +207,7 @@ export default function DatePicker({
             {WEEKDAYS.map((wd, i) => (
               <div
                 key={i}
-                className="flex h-7 items-center justify-center text-[11px] font-medium uppercase tracking-wide text-graphite-400"
+                className="flex h-7 items-center justify-center text-[11px] font-medium uppercase tracking-wide text-graphite-400 dark:text-graphite-500"
               >
                 {wd}
               </div>
@@ -234,10 +234,10 @@ export default function DatePicker({
                       isSelected
                         ? "bg-primary-600 font-semibold text-white shadow-sm"
                         : isMarked
-                          ? "bg-primary-50 font-semibold text-primary-700 hover:bg-primary-100"
+                          ? "bg-primary-50 font-semibold text-primary-700 hover:bg-primary-100 dark:bg-primary-900/30 dark:text-primary-300"
                           : inMonth
-                            ? "text-graphite-700 hover:bg-primary-50 hover:text-primary-700"
-                            : "text-graphite-300 hover:bg-graphite-50",
+                            ? "text-graphite-700 hover:bg-primary-50 hover:text-primary-700 dark:text-graphite-300 dark:hover:bg-primary-900/30"
+                            : "text-graphite-300 hover:bg-graphite-50 dark:hover:bg-graphite-800",
                       isToday && !isSelected
                         ? "ring-1 ring-inset ring-primary-400"
                         : "",
@@ -255,16 +255,16 @@ export default function DatePicker({
 
           {/* Legend */}
           {markedDates.length > 0 && (
-            <div className="mt-3 flex items-center gap-4 border-t border-graphite-100 pt-3">
+            <div className="mt-3 flex items-center gap-4 border-t border-graphite-100 pt-3 dark:border-graphite-700">
               <div className="flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-primary-500" />
-                <span className="text-[11px] font-medium text-graphite-500">
+                <span className="text-[11px] font-medium text-graphite-500 dark:text-graphite-400">
                   {markedLabel}
                 </span>
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full ring-1 ring-inset ring-primary-400" />
-                <span className="text-[11px] font-medium text-graphite-500">
+                <span className="text-[11px] font-medium text-graphite-500 dark:text-graphite-400">
                   Today
                 </span>
               </div>
@@ -272,18 +272,18 @@ export default function DatePicker({
           )}
 
           {/* Footer */}
-          <div className="mt-3 flex items-center justify-between border-t border-graphite-100 pt-3">
+          <div className="mt-3 flex items-center justify-between border-t border-graphite-100 pt-3 dark:border-graphite-700">
             <button
               type="button"
               onClick={handleClear}
-              className="text-xs font-medium text-graphite-500 transition-colors hover:text-graphite-800"
+              className="text-xs font-medium text-graphite-500 transition-colors hover:text-graphite-800 dark:text-graphite-400"
             >
               Clear
             </button>
             <button
               type="button"
               onClick={() => handleSelectDay(today)}
-              className="text-xs font-medium text-primary-600 transition-colors hover:text-primary-700"
+              className="text-xs font-medium text-primary-600 transition-colors hover:text-primary-700 dark:text-primary-400"
             >
               Today
             </button>

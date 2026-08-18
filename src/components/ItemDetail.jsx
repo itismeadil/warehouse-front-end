@@ -284,7 +284,9 @@ export default function ItemDetail() {
   if (loading) {
     return (
       <div className="mx-auto max-w-2xl py-12 text-center">
-        <p className="text-sm text-graphite-500">{t("loadingItem")}</p>
+        <p className="text-sm text-graphite-500 dark:text-graphite-400">
+          {t("loadingItem")}
+        </p>
       </div>
     );
   }
@@ -292,7 +294,9 @@ export default function ItemDetail() {
   if (!item) {
     return (
       <div className="mx-auto max-w-2xl py-12 text-center">
-        <p className="text-sm text-graphite-500">{t("itemNotFound")}</p>
+        <p className="text-sm text-graphite-500 dark:text-graphite-400">
+          {t("itemNotFound")}
+        </p>
       </div>
     );
   }
@@ -301,7 +305,7 @@ export default function ItemDetail() {
     <div className="mx-auto max-w-2xl">
       <button
         onClick={() => navigate("/")}
-        className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-graphite-600 transition-colors hover:text-graphite-900"
+        className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-graphite-600 transition-colors hover:text-graphite-900 dark:text-graphite-400 dark:hover:text-graphite-100"
       >
         {translation.dir() === "rtl" ? (
           <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -312,11 +316,11 @@ export default function ItemDetail() {
       </button>
 
       {/* Item summary card */}
-      <div className="rounded-lg border border-graphite-200 bg-white p-4 shadow-sm">
+      <div className="rounded-lg border border-graphite-200 bg-white p-4 shadow-sm dark:border-graphite-700 dark:bg-graphite-800">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3 flex-1">
             <span
-              className="h-9 w-9 shrink-0 rounded-lg border border-graphite-300"
+              className="h-9 w-9 shrink-0 rounded-lg border border-graphite-300 dark:border-graphite-600"
               style={{ backgroundColor: item.color }}
               title={item.color}
             />
@@ -329,7 +333,7 @@ export default function ItemDetail() {
                     onChange={(e) =>
                       setEditForm({ ...editForm, name: e.target.value })
                     }
-                    className="block w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm text-graphite-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                    className="block w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm text-graphite-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-graphite-600 dark:text-graphite-100 bg-white dark:bg-graphite-800"
                     placeholder={t("itemNamePlaceholder")}
                   />
                   <input
@@ -338,7 +342,7 @@ export default function ItemDetail() {
                     onChange={(e) =>
                       setEditForm({ ...editForm, serialNumber: e.target.value })
                     }
-                    className="block w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm font-mono text-graphite-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                    className="block w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm font-mono text-graphite-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-graphite-600 dark:text-graphite-100 bg-white dark:bg-graphite-800"
                     placeholder={t("serialNumberPlaceholder")}
                   />
                   <div className="flex gap-2">
@@ -348,7 +352,7 @@ export default function ItemDetail() {
                       onChange={(e) =>
                         setEditForm({ ...editForm, color: e.target.value })
                       }
-                      className="flex-1 rounded-lg border border-graphite-300 px-3 py-2 text-sm text-graphite-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                      className="flex-1 rounded-lg border border-graphite-300 px-3 py-2 text-sm text-graphite-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-graphite-600 dark:text-graphite-100"
                       placeholder={t("colorPlaceholder")}
                     />
                     <input
@@ -357,7 +361,7 @@ export default function ItemDetail() {
                       onChange={(e) =>
                         setEditForm({ ...editForm, stock: e.target.value })
                       }
-                      className="w-24 rounded-lg border border-graphite-300 px-3 py-2 text-sm text-graphite-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                      className="w-24 rounded-lg border border-graphite-300 px-3 py-2 text-sm text-graphite-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-graphite-600 dark:text-graphite-100"
                       placeholder={t("stock")}
                       min="0"
                     />
@@ -367,7 +371,7 @@ export default function ItemDetail() {
                     onChange={(e) =>
                       setEditForm({ ...editForm, supplierId: e.target.value })
                     }
-                    className="block w-full rounded-lg border border-graphite-300 bg-white px-3 py-2 text-sm text-graphite-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                    className="block w-full rounded-lg border border-graphite-300 bg-white px-3 py-2 text-sm text-graphite-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-graphite-600 dark:bg-graphite-800 dark:text-graphite-100"
                   >
                     <option value="">{t("noSupplier")}</option>
                     {suppliers.map((s) => (
@@ -379,10 +383,10 @@ export default function ItemDetail() {
                 </div>
               ) : (
                 <>
-                  <h1 className="truncate text-base font-semibold text-graphite-900">
+                  <h1 className="truncate text-base font-semibold text-graphite-900 dark:text-graphite-100">
                     {item.name}
                   </h1>
-                  <p className="mt-0.5 font-mono text-xs text-graphite-500">
+                  <p className="mt-0.5 font-mono text-xs text-graphite-500 dark:text-graphite-400">
                     {item.serialNumber}
                   </p>
                 </>
@@ -397,7 +401,7 @@ export default function ItemDetail() {
                   <button
                     onClick={handleEditSave}
                     disabled={saving}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-primary-200 px-3 py-1.5 text-sm font-medium text-primary-600 transition-colors hover:bg-primary-50 disabled:opacity-50"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-primary-200 px-3 py-1.5 text-sm font-medium text-primary-600 transition-colors hover:bg-primary-50 disabled:opacity-50 dark:hover:bg-primary-900/30 dark:border-primary-800 dark:text-primary-400"
                   >
                     <Save className="h-4 w-4" />
                     <span className="hidden sm:inline">{t("saveChanges")}</span>
@@ -405,7 +409,7 @@ export default function ItemDetail() {
                   <button
                     onClick={handleEditCancel}
                     disabled={saving}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-graphite-200 px-3 py-1.5 text-sm font-medium text-graphite-600 transition-colors hover:bg-graphite-50 disabled:opacity-50"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-graphite-200 px-3 py-1.5 text-sm font-medium text-graphite-600 transition-colors hover:bg-graphite-50 disabled:opacity-50 dark:border-graphite-700 dark:text-graphite-400 dark:hover:bg-graphite-800"
                   >
                     <X className="h-4 w-4" />
                     <span className="hidden sm:inline">{t("cancelEdit")}</span>
@@ -415,14 +419,14 @@ export default function ItemDetail() {
                 <>
                   <button
                     onClick={handleEditStart}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-primary-200 px-3 py-1.5 text-sm font-medium text-primary-600 transition-colors hover:bg-primary-50"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-primary-200 px-3 py-1.5 text-sm font-medium text-primary-600 transition-colors hover:bg-primary-50 dark:hover:bg-primary-900/30 dark:border-primary-800 dark:text-primary-400"
                   >
                     <Edit2 className="h-4 w-4" />
                     <span className="hidden sm:inline">{t("editItem")}</span>
                   </button>
                   <button
                     onClick={() => setShowDeleteConfirm(true)}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 px-3 py-1.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 px-3 py-1.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-900/30 dark:text-red-400"
                   >
                     <Trash2 className="h-4 w-4" />
                     <span className="hidden sm:inline">{t("deleteItem")}</span>
@@ -435,8 +439,8 @@ export default function ItemDetail() {
       </div>
 
       {/* Item-level stock/sold/reserved - read-only, synced from accountant */}
-      <div className="mt-6 rounded-xl border border-graphite-200 bg-graphite-50 p-4 shadow-sm">
-        <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-graphite-500">
+      <div className="mt-6 rounded-xl border border-graphite-200 bg-graphite-50 p-4 shadow-sm dark:border-graphite-700 dark:bg-graphite-900">
+        <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-graphite-500 dark:text-graphite-400">
           {t("stock")}
         </h3>
         <div className="grid grid-cols-3 gap-3">
@@ -447,16 +451,18 @@ export default function ItemDetail() {
           ].map(({ key, label }) => (
             <div
               key={key}
-              className="rounded-lg border border-graphite-200 bg-white p-3"
+              className="rounded-lg border border-graphite-200 bg-white p-3 dark:border-graphite-700 dark:bg-graphite-800"
             >
-              <p className="text-xs text-graphite-500">{label}</p>
-              <p className="mt-1.5 text-lg font-semibold text-graphite-900">
+              <p className="text-xs text-graphite-500 dark:text-graphite-400">
+                {label}
+              </p>
+              <p className="mt-1.5 text-lg font-semibold text-graphite-900 dark:text-graphite-100">
                 {item[key] ?? 0}
               </p>
             </div>
           ))}
         </div>
-        <p className="mt-3 text-xs text-graphite-400">
+        <p className="mt-3 text-xs text-graphite-400 dark:text-graphite-500">
           {t("stockSyncedFromAccountant")}
         </p>
       </div>
@@ -465,17 +471,17 @@ export default function ItemDetail() {
       {!(item.stock === 0 && !item.parts?.some((part) => part.damaged > 0)) && (
         <div>
           {/* Legend for floor grid colors */}
-          <div className="mt-6 rounded-xl border border-graphite-200 bg-white p-4 shadow-sm">
-            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-graphite-500">
+          <div className="mt-6 rounded-xl border border-graphite-200 bg-white p-4 shadow-sm dark:border-graphite-700 dark:bg-graphite-800">
+            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-graphite-500 dark:text-graphite-400">
               {t("locationLegend")}
             </h3>
-            <div className="flex flex-wrap items-center gap-4 text-xs text-graphite-600">
+            <div className="flex flex-wrap items-center gap-4 text-xs text-graphite-600 dark:text-graphite-400">
               <span className="inline-flex items-center gap-1.5">
                 <span className="h-3 w-3 rounded-full border border-emerald-600 bg-emerald-500" />
                 {t("itemLocation")}
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <span className="h-3 w-3 rounded-full border border-slate-300 bg-slate-200" />
+                <span className="h-3 w-3 rounded-full border border-graphite-300 bg-graphite-200" />
                 {t("empty")}
               </span>
               <span className="inline-flex items-center gap-1.5">
@@ -488,13 +494,13 @@ export default function ItemDetail() {
           {/* Parts: each is a card; clicking expands Location/Stats tabs inline */}
           <div className="mt-6">
             <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-graphite-500">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-graphite-500 dark:text-graphite-400">
                 {t("parts")}
               </h3>
               {canEdit && (
                 <button
                   onClick={handleAddPartClick}
-                  className="text-xs font-medium text-primary-600 hover:text-primary-700 transition-colors"
+                  className="text-xs font-medium text-primary-600 hover:text-primary-700 transition-colors dark:text-primary-400"
                 >
                   {t("addPart")}
                 </button>
@@ -526,7 +532,7 @@ export default function ItemDetail() {
                     <button
                       onClick={handleAddPartCancel}
                       disabled={addingPart}
-                      className="rounded-lg border border-graphite-300 bg-white px-4 py-2 text-sm font-medium text-graphite-700 transition-colors hover:bg-graphite-50 disabled:opacity-50"
+                      className="rounded-lg border border-graphite-300 bg-white px-4 py-2 text-sm font-medium text-graphite-700 transition-colors hover:bg-graphite-50 disabled:opacity-50 dark:border-graphite-600 dark:bg-graphite-800 dark:text-graphite-300 dark:hover:bg-graphite-700"
                     >
                       {t("cancel")}
                     </button>
@@ -539,7 +545,7 @@ export default function ItemDetail() {
                 return (
                   <div
                     key={part._id}
-                    className="overflow-hidden rounded-xl border border-graphite-200 bg-white shadow-sm"
+                    className="overflow-hidden rounded-xl border border-graphite-200 bg-white shadow-sm dark:border-graphite-700 dark:bg-graphite-800"
                   >
                     <button
                       type="button"
@@ -548,21 +554,21 @@ export default function ItemDetail() {
                       }
                       className="flex w-full items-center justify-between px-4 py-3 text-start"
                     >
-                      <span className="text-sm font-semibold text-graphite-900 truncate">
+                      <span className="text-sm font-semibold text-graphite-900 truncate dark:text-graphite-100">
                         PCS/CTN: {partLabel(item, part)}
                       </span>
-                      <span className="ml-auto shrink-0 text-sm text-graphite-500 mr-3">
+                      <span className="ml-auto shrink-0 text-sm text-graphite-500 mr-3 dark:text-graphite-400">
                         {`Damaged: ${part.damaged}`}
                       </span>
                       {isExpanded ? (
-                        <ChevronUp className="h-4 w-4 shrink-0 text-graphite-400" />
+                        <ChevronUp className="h-4 w-4 shrink-0 text-graphite-400 dark:text-graphite-500" />
                       ) : (
-                        <ChevronDown className="h-4 w-4 shrink-0 text-graphite-400" />
+                        <ChevronDown className="h-4 w-4 shrink-0 text-graphite-400 dark:text-graphite-500" />
                       )}
                     </button>
 
                     {isExpanded && (
-                      <div className="border-t border-graphite-200 px-4 py-4">
+                      <div className="border-t border-graphite-200 px-4 py-4 dark:border-graphite-700">
                         <PartDetail
                           embedded
                           item={item}
@@ -585,10 +591,10 @@ export default function ItemDetail() {
           <div className="mt-6">
             <div className="mb-3 flex items-center justify-between">
               <div>
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-graphite-500">
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-graphite-500 dark:text-graphite-400">
                   {t("sharedParts", "Shared Parts")}
                 </h3>
-                <p className="mt-0.5 text-xs text-graphite-400">
+                <p className="mt-0.5 text-xs text-graphite-400 dark:text-graphite-500">
                   {t(
                     "sharedPartsHint",
                     "Parts that don't change with color and are already placed for another variant of this item.",
@@ -598,7 +604,7 @@ export default function ItemDetail() {
               {canEdit && !showAddSharedPart && (
                 <button
                   onClick={() => setShowAddSharedPart(true)}
-                  className="shrink-0 text-xs font-medium text-primary-600 hover:text-primary-700 transition-colors"
+                  className="shrink-0 text-xs font-medium text-primary-600 hover:text-primary-700 transition-colors dark:text-primary-400"
                 >
                   {t("addSharedPart", "+ Add Shared Part")}
                 </button>
@@ -619,7 +625,7 @@ export default function ItemDetail() {
               )}
 
               {(item.sharedParts || []).length === 0 && !showAddSharedPart && (
-                <p className="rounded-xl border border-dashed border-graphite-200 px-4 py-6 text-center text-sm text-graphite-400">
+                <p className="rounded-xl border border-dashed border-graphite-200 px-4 py-6 text-center text-sm text-graphite-400 dark:border-graphite-700 dark:text-graphite-500">
                   {t("noSharedPartsYet", "No shared parts yet")}
                 </p>
               )}
@@ -629,7 +635,7 @@ export default function ItemDetail() {
                 return (
                   <div
                     key={sharedPart._id}
-                    className="overflow-hidden rounded-xl border border-primary-200 bg-white shadow-sm"
+                    className="overflow-hidden rounded-xl border border-primary-200 bg-white shadow-sm dark:bg-graphite-800 dark:border-primary-800"
                   >
                     <button
                       type="button"
@@ -640,22 +646,22 @@ export default function ItemDetail() {
                       }
                       className="flex w-full items-center justify-between px-4 py-3 text-start"
                     >
-                      <span className="text-sm font-semibold text-graphite-900 truncate">
+                      <span className="text-sm font-semibold text-graphite-900 truncate dark:text-graphite-100">
                         PCS/CTN: {partLabel(item, sharedPart)}
                         {sharedPart.name ? ` — ${sharedPart.name}` : ""}
                       </span>
-                      <span className="ml-auto shrink-0 text-sm text-graphite-500 mr-3">
+                      <span className="ml-auto shrink-0 text-sm text-graphite-500 mr-3 dark:text-graphite-400">
                         {`Damaged: ${sharedPart.damaged}`}
                       </span>
                       {isExpanded ? (
-                        <ChevronUp className="h-4 w-4 shrink-0 text-graphite-400" />
+                        <ChevronUp className="h-4 w-4 shrink-0 text-graphite-400 dark:text-graphite-500" />
                       ) : (
-                        <ChevronDown className="h-4 w-4 shrink-0 text-graphite-400" />
+                        <ChevronDown className="h-4 w-4 shrink-0 text-graphite-400 dark:text-graphite-500" />
                       )}
                     </button>
 
                     {isExpanded && (
-                      <div className="border-t border-graphite-200 px-4 py-4">
+                      <div className="border-t border-graphite-200 px-4 py-4 dark:border-graphite-700">
                         <SharedPartDetail
                           sharedPart={sharedPart}
                           currentItemId={item._id}

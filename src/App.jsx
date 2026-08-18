@@ -15,6 +15,7 @@ import ManageUsers from "./components/ManageUsers";
 import SupplierItems from "./components/SupplierItems";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { ThemeProvider } from "./context/ThemeContext";
 import ItemDetail from "./components/ItemDetail";
 import Accounting from "./components/Accounting";
 import InvoiceSummary from "./components/accounting/InvoiceSummary";
@@ -58,94 +59,96 @@ function RoleHome() {
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <PageTitle />
-        <Routes>
-          <Route path="/login" element={<Login />} />
+    <ThemeProvider>
+      <AuthProvider>
+        <Router>
+          <PageTitle />
+          <Routes>
+            <Route path="/login" element={<Login />} />
 
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <RoleHome />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <RoleHome />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/add"
-            element={
-              <ProtectedRoute roles={["admin", "manager"]}>
-                <Layout>
-                  <AddItemForm />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/add"
+              element={
+                <ProtectedRoute roles={["admin", "manager"]}>
+                  <Layout>
+                    <AddItemForm />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/items/:id"
-            element={
-              <ProtectedRoute roles={["admin", "manager"]}>
-                <Layout>
-                  <ItemDetail />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/items/:id"
+              element={
+                <ProtectedRoute roles={["admin", "manager"]}>
+                  <Layout>
+                    <ItemDetail />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/floors"
-            element={
-              <ProtectedRoute roles={["admin", "manager"]}>
-                <Layout>
-                  <FloorsMap />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/floors"
+              element={
+                <ProtectedRoute roles={["admin", "manager"]}>
+                  <Layout>
+                    <FloorsMap />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/accounting"
-            element={
-              <ProtectedRoute roles={["admin", "accountant"]}>
-                <Layout>
-                  <Accounting />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/accounting"
+              element={
+                <ProtectedRoute roles={["admin", "accountant"]}>
+                  <Layout>
+                    <Accounting />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/accounting/summary"
-            element={
-              <ProtectedRoute roles={["admin", "accountant"]}>
-                <Layout>
-                  <InvoiceSummary />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/accounting/summary"
+              element={
+                <ProtectedRoute roles={["admin", "accountant"]}>
+                  <Layout>
+                    <InvoiceSummary />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/users"
-            element={
-              <ProtectedRoute roles={["admin"]}>
-                <Layout>
-                  <ManageUsers />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/users"
+              element={
+                <ProtectedRoute roles={["admin"]}>
+                  <Layout>
+                    <ManageUsers />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Any unmatched path (typo, stale bookmark, etc.) shows 404 */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </Router>
-    </AuthProvider>
+            {/* Any unmatched path (typo, stale bookmark, etc.) shows 404 */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Router>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 
