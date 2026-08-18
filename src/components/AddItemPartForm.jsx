@@ -27,9 +27,9 @@ export default function AddItemPartForm({
       : 0;
 
   return (
-    <div className="relative rounded-lg border border-graphite-200 bg-graphite-50 p-4">
+    <div className="relative rounded-lg border border-graphite-200 bg-graphite-50 p-4 dark:border-graphite-700 dark:bg-graphite-800">
       <div className="mb-3 flex items-center justify-between">
-        <span className="inline-flex items-center rounded-md border border-graphite-200 bg-white px-2 py-0.5 text-xs font-medium text-graphite-500">
+        <span className="inline-flex items-center rounded-md border border-graphite-200 bg-white px-2 py-0.5 text-xs font-medium text-graphite-500 dark:border-graphite-600 dark:bg-graphite-700 dark:text-graphite-400">
           PCS/CTN {totalParts}/{index + 1}
         </span>
 
@@ -38,7 +38,7 @@ export default function AddItemPartForm({
             type="button"
             onClick={() => onRemove(part.id)}
             aria-label={t("removePart")}
-            className="rounded-md p-1 text-graphite-400 transition-colors hover:bg-red-50 hover:text-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/30"
+            className="rounded-md p-1 text-graphite-400 transition-colors hover:bg-red-50 hover:text-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/30 dark:text-graphite-500 dark:hover:bg-red-900/30 dark:hover:text-red-400"
           >
             <X className="h-4 w-4" />
           </button>
@@ -46,12 +46,12 @@ export default function AddItemPartForm({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-graphite-700">
+        <label className="block text-sm font-medium text-graphite-700 dark:text-graphite-300">
           {t("location")}
         </label>
 
         <div className="mt-1.5 flex items-center gap-2">
-          <div className="flex-1 rounded-lg border border-graphite-300 bg-white px-3 py-2 text-sm text-graphite-900">
+          <div className="flex-1 rounded-lg border border-graphite-300 bg-white px-3 py-2 text-sm text-graphite-900 dark:border-graphite-600 dark:bg-graphite-700 dark:text-graphite-100">
             {hasLocation ? (
               <>
                 {part.floorName ?? t("floor")} · {totalSize}{" "}
@@ -61,14 +61,16 @@ export default function AddItemPartForm({
                   ` (${part.areas.length} locations)`}
               </>
             ) : (
-              <span className="text-graphite-400">{t("noLocationSet")}</span>
+              <span className="text-graphite-400 dark:text-graphite-500">
+                {t("noLocationSet")}
+              </span>
             )}
           </div>
 
           <button
             type="button"
             onClick={() => setShowPicker(true)}
-            className="whitespace-nowrap rounded-lg border border-graphite-300 px-3 py-2 text-sm font-medium text-graphite-700 transition-colors hover:bg-graphite-100"
+            className="whitespace-nowrap rounded-lg border border-graphite-300 px-3 py-2 text-sm font-medium text-graphite-700 transition-colors hover:bg-graphite-100 dark:border-graphite-600 dark:text-graphite-200 dark:hover:bg-graphite-700"
           >
             {hasLocation ? t("change") : t("choose")}
           </button>

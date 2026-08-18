@@ -25,6 +25,8 @@ import { partLabel } from "../lib/Partlabel";
 import PartDetail from "./PartDetail";
 import ConfirmDialog from "./ConfirmDialog";
 import AddItemPartForm from "./AddItemPartForm";
+import AddSharedPartForm from "./AddSharedPartForm";
+import SharedPartDetail from "./SharedPartDetail";
 import AlertModal from "./AlertModal";
 import { useAlert } from "../hooks/useAlert";
 
@@ -59,6 +61,8 @@ export default function ItemDetail() {
   const [showAddPart, setShowAddPart] = useState(false);
   const [draftPart, setDraftPart] = useState(null);
   const [addingPart, setAddingPart] = useState(false);
+  const [expandedSharedPartId, setExpandedSharedPartId] = useState(null);
+  const [showAddSharedPart, setShowAddSharedPart] = useState(false);
 
   const fetchItem = () => {
     setLoading(true);
@@ -173,7 +177,9 @@ export default function ItemDetail() {
         supplierId: editForm.supplierId || null,
         stock: parseInt(editForm.stock) || 0,
       });
-      setItem(updated);
+      // updateItem's response doesn't carry sharedParts (only getItems does)
+      // — keep whatever we already had loaded instead of dropping it.
+      setItem((prev) => ({ ...updated, sharedParts: prev?.sharedParts }));
       setIsEditing(false);
       showAlert(t("itemUpdatedSuccess"), {
         type: "success",
@@ -241,6 +247,38 @@ export default function ItemDetail() {
   const handleAddPartCancel = () => {
     setShowAddPart(false);
     setDraftPart(null);
+  };
+
+  // A shared part was either newly created or newly linked — either way it
+  // now belongs on this item's list. Upsert by id in case it was already
+  // there (e.g. a damaged-count update coming back through the same path).
+  const handleSharedPartLinked = (sharedPart) => {
+    setItem((prev) => {
+      const rest = (prev.sharedParts || []).filter(
+        (sp) => sp._id !== sharedPart._id,
+      );
+      return { ...prev, sharedParts: [...rest, sharedPart] };
+    });
+    setShowAddSharedPart(false);
+  };
+
+  const handleSharedPartUpdated = (updated) => {
+    setItem((prev) => ({
+      ...prev,
+      sharedParts: (prev.sharedParts || []).map((sp) =>
+        sp._id === updated._id ? updated : sp,
+      ),
+    }));
+  };
+
+  const handleSharedPartUnlinked = (sharedPartId) => {
+    setItem((prev) => ({
+      ...prev,
+      sharedParts: (prev.sharedParts || []).filter(
+        (sp) => sp._id !== sharedPartId,
+      ),
+    }));
+    setExpandedSharedPartId(null);
   };
 
   if (loading) {
@@ -531,6 +569,98 @@ export default function ItemDetail() {
                           part={part}
                           onUpdateField={updatePartField}
                           onPartUpdated={handlePartUpdated}
+                        />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Shared Parts: parts that are physically identical across two
+              or more color variants of this same product (e.g. legs that
+              look the same whether the top is silver or gold) — stored
+              once, with one location, instead of duplicated per color. */}
+          <div className="mt-6">
+            <div className="mb-3 flex items-center justify-between">
+              <div>
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-graphite-500">
+                  {t("sharedParts", "Shared Parts")}
+                </h3>
+                <p className="mt-0.5 text-xs text-graphite-400">
+                  {t(
+                    "sharedPartsHint",
+                    "Parts that don't change with color and are already placed for another variant of this item.",
+                  )}
+                </p>
+              </div>
+              {canEdit && !showAddSharedPart && (
+                <button
+                  onClick={() => setShowAddSharedPart(true)}
+                  className="shrink-0 text-xs font-medium text-primary-600 hover:text-primary-700 transition-colors"
+                >
+                  {t("addSharedPart", "+ Add Shared Part")}
+                </button>
+              )}
+            </div>
+
+            <div className="space-y-3">
+              {showAddSharedPart && (
+                <AddSharedPartForm
+                  itemId={item._id}
+                  floors={floors}
+                  existingSharedPartIds={(item.sharedParts || []).map(
+                    (sp) => sp._id,
+                  )}
+                  onLinked={handleSharedPartLinked}
+                  onCancel={() => setShowAddSharedPart(false)}
+                />
+              )}
+
+              {(item.sharedParts || []).length === 0 && !showAddSharedPart && (
+                <p className="rounded-xl border border-dashed border-graphite-200 px-4 py-6 text-center text-sm text-graphite-400">
+                  {t("noSharedPartsYet", "No shared parts yet")}
+                </p>
+              )}
+
+              {(item.sharedParts || []).map((sharedPart) => {
+                const isExpanded = expandedSharedPartId === sharedPart._id;
+                return (
+                  <div
+                    key={sharedPart._id}
+                    className="overflow-hidden rounded-xl border border-primary-200 bg-white shadow-sm"
+                  >
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setExpandedSharedPartId(
+                          isExpanded ? null : sharedPart._id,
+                        )
+                      }
+                      className="flex w-full items-center justify-between px-4 py-3 text-start"
+                    >
+                      <span className="text-sm font-semibold text-graphite-900 truncate">
+                        PCS/CTN: {partLabel(item, sharedPart)}
+                        {sharedPart.name ? ` — ${sharedPart.name}` : ""}
+                      </span>
+                      <span className="ml-auto shrink-0 text-sm text-graphite-500 mr-3">
+                        {`Damaged: ${sharedPart.damaged}`}
+                      </span>
+                      {isExpanded ? (
+                        <ChevronUp className="h-4 w-4 shrink-0 text-graphite-400" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4 shrink-0 text-graphite-400" />
+                      )}
+                    </button>
+
+                    {isExpanded && (
+                      <div className="border-t border-graphite-200 px-4 py-4">
+                        <SharedPartDetail
+                          sharedPart={sharedPart}
+                          currentItemId={item._id}
+                          onUpdated={handleSharedPartUpdated}
+                          onUnlinked={handleSharedPartUnlinked}
                         />
                       </div>
                     )}

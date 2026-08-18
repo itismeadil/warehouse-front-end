@@ -375,5 +375,28 @@
   "noExpensesYet": "لا توجد مصروفات بعد",
 
   "duplicateSerialNumberError": "عنصر يحمل الرقم التسلسلي \"{{serial}}\" موجود بالفعل. يرجى استخدام رقم تسلسلي مختلف.",
-  "duplicateEntryError": "هذا الإدخال موجود بالفعل. يرجى التحقق من التكرارات."
+  "duplicateEntryError": "هذا الإدخال موجود بالفعل. يرجى التحقق من التكرارات.",
+
+  "sharedParts": "الأجزاء المشتركة",
+  "sharedPart": "جزء مشترك",
+  "sharedPartsHint": "أجزاء لا تتغير مع اللون وتم تحديد مكانها بالفعل مع نسخة أخرى من هذا الصنف.",
+  "addSharedPart": "+ إضافة جزء مشترك",
+  "noSharedPartsYet": "لا توجد أجزاء مشتركة بعد",
+  "linkExistingSharedPart": "ربط جزء مشترك موجود",
+  "createNewSharedPart": "إنشاء جزء مشترك جديد",
+  "linkSharedPartHint": "أعد استخدام جزء تم تحديد مكانه بالفعل مع لون آخر من هذا الصنف — لا حاجة لموقع جديد.",
+  "noSharedPartsAvailable": "لا توجد أجزاء مشتركة بعد — أنشئ واحدًا بدلاً من ذلك.",
+  "usedBy": "يُستخدم من قبل",
+  "selectSharedPartError": "اختر جزءًا مشتركًا للربط",
+  "link": "ربط",
+  "sharedPartName": "اسم الجزء",
+  "sharedPartNamePlaceholder": "مثال: القاعدة، الأرجل",
+  "sharedPartUsedBy": "يُستخدم أيضًا من قبل",
+  "noOtherItemsYet": "لا توجد أصناف أخرى بعد",
+  "combinedStock": "المخزون الإجمالي",
+  "sharedPartDamageHint": "محدود بالمخزون الإجمالي لكل صنف يشارك هذا الجزء.",
+  "unlinkSharedPart": "إلغاء ربط الجزء المشترك",
+  "unlinkFromThisItem": "إلغاء الربط من هذا الصنف",
+  "unlink": "إلغاء الربط",
+  "confirmUnlinkSharedPart": "إيقاف مشاركة هذا الجزء مع هذا الصنف؟ ستبقى الأصناف الأخرى المرتبطة به محتفظة به."
 }

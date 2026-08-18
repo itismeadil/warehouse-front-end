@@ -441,11 +441,16 @@ export default function FloorGrid({
               {hover.entry.partName && (
                 <div className="text-slate-300">{hover.entry.partName}</div>
               )}
-              <div className="flex items-center gap-2 text-slate-300">
-                <span>SN: #{hover.entry.serialNumber}</span>
-                <span>·</span>
-                <span>Qty: {hover.entry.stock}</span>
-              </div>
+              {/* Shared parts (see sharedPartId) have no serial number or
+                  single item stock of their own — they belong to more
+                  than one item at once, so skip this line for them. */}
+              {hover.entry.serialNumber != null && (
+                <div className="flex items-center gap-2 text-slate-300">
+                  <span>SN: #{hover.entry.serialNumber}</span>
+                  <span>·</span>
+                  <span>Qty: {hover.entry.stock}</span>
+                </div>
+              )}
             </div>
           )}
         </div>

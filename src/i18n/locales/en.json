@@ -373,5 +373,28 @@
   "noExpensesYet": "No expenses yet",
 
   "duplicateSerialNumberError": "An item with serial number \"{{serial}}\" already exists. Please use a different serial number.",
-  "duplicateEntryError": "This entry already exists. Please check for duplicates."
+  "duplicateEntryError": "This entry already exists. Please check for duplicates.",
+
+  "sharedParts": "Shared Parts",
+  "sharedPart": "Shared part",
+  "sharedPartsHint": "Parts that don't change with color and are already placed for another variant of this item.",
+  "addSharedPart": "+ Add Shared Part",
+  "noSharedPartsYet": "No shared parts yet",
+  "linkExistingSharedPart": "Link existing shared part",
+  "createNewSharedPart": "Create new shared part",
+  "linkSharedPartHint": "Reuse a part that's already placed for another color of this item — no new location needed.",
+  "noSharedPartsAvailable": "No shared parts exist yet — create one instead.",
+  "usedBy": "Used by",
+  "selectSharedPartError": "Choose a shared part to link",
+  "link": "Link",
+  "sharedPartName": "Part name",
+  "sharedPartNamePlaceholder": "e.g. Bottom, Legs",
+  "sharedPartUsedBy": "Also used by",
+  "noOtherItemsYet": "no other items yet",
+  "combinedStock": "Combined stock",
+  "sharedPartDamageHint": "Capped by the combined stock of every item that shares this part.",
+  "unlinkSharedPart": "Unlink shared part",
+  "unlinkFromThisItem": "Unlink from this item",
+  "unlink": "Unlink",
+  "confirmUnlinkSharedPart": "Stop sharing this part with this item? The other linked item(s) keep it."
 }

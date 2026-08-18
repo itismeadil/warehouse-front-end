@@ -21,9 +21,9 @@ const Spinner = () => (
 );
 
 const StatCard = ({ label, value }) => (
-  <div className="rounded-lg bg-graphite-100 p-3 sm:p-4">
-    <p className="text-xs text-graphite-500">{label}</p>
-    <p className="mt-0.5 text-lg font-medium text-graphite-900 sm:text-2xl">
+  <div className="rounded-lg bg-graphite-100 p-3 sm:p-4 dark:bg-graphite-700">
+    <p className="text-xs text-graphite-500 dark:text-graphite-400">{label}</p>
+    <p className="mt-0.5 text-lg font-medium text-graphite-900 sm:text-2xl dark:text-graphite-100">
       {value}
     </p>
   </div>
@@ -34,7 +34,7 @@ const StatCard = ({ label, value }) => (
 // Silently swallowing this (old behavior) is what made the tab look broken
 // with no visible error.
 const ServiceErrorBanner = ({ message }) => (
-  <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+  <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
     <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
     <div>
       <p className="font-medium">{message}</p>
@@ -173,16 +173,16 @@ export default function CalculationsTab() {
   return (
     <div>
       {/* Helpful Hint */}
-      <div className="mb-4 rounded-lg bg-blue-50 px-4 py-3 border border-blue-200">
+      <div className="mb-4 rounded-lg bg-blue-50 px-4 py-3 border border-blue-200 dark:border-blue-800 dark:bg-blue-900/30">
         <div className="flex items-start gap-3">
           <div className="flex-shrink-0">
             <Calculator className="h-5 w-5 text-blue-600" />
           </div>
           <div className="flex-1">
-            <h4 className="text-sm font-semibold text-blue-900 mb-1">
+            <h4 className="text-sm font-semibold text-blue-900 mb-1 dark:text-blue-300">
               {t("calculationsHintTitle")}
             </h4>
-            <p className="text-xs text-blue-800 leading-relaxed">
+            <p className="text-xs text-blue-800 leading-relaxed dark:text-blue-300">
               {t("calculationsHint")}
             </p>
           </div>
@@ -192,18 +192,18 @@ export default function CalculationsTab() {
       {/* Controls */}
       <form
         onSubmit={handleRun}
-        className="mt-5 rounded-xl border border-graphite-200 bg-white p-6 shadow-sm"
+        className="mt-5 rounded-xl border border-graphite-200 bg-white p-6 shadow-sm dark:border-graphite-700 dark:bg-graphite-800"
       >
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div>
-            <label className="block text-sm font-medium text-graphite-700">
+            <label className="block text-sm font-medium text-graphite-700 dark:text-graphite-300">
               {t("task")}
             </label>
             <select
               value={taskKey}
               onChange={(e) => setTaskKey(e.target.value)}
               disabled={tasks.length === 0}
-              className="mt-1.5 block w-full rounded-lg border border-graphite-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 disabled:bg-graphite-50 disabled:text-graphite-400"
+              className="mt-1.5 block w-full rounded-lg border border-graphite-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 disabled:bg-graphite-50 disabled:text-graphite-400 dark:border-graphite-600 dark:bg-graphite-700 dark:text-graphite-100 dark:focus:border-primary-500 dark:focus:ring-primary-500/30 dark:disabled:bg-graphite-800 dark:disabled:text-graphite-500"
             >
               {tasks.length === 0 && <option value="">—</option>}
               {tasks.map((task) => (
@@ -216,13 +216,13 @@ export default function CalculationsTab() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-graphite-700">
+            <label className="block text-sm font-medium text-graphite-700 dark:text-graphite-300">
               {t("filterByItem")}
             </label>
             <select
               value={itemId}
               onChange={(e) => setItemId(e.target.value)}
-              className="mt-1.5 block w-full rounded-lg border border-graphite-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+              className="mt-1.5 block w-full rounded-lg border border-graphite-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-graphite-600 dark:bg-graphite-700 dark:text-graphite-100 dark:focus:border-primary-500 dark:focus:ring-primary-500/30"
             >
               <option value="">{t("allItems")}</option>
               {items.map((item) => (
@@ -234,9 +234,11 @@ export default function CalculationsTab() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-graphite-700">
+            <label className="block text-sm font-medium text-graphite-700 dark:text-graphite-300">
               {t("unitPrice")}{" "}
-              <span className="text-graphite-400">({t("optional")})</span>
+              <span className="text-graphite-400 dark:text-graphite-500">
+                ({t("optional")})
+              </span>
             </label>
             <input
               type="number"
@@ -246,7 +248,7 @@ export default function CalculationsTab() {
               onChange={(e) => setUnitPrice(e.target.value)}
               disabled={!itemId}
               placeholder={t("unitPricePlaceholder")}
-              className="mt-1.5 block w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 disabled:cursor-not-allowed disabled:bg-graphite-50 disabled:text-graphite-400"
+              className="mt-1.5 block w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 disabled:cursor-not-allowed disabled:bg-graphite-50 disabled:text-graphite-400 dark:border-graphite-600 dark:bg-graphite-700 dark:text-graphite-100 dark:focus:border-primary-500 dark:focus:ring-primary-500/30 dark:disabled:bg-graphite-800 dark:disabled:text-graphite-500"
             />
           </div>
         </div>
@@ -266,17 +268,19 @@ export default function CalculationsTab() {
       {/* Results */}
       <div className="mt-6">
         <h2 className="flex items-center gap-2 text-sm font-semibold text-graphite-900">
-          <Calculator className="h-4 w-4 text-graphite-400" />
+          <Calculator className="h-4 w-4 text-graphite-400 dark:text-graphite-500" />
           {t("results")}
         </h2>
 
         {!activeReport ? (
-          <div className="mt-3 rounded-lg border border-dashed border-graphite-300 bg-white py-12 text-center">
-            <p className="text-sm text-graphite-500">{t("noReportYet")}</p>
+          <div className="mt-3 rounded-lg border border-dashed border-graphite-300 bg-white py-12 text-center dark:border-graphite-600 dark:bg-graphite-800">
+            <p className="text-sm text-graphite-500 dark:text-graphite-400">
+              {t("noReportYet")}
+            </p>
           </div>
         ) : (
           <div className="mt-3">
-            <p className="mb-3 text-xs text-graphite-500">
+            <p className="mb-3 text-xs text-graphite-500 dark:text-graphite-400">
               {t("generatedAt")}:{" "}
               {new Date(
                 activeReport.generatedAt || activeReport.createdAt,
@@ -359,11 +363,11 @@ export default function CalculationsTab() {
             )}
 
             {activeReport.items?.length > 0 && (
-              <div className="mt-4 overflow-hidden rounded-xl border border-graphite-200 bg-white shadow-sm">
+              <div className="mt-4 overflow-hidden rounded-xl border border-graphite-200 bg-white shadow-sm dark:border-graphite-700 dark:bg-graphite-800">
                 {/* Sales breakdown specific display */}
                 {activeReport.taskKey === "sales-breakdown" ? (
                   <>
-                    <div className="hidden border-b border-graphite-200 bg-graphite-50 px-4 py-2.5 sm:grid sm:grid-cols-4 sm:gap-4">
+                    <div className="hidden border-b border-graphite-200 bg-graphite-50 px-4 py-2.5 sm:grid sm:grid-cols-4 sm:gap-4 dark:border-graphite-700 dark:bg-graphite-800">
                       {[
                         "item",
                         "totalQuantity",
@@ -382,22 +386,22 @@ export default function CalculationsTab() {
                       {activeReport.items.map((row) => (
                         <div key={row.itemId} className="px-4 py-3 text-sm">
                           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-4">
-                            <span className="col-span-2 truncate font-medium text-graphite-900 sm:col-span-1">
+                            <span className="col-span-2 truncate font-medium text-graphite-900 sm:col-span-1 dark:text-graphite-100">
                               {row.itemName}
                             </span>
-                            <span className="text-graphite-600">
+                            <span className="text-graphite-600 dark:text-graphite-400">
                               {row.totalQuantity}
                             </span>
-                            <span className="text-graphite-600">
+                            <span className="text-graphite-600 dark:text-graphite-400">
                               {row.totalRevenue}
                             </span>
-                            <span className="text-graphite-600">
+                            <span className="text-graphite-600 dark:text-graphite-400">
                               {row.averagePrice}
                             </span>
                           </div>
                           {row.priceBreakdown?.length > 0 && (
-                            <div className="mt-2 rounded-lg bg-graphite-50 p-2">
-                              <p className="mb-1 text-xs font-medium text-graphite-500">
+                            <div className="mt-2 rounded-lg bg-graphite-50 p-2 dark:bg-graphite-800">
+                              <p className="mb-1 text-xs font-medium text-graphite-500 dark:text-graphite-400">
                                 {t("priceBreakdown")}
                               </p>
                               <div className="space-y-1">
@@ -421,7 +425,7 @@ export default function CalculationsTab() {
                   </>
                 ) : (
                   <>
-                    <div className="hidden border-b border-graphite-200 bg-graphite-50 px-4 py-2.5 sm:grid sm:grid-cols-6 sm:gap-4">
+                    <div className="hidden border-b border-graphite-200 bg-graphite-50 px-4 py-2.5 sm:grid sm:grid-cols-6 sm:gap-4 dark:border-graphite-700 dark:bg-graphite-800">
                       {[
                         "item",
                         "stock",
@@ -446,7 +450,7 @@ export default function CalculationsTab() {
                         >
                           <span className="col-span-2 truncate font-medium text-graphite-900 sm:col-span-1">
                             {row.name}{" "}
-                            <span className="text-graphite-400">
+                            <span className="text-graphite-400 dark:text-graphite-500">
                               ({row.serialNumber})
                             </span>
                           </span>
@@ -475,15 +479,15 @@ export default function CalculationsTab() {
       {/* History */}
       <div className="mt-8">
         <div className="flex items-center justify-between">
-          <h2 className="flex items-center gap-2 text-sm font-semibold text-graphite-900">
-            <History className="h-4 w-4 text-graphite-400" />
+          <h2 className="flex items-center gap-2 text-sm font-semibold text-graphite-900 dark:text-graphite-100">
+            <History className="h-4 w-4 text-graphite-400 dark:text-graphite-500" />
             {t("history")}
           </h2>
           {reports.length > 0 && (
             <button
               type="button"
               onClick={() => setShowClearConfirm(true)}
-              className="flex items-center gap-1.5 text-sm font-medium text-red-600 transition-colors hover:text-red-700"
+              className="flex items-center gap-1.5 text-sm font-medium text-red-600 transition-colors hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
             >
               <Trash2 className="h-4 w-4" />
               {t("clearHistory")}
@@ -495,27 +499,33 @@ export default function CalculationsTab() {
           {reportsLoading ? (
             <div className="flex items-center gap-2">
               <Spinner />
-              <p className="text-sm text-graphite-500">{t("loading")}</p>
+              <p className="text-sm text-graphite-500 dark:text-graphite-400">
+                {t("loading")}
+              </p>
             </div>
           ) : reportsError ? (
             <ServiceErrorBanner message={reportsError} />
           ) : reports.length === 0 ? (
-            <p className="text-sm text-graphite-500">{t("noReportsYet")}</p>
+            <p className="text-sm text-graphite-500 dark:text-graphite-400">
+              {t("noReportsYet")}
+            </p>
           ) : (
-            <div className="divide-y divide-graphite-200 rounded-xl border border-graphite-200 bg-white">
+            <div className="divide-y divide-graphite-200 rounded-xl border border-graphite-200 bg-white dark:divide-graphite-700 dark:border-graphite-700 dark:bg-graphite-800">
               {reports.map((report) => (
                 <button
                   key={report._id}
                   onClick={() => setActiveReport(report)}
-                  className={`flex w-full items-center justify-between px-4 py-3 text-start transition-colors hover:bg-primary-50/40 ${
-                    activeReport?._id === report._id ? "bg-primary-50/60" : ""
+                  className={`flex w-full items-center justify-between px-4 py-3 text-start transition-colors hover:bg-primary-50/40 dark:hover:bg-primary-900/30 ${
+                    activeReport?._id === report._id
+                      ? "bg-primary-50/60 dark:bg-primary-900/40"
+                      : ""
                   }`}
                 >
                   <div>
-                    <p className="text-sm font-medium text-graphite-900">
+                    <p className="text-sm font-medium text-graphite-900 dark:text-graphite-100">
                       {report.taskName}
                     </p>
-                    <p className="text-xs text-graphite-500">
+                    <p className="text-xs text-graphite-500 dark:text-graphite-400">
                       {new Date(
                         report.generatedAt || report.createdAt,
                       ).toLocaleString()}
@@ -532,12 +542,12 @@ export default function CalculationsTab() {
       </div>
 
       {showClearConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="mx-4 max-w-sm rounded-xl border border-red-200 bg-white p-6 shadow-lg">
-            <h3 className="text-lg font-semibold text-graphite-900">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 dark:bg-black/70">
+          <div className="mx-4 max-w-sm rounded-xl border border-red-200 bg-white p-6 shadow-lg dark:border-red-800 dark:bg-graphite-800">
+            <h3 className="text-lg font-semibold text-graphite-900 dark:text-graphite-100">
               {t("clearHistory")}
             </h3>
-            <p className="mt-2 text-sm text-graphite-600">
+            <p className="mt-2 text-sm text-graphite-600 dark:text-graphite-400">
               {t("confirmClearHistory")}
             </p>
             <div className="mt-4 flex gap-3">
@@ -545,7 +555,7 @@ export default function CalculationsTab() {
                 type="button"
                 onClick={() => setShowClearConfirm(false)}
                 disabled={clearing}
-                className="flex-1 rounded-lg border border-graphite-300 px-4 py-2 text-sm font-medium text-graphite-700 transition-colors hover:bg-graphite-50 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex-1 rounded-lg border border-graphite-300 px-4 py-2 text-sm font-medium text-graphite-700 transition-colors hover:bg-graphite-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-graphite-600 dark:text-graphite-200 dark:hover:bg-graphite-700"
               >
                 {t("cancel")}
               </button>
