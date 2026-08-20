@@ -138,6 +138,8 @@
 
   "invoiceScannerTitle": "Scan Invoice",
   "invoiceScannerDescription": "Upload an invoice image to extract data",
+  "invoiceScannerTemplateMatched": "Recognized as: {{name}}",
+  "invoiceScannerGenericParser": "Using generic parser",
   "extractData": "Extract Data",
   "uploadInvoice": "Upload invoice image",
   "uploadInvoiceHint": "PNG, JPG, GIF up to 10MB",

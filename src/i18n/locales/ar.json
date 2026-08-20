@@ -141,6 +141,8 @@
 
   "invoiceScannerTitle": "مسح الفاتورة",
   "invoiceScannerDescription": "قم برفع صورة الفاتورة لاستخراج البيانات",
+  "invoiceScannerTemplateMatched": "تم التعرف عليها كـ: {{name}}",
+  "invoiceScannerGenericParser": "يتم استخدام المحلل العام",
   "extractData": "استخراج البيانات",
   "uploadInvoice": "رفع صورة الفاتورة",
   "uploadInvoiceHint": "PNG, JPG, GIF حتى 10MB",

@@ -245,10 +245,10 @@ export default function CalculationsTab() {
               min="0"
               step="0.01"
               value={unitPrice}
-              onChange={(e) => setUnitPrice(e.target.value)}
+              onChange={(e) => setUnitPrice(e.target.valueAsNumber)}
               disabled={!itemId}
               placeholder={t("unitPricePlaceholder")}
-              className="mt-1.5 block w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 disabled:cursor-not-allowed disabled:bg-graphite-50 disabled:text-graphite-400 dark:border-graphite-600 dark:bg-graphite-700 dark:text-graphite-100 dark:focus:border-primary-500 dark:focus:ring-primary-500/30 dark:disabled:bg-graphite-800 dark:disabled:text-graphite-500"
+              className="mt-1.5 block w-full rounded-lg border border-graphite-300 bg-white px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 disabled:cursor-not-allowed disabled:bg-graphite-50 disabled:text-graphite-400 dark:border-graphite-600 dark:bg-graphite-700 dark:text-graphite-100 dark:focus:border-primary-500 dark:focus:ring-primary-500/30 dark:disabled:bg-graphite-800 dark:disabled:text-graphite-500"
             />
           </div>
         </div>
@@ -267,7 +267,7 @@ export default function CalculationsTab() {
 
       {/* Results */}
       <div className="mt-6">
-        <h2 className="flex items-center gap-2 text-sm font-semibold text-graphite-900">
+        <h2 className="flex items-center gap-2 text-sm font-semibold text-graphite-900 dark:text-graphite-100">
           <Calculator className="h-4 w-4 text-graphite-400 dark:text-graphite-500" />
           {t("results")}
         </h2>
@@ -376,13 +376,13 @@ export default function CalculationsTab() {
                       ].map((key) => (
                         <span
                           key={key}
-                          className="text-xs font-medium uppercase tracking-wide text-graphite-400"
+                          className="text-xs font-medium uppercase tracking-wide text-graphite-400 dark:text-graphite-500"
                         >
                           {t(key)}
                         </span>
                       ))}
                     </div>
-                    <div className="divide-y divide-graphite-100">
+                    <div className="divide-y divide-graphite-100 dark:divide-graphite-700">
                       {activeReport.items.map((row) => (
                         <div key={row.itemId} className="px-4 py-3 text-sm">
                           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-4">
@@ -408,7 +408,7 @@ export default function CalculationsTab() {
                                 {row.priceBreakdown.map((pb, idx) => (
                                   <div
                                     key={idx}
-                                    className="flex items-center gap-2 text-xs text-graphite-600"
+                                    className="flex items-center gap-2 text-xs text-graphite-600 dark:text-graphite-400"
                                   >
                                     <span>
                                       {pb.quantity} × {pb.price}
@@ -436,33 +436,37 @@ export default function CalculationsTab() {
                       ].map((key) => (
                         <span
                           key={key}
-                          className="text-xs font-medium uppercase tracking-wide text-graphite-400"
+                          className="text-xs font-medium uppercase tracking-wide text-graphite-400 dark:text-graphite-500"
                         >
                           {t(key)}
                         </span>
                       ))}
                     </div>
-                    <div className="divide-y divide-graphite-100">
+                    <div className="divide-y divide-graphite-100 dark:divide-graphite-700">
                       {activeReport.items.map((row) => (
                         <div
                           key={row.itemId}
                           className="grid grid-cols-2 gap-2 px-4 py-3 text-sm sm:grid-cols-6 sm:gap-4"
                         >
-                          <span className="col-span-2 truncate font-medium text-graphite-900 sm:col-span-1">
+                          <span className="col-span-2 truncate font-medium text-graphite-900 sm:col-span-1 dark:text-graphite-100">
                             {row.name}{" "}
                             <span className="text-graphite-400 dark:text-graphite-500">
                               ({row.serialNumber})
                             </span>
                           </span>
-                          <span className="text-graphite-600">{row.stock}</span>
-                          <span className="text-graphite-600">{row.sold}</span>
-                          <span className="text-graphite-600">
+                          <span className="text-graphite-600 dark:text-graphite-400">
+                            {row.stock}
+                          </span>
+                          <span className="text-graphite-600 dark:text-graphite-400">
+                            {row.sold}
+                          </span>
+                          <span className="text-graphite-600 dark:text-graphite-400">
                             {row.reserved}
                           </span>
-                          <span className="text-graphite-600">
+                          <span className="text-graphite-600 dark:text-graphite-400">
                             {row.damaged}
                           </span>
-                          <span className="text-graphite-600">
+                          <span className="text-graphite-600 dark:text-graphite-400">
                             {row.totalUnits}
                           </span>
                         </div>
@@ -480,7 +484,7 @@ export default function CalculationsTab() {
       <div className="mt-8">
         <div className="flex items-center justify-between">
           <h2 className="flex items-center gap-2 text-sm font-semibold text-graphite-900 dark:text-graphite-100">
-            <History className="h-4 w-4 text-graphite-400 dark:text-graphite-500" />
+            <History className="h-4 w-4 text-graphite-400" />
             {t("history")}
           </h2>
           {reports.length > 0 && (

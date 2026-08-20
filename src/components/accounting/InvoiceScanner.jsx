@@ -11,6 +11,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import Tesseract from "tesseract.js";
+import { matchTemplate } from "../../lib/invoiceTemplates";
 
 const Spinner = () => (
   <div
@@ -19,6 +20,147 @@ const Spinner = () => (
     aria-hidden
   />
 );
+
+// The original best-effort, no-supplier-known-yet parser: generic regex
+// patterns that try to catch common invoice number / date / total / line
+// item / tax formats in any invoice. This is always run first as a
+// baseline; if a supplier template matches (see lib/invoiceTemplates.js),
+// its fields overwrite whatever this function guessed for that invoice.
+function parseGenericFields(text) {
+  const data = {
+    invoiceNumber: "",
+    date: "",
+    total: "",
+    lineItems: [],
+  };
+
+  // Enhanced invoice number patterns
+  const invoicePatterns = [
+    /invoice\s*[:#]?\s*([a-zA-Z0-9-]+)/i,
+    /inv\s*[:#]?\s*([a-zA-Z0-9-]+)/i,
+    /فاتورة\s*[:#]?\s*([a-zA-Z0-9-]+)/i,
+    /bill\s*[:#]?\s*([a-zA-Z0-9-]+)/i,
+    /رقم\s*الفاتورة\s*[:#]?\s*([a-zA-Z0-9-]+)/i,
+    /#\s*([a-zA-Z0-9-]+)/i,
+  ];
+
+  for (const pattern of invoicePatterns) {
+    const match = text.match(pattern);
+    if (match) {
+      data.invoiceNumber = match[1];
+      break;
+    }
+  }
+
+  // Enhanced date patterns with multiple formats
+  const datePatterns = [
+    /(\d{4}[-/]\d{1,2}[-/]\d{1,2})/,
+    /(\d{1,2}[-/]\d{1,2}[-/]\d{4})/,
+    /(\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{4})/i,
+    /(\d{1,2}\s+(?:يناير|فبراير|مارس|أبريل|مايو|يونيو|يوليو|أغسطس|سبتمبر|أكتوبر|نوفمبر|ديسمبر)\s+\d{4})/,
+  ];
+
+  for (const pattern of datePatterns) {
+    const match = text.match(pattern);
+    if (match) {
+      data.date = match[1];
+      break;
+    }
+  }
+
+  // Enhanced total amount patterns with currency symbols
+  const totalPatterns = [
+    /total\s*[:]?\s*[$€£₹]?\s*([0-9.,]+)/i,
+    /الإجمالي\s*[:]?\s*[$€£₹]?\s*([0-9.,]+)/i,
+    /amount\s*[:]?\s*[$€£₹]?\s*([0-9.,]+)/i,
+    /المبلغ\s*[:]?\s*[$€£₹]?\s*([0-9.,]+)/i,
+    /grand\s*total\s*[:]?\s*[$€£₹]?\s*([0-9.,]+)/i,
+    /[$€£₹]\s*([0-9.,]+)/,
+  ];
+
+  for (const pattern of totalPatterns) {
+    const match = text.match(pattern);
+    if (match) {
+      data.total = match[1].replace(/,/g, "");
+      break;
+    }
+  }
+
+  // Enhanced line item extraction with better patterns
+  const detailedPattern =
+    /([a-zA-Z\u0600-\u06FF\s][a-zA-Z\u0600-\u06FF0-9\s\-\.]*)\s+(\d+)\s*[x×]\s*[$€£₹]?\s*([0-9.,]+)/g;
+  let match;
+  while ((match = detailedPattern.exec(text)) !== null) {
+    const description = match[1].trim();
+    const quantity = match[2];
+    const price = match[3].replace(/,/g, "");
+
+    // Only add if it looks like a valid item
+    if (description.length > 2 && !isNaN(quantity) && !isNaN(price)) {
+      data.lineItems.push({
+        description: description,
+        quantity: parseInt(quantity),
+        price: parseFloat(price),
+      });
+    }
+  }
+
+  // Alternative pattern: Price first, then quantity
+  const priceFirstPattern =
+    /[$€£₹]?\s*([0-9.,]+)\s*[x×]\s*(\d+)\s*([a-zA-Z\u0600-\u06FF\s][a-zA-Z\u0600-\u06FF0-9\s\-\.]*)/g;
+  while ((match = priceFirstPattern.exec(text)) !== null) {
+    const price = match[1].replace(/,/g, "");
+    const quantity = match[2];
+    const description = match[3].trim();
+
+    if (description.length > 2 && !isNaN(quantity) && !isNaN(price)) {
+      // Avoid duplicates
+      const isDuplicate = data.lineItems.some(
+        (item) =>
+          item.description === description &&
+          item.quantity === parseInt(quantity) &&
+          item.price === parseFloat(price),
+      );
+
+      if (!isDuplicate) {
+        data.lineItems.push({
+          description: description,
+          quantity: parseInt(quantity),
+          price: parseFloat(price),
+        });
+      }
+    }
+  }
+
+  // If no detailed items found, fall back to simple quantity × price patterns
+  if (data.lineItems.length === 0) {
+    const simplePattern = /(\d+)\s*[x×]\s*[$€£₹]?\s*([0-9.,]+)/g;
+    while ((match = simplePattern.exec(text)) !== null) {
+      data.lineItems.push({
+        description: "",
+        quantity: parseInt(match[1]),
+        price: parseFloat(match[2].replace(/,/g, "")),
+      });
+    }
+  }
+
+  // Enhanced tax/VAT extraction
+  const taxPatterns = [
+    /(?:tax|vat|الضريبة|ضريبة)\s*[:#]?\s*([0-9.,]+)%?/i,
+    /(?:tax|vat|الضريبة|ضريبة)\s*[:#]?\s*[$€£₹]?\s*([0-9.,]+)/i,
+    /(?:vat|ضريبة\s*القيمة\s*المضافة)\s*[:#]?\s*([0-9.,]+)%?/i,
+  ];
+
+  for (const pattern of taxPatterns) {
+    const match = text.match(pattern);
+    if (match) {
+      data.taxRate = match[1].replace(/,/g, "");
+      break;
+    }
+  }
+
+  return data;
+}
 
 export default function InvoiceScanner({ onScanComplete, onClose }) {
   const { t } = useTranslation();
@@ -180,131 +322,19 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
       rawText: text,
       confidence: confidence,
       warnings: [],
+      matchedTemplate: null,
     };
 
-    // Enhanced invoice number patterns
-    const invoicePatterns = [
-      /invoice\s*[:#]?\s*([a-zA-Z0-9-]+)/i,
-      /inv\s*[:#]?\s*([a-zA-Z0-9-]+)/i,
-      /فاتورة\s*[:#]?\s*([a-zA-Z0-9-]+)/i,
-      /bill\s*[:#]?\s*([a-zA-Z0-9-]+)/i,
-      /رقم\s*الفاتورة\s*[:#]?\s*([a-zA-Z0-9-]+)/i,
-      /#\s*([a-zA-Z0-9-]+)/i,
-    ];
-
-    for (const pattern of invoicePatterns) {
-      const match = text.match(pattern);
-      if (match) {
-        data.invoiceNumber = match[1];
-        break;
-      }
-    }
-
-    // Enhanced date patterns with multiple formats
-    const datePatterns = [
-      /(\d{4}[-/]\d{1,2}[-/]\d{1,2})/,
-      /(\d{1,2}[-/]\d{1,2}[-/]\d{4})/,
-      /(\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{4})/i,
-      /(\d{1,2}\s+(?:يناير|فبراير|مارس|أبريل|مايو|يونيو|يوليو|أغسطس|سبتمبر|أكتوبر|نوفمبر|ديسمبر)\s+\d{4})/,
-    ];
-
-    for (const pattern of datePatterns) {
-      const match = text.match(pattern);
-      if (match) {
-        data.date = match[1];
-        break;
-      }
-    }
-
-    // Enhanced total amount patterns with currency symbols
-    const totalPatterns = [
-      /total\s*[:]?\s*[$€£₹]?\s*([0-9.,]+)/i,
-      /الإجمالي\s*[:]?\s*[$€£₹]?\s*([0-9.,]+)/i,
-      /amount\s*[:]?\s*[$€£₹]?\s*([0-9.,]+)/i,
-      /المبلغ\s*[:]?\s*[$€£₹]?\s*([0-9.,]+)/i,
-      /grand\s*total\s*[:]?\s*[$€£₹]?\s*([0-9.,]+)/i,
-      /[$€£₹]\s*([0-9.,]+)/,
-    ];
-
-    for (const pattern of totalPatterns) {
-      const match = text.match(pattern);
-      if (match) {
-        data.total = match[1].replace(/,/g, "");
-        break;
-      }
-    }
-
-    // Enhanced line item extraction with better patterns
-    const detailedPattern =
-      /([a-zA-Z\u0600-\u06FF\s][a-zA-Z\u0600-\u06FF0-9\s\-\.]*)\s+(\d+)\s*[x×]\s*[$€£₹]?\s*([0-9.,]+)/g;
-    let match;
-    while ((match = detailedPattern.exec(text)) !== null) {
-      const description = match[1].trim();
-      const quantity = match[2];
-      const price = match[3].replace(/,/g, "");
-
-      // Only add if it looks like a valid item
-      if (description.length > 2 && !isNaN(quantity) && !isNaN(price)) {
-        data.lineItems.push({
-          description: description,
-          quantity: parseInt(quantity),
-          price: parseFloat(price),
-        });
-      }
-    }
-
-    // Alternative pattern: Price first, then quantity
-    const priceFirstPattern =
-      /[$€£₹]?\s*([0-9.,]+)\s*[x×]\s*(\d+)\s*([a-zA-Z\u0600-\u06FF\s][a-zA-Z\u0600-\u06FF0-9\s\-\.]*)/g;
-    while ((match = priceFirstPattern.exec(text)) !== null) {
-      const price = match[1].replace(/,/g, "");
-      const quantity = match[2];
-      const description = match[3].trim();
-
-      if (description.length > 2 && !isNaN(quantity) && !isNaN(price)) {
-        // Avoid duplicates
-        const isDuplicate = data.lineItems.some(
-          (item) =>
-            item.description === description &&
-            item.quantity === parseInt(quantity) &&
-            item.price === parseFloat(price),
-        );
-
-        if (!isDuplicate) {
-          data.lineItems.push({
-            description: description,
-            quantity: parseInt(quantity),
-            price: parseFloat(price),
-          });
-        }
-      }
-    }
-
-    // If no detailed items found, fall back to simple quantity × price patterns
-    if (data.lineItems.length === 0) {
-      const simplePattern = /(\d+)\s*[x×]\s*[$€£₹]?\s*([0-9.,]+)/g;
-      while ((match = simplePattern.exec(text)) !== null) {
-        data.lineItems.push({
-          description: "",
-          quantity: parseInt(match[1]),
-          price: parseFloat(match[2].replace(/,/g, "")),
-        });
-      }
-    }
-
-    // Enhanced tax/VAT extraction
-    const taxPatterns = [
-      /(?:tax|vat|الضريبة|ضريبة)\s*[:#]?\s*([0-9.,]+)%?/i,
-      /(?:tax|vat|الضريبة|ضريبة)\s*[:#]?\s*[$€£₹]?\s*([0-9.,]+)/i,
-      /(?:vat|ضريبة\s*القيمة\s*المضافة)\s*[:#]?\s*([0-9.,]+)%?/i,
-    ];
-
-    for (const pattern of taxPatterns) {
-      const match = text.match(pattern);
-      if (match) {
-        data.taxRate = match[1].replace(/,/g, "");
-        break;
-      }
+    // If this invoice matches a known supplier (see lib/invoiceTemplates.js),
+    // run the generic parser first as a baseline, then let the template
+    // overwrite only the fields it explicitly provides — a template only
+    // needs to define whatever the generic parser gets wrong for that
+    // supplier's layout, not every field from scratch.
+    const template = matchTemplate(text);
+    Object.assign(data, parseGenericFields(text));
+    if (template) {
+      Object.assign(data, template.parse(text, confidence));
+      data.matchedTemplate = template.name;
     }
 
     // Add confidence-based warnings (using translation keys)
@@ -508,6 +538,22 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
                       <Edit2 className="h-3 w-3" />
                       {t("editExtractedData")}
                     </button>
+                  </div>
+
+                  {/* Which supplier template (if any) was used to parse
+                      this invoice — see src/lib/invoiceTemplates.js */}
+                  <div className="mb-3">
+                    {extractedData.matchedTemplate ? (
+                      <span className="inline-flex items-center rounded-full bg-primary-100 px-2 py-0.5 text-xs font-medium text-primary-700 dark:bg-primary-900/40 dark:text-primary-300">
+                        {t("invoiceScannerTemplateMatched", {
+                          name: extractedData.matchedTemplate,
+                        })}
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center rounded-full bg-graphite-100 px-2 py-0.5 text-xs font-medium text-graphite-600 dark:bg-graphite-800 dark:text-graphite-300">
+                        {t("invoiceScannerGenericParser")}
+                      </span>
+                    )}
                   </div>
 
                   {/* Quality Indicators */}
