@@ -176,6 +176,9 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
   const [editableData, setEditableData] = useState(null);
   const [imageQuality, setImageQuality] = useState(null);
   const [ocrConfidence, setOcrConfidence] = useState(null);
+  const [invoiceType, setInvoiceType] = useState("sales"); // "sales" or "expense"
+  const [expenseCategory, setExpenseCategory] = useState("");
+  const [expenseDescription, setExpenseDescription] = useState("");
 
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
@@ -357,7 +360,15 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
   const handleApplyData = () => {
     const dataToApply = isEditing ? editableData : extractedData;
     if (dataToApply && onScanComplete) {
-      onScanComplete(dataToApply);
+      // Add invoice type and expense info to the data
+      const finalData = {
+        ...dataToApply,
+        invoiceType,
+        expenseCategory: invoiceType === "expense" ? expenseCategory : null,
+        expenseDescription:
+          invoiceType === "expense" ? expenseDescription : null,
+      };
+      onScanComplete(finalData);
       onClose();
     }
   };
@@ -413,6 +424,9 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
     setExtractedData(null);
     setError("");
     setProgress(0);
+    setInvoiceType("sales");
+    setExpenseCategory("");
+    setExpenseDescription("");
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -447,6 +461,62 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
 
         {/* Content */}
         <div className="px-6 py-4">
+          {/* Invoice Type Selector */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-graphite-700 mb-2 dark:text-graphite-300">
+              {t("invoiceType")}
+            </label>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setInvoiceType("sales")}
+                className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                  invoiceType === "sales"
+                    ? "bg-primary-600 text-white"
+                    : "bg-graphite-100 text-graphite-700 hover:bg-graphite-200 dark:bg-graphite-800 dark:text-graphite-300 dark:hover:bg-graphite-700"
+                }`}
+              >
+                {t("salesInvoice")}
+              </button>
+              <button
+                type="button"
+                onClick={() => setInvoiceType("expense")}
+                className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                  invoiceType === "expense"
+                    ? "bg-primary-600 text-white"
+                    : "bg-graphite-100 text-graphite-700 hover:bg-graphite-200 dark:bg-graphite-800 dark:text-graphite-300 dark:hover:bg-graphite-700"
+                }`}
+              >
+                {t("expenseInvoice")}
+              </button>
+            </div>
+          </div>
+
+          {/* Expense Category Field (only shown for expense invoices) */}
+          {invoiceType === "expense" && (
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-graphite-700 mb-2 dark:text-graphite-300">
+                {t("expenseCategory")}
+              </label>
+              <select
+                value={expenseCategory}
+                onChange={(e) => setExpenseCategory(e.target.value)}
+                className="block w-full rounded-lg border border-graphite-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-graphite-600 bg-white dark:bg-graphite-800 text-graphite-900 dark:text-graphite-100"
+              >
+                <option value="">{t("selectCategory")}</option>
+                <option value="utilities">{t("utilities")}</option>
+                <option value="supplies">{t("supplies")}</option>
+                <option value="rent">{t("rent")}</option>
+                <option value="salaries">{t("salaries")}</option>
+                <option value="maintenance">{t("maintenance")}</option>
+                <option value="transportation">{t("transportation")}</option>
+                <option value="marketing">{t("marketing")}</option>
+                <option value="insurance">{t("insurance")}</option>
+                <option value="other">{t("other")}</option>
+              </select>
+            </div>
+          )}
+
           {!preview ? (
             /* Upload Area */
             <div
@@ -745,6 +815,51 @@ export default function InvoiceScanner({ onScanComplete, onClose }) {
                         />
                       </div>
                     </div>
+
+                    {/* Expense-specific fields */}
+                    {invoiceType === "expense" && (
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-medium text-blue-700 mb-1 dark:text-blue-300">
+                            {t("expenseCategory")}
+                          </label>
+                          <select
+                            value={expenseCategory}
+                            onChange={(e) => setExpenseCategory(e.target.value)}
+                            className="w-full rounded border border-blue-300 px-2 py-1 text-blue-900 focus:border-blue-500 focus:outline-none"
+                          >
+                            <option value="">{t("selectCategory")}</option>
+                            <option value="utilities">{t("utilities")}</option>
+                            <option value="supplies">{t("supplies")}</option>
+                            <option value="rent">{t("rent")}</option>
+                            <option value="salaries">{t("salaries")}</option>
+                            <option value="maintenance">
+                              {t("maintenance")}
+                            </option>
+                            <option value="transportation">
+                              {t("transportation")}
+                            </option>
+                            <option value="marketing">{t("marketing")}</option>
+                            <option value="insurance">{t("insurance")}</option>
+                            <option value="other">{t("other")}</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-blue-700 mb-1 dark:text-blue-300">
+                            {t("description")}
+                          </label>
+                          <input
+                            type="text"
+                            value={expenseDescription}
+                            onChange={(e) =>
+                              setExpenseDescription(e.target.value)
+                            }
+                            placeholder={t("expenseDescriptionPlaceholder")}
+                            className="w-full rounded border border-blue-300 px-2 py-1 text-blue-900 focus:border-blue-500 focus:outline-none"
+                          />
+                        </div>
+                      </div>
+                    )}
 
                     <div className="grid grid-cols-2 gap-3">
                       <div>
