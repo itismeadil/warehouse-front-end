@@ -83,7 +83,7 @@ export default function SalesInvoicesTab() {
   );
 
   const vatAmount = total * (vatRate / 100);
-  const totalAfterTax = total - vatAmount;
+  const totalAfterTax = total + vatAmount;
 
   // Distinct calendar days that have at least one sales invoice, for highlighting
   const salesDates = useMemo(() => {
@@ -406,10 +406,10 @@ export default function SalesInvoicesTab() {
 
           <div className="flex justify-between text-sm text-graphite-700">
             <span>
-              {t("vatDeduction")} ({vatRate}%)
+              {t("vat")} ({vatRate}%)
             </span>
             <span className="font-semibold text-red-600">
-              -{vatAmount.toFixed(2)}
+              +{vatAmount.toFixed(2)}
             </span>
           </div>
 
@@ -503,7 +503,7 @@ export default function SalesInvoicesTab() {
                       )}
                       {inv.vatAmount !== undefined && (
                         <span className="text-red-600">
-                          {t("vatDeduction")}: -{inv.vatAmount.toFixed(2)}
+                          {t("vat")}: +{inv.vatAmount.toFixed(2)}
                         </span>
                       )}
                       {inv.totalAmount !== undefined && (

@@ -318,7 +318,10 @@ export default function PurchaseInvoicesTab() {
                   </p>
                   <ul className="mt-1.5 space-y-0.5">
                     {inv.lines.map((line, i) => (
-                      <li className="text-xs text-graphite-600 dark:text-graphite-400">
+                      <li
+                        key={`${inv._id}-${i}`}
+                        className="text-xs text-graphite-600 dark:text-graphite-400"
+                      >
                         {line.itemName} · {line.quantity} × {line.unitCost} ={" "}
                         {line.lineTotal}
                       </li>

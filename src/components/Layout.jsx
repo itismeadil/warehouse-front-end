@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   Home,
+  LayoutDashboard,
   Plus,
   Map,
   Users,
@@ -18,6 +19,13 @@ import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 
 const ALL_NAV_ITEMS = [
+  {
+    to: "/dashboard",
+    label: "adminDashboard",
+    icon: LayoutDashboard,
+    match: (path) => path === "/dashboard",
+    roles: ["admin"],
+  },
   {
     to: "/",
     label: "home",

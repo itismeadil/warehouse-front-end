@@ -7,6 +7,7 @@ import {
 } from "react-router-dom";
 import { useEffect } from "react";
 import AddItemForm from "./components/AddItemForm";
+import AdminDashboard from "./components/AdminDashboard";
 import Home from "./components/Home";
 import FloorsMap from "./components/FloorsMap";
 import Layout from "./components/Layout";
@@ -30,6 +31,7 @@ function PageTitle() {
   useEffect(() => {
     const titles = {
       "/": t("home"),
+      "/dashboard": t("adminDashboard"),
       "/login": t("login"),
       "/add": t("addItem"),
       "/floors": t("floorMaps"),
@@ -72,6 +74,17 @@ function App() {
                 <ProtectedRoute>
                   <Layout>
                     <RoleHome />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute roles={["admin"]}>
+                  <Layout>
+                    <AdminDashboard />
                   </Layout>
                 </ProtectedRoute>
               }
