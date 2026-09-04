@@ -28,6 +28,7 @@ import AddItemPartForm from "./AddItemPartForm";
 import AddSharedPartForm from "./AddSharedPartForm";
 import SharedPartDetail from "./SharedPartDetail";
 import AlertModal from "./AlertModal";
+import LocationOverviewModal from "./LocationOverviewModal";
 import { useAlert } from "../hooks/useAlert";
 
 export default function ItemDetail() {
@@ -63,6 +64,7 @@ export default function ItemDetail() {
   const [addingPart, setAddingPart] = useState(false);
   const [expandedSharedPartId, setExpandedSharedPartId] = useState(null);
   const [showAddSharedPart, setShowAddSharedPart] = useState(false);
+  const [showLocationOverview, setShowLocationOverview] = useState(false);
 
   const fetchItem = () => {
     setLoading(true);
@@ -470,6 +472,16 @@ export default function ItemDetail() {
       {/* Legend for floor grid colors and Parts section - only show when stock > 0 or has damaged parts */}
       {!(item.stock === 0 && !item.parts?.some((part) => part.damaged > 0)) && (
         <div>
+          {/* Location Overview Button */}
+          <div className="mt-6">
+            <button
+              onClick={() => setShowLocationOverview(true)}
+              className="w-full rounded-lg border border-primary-200 bg-primary-50 px-4 py-3 text-sm font-semibold text-primary-700 transition-colors hover:bg-primary-100 dark:border-primary-800 dark:bg-primary-900/30 dark:text-primary-400 dark:hover:bg-primary-900/50"
+            >
+              {t("viewAllLocations", "View All Locations")}
+            </button>
+          </div>
+
           {/* Legend for floor grid colors */}
           <div className="mt-6 rounded-xl border border-graphite-200 bg-white p-4 shadow-sm dark:border-graphite-700 dark:bg-graphite-800">
             <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-graphite-500 dark:text-graphite-400">
@@ -701,6 +713,13 @@ export default function ItemDetail() {
         cancelText={alert?.cancelText}
         onConfirm={alert?.onConfirm}
       />
+
+      {showLocationOverview && (
+        <LocationOverviewModal
+          item={item}
+          onClose={() => setShowLocationOverview(false)}
+        />
+      )}
     </div>
   );
 }
