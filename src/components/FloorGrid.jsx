@@ -219,6 +219,7 @@ export default function FloorGrid({
   ]);
 
   const cellFromEvent = (e) => {
+    if (!canvasRef.current) return { row: 0, col: 0 };
     const rect = canvasRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
@@ -291,7 +292,13 @@ export default function FloorGrid({
   };
 
   const handleMouseUp = (e) => {
-    if (selectionMode === "squares" && isDragging && dragStart && dragEnd) {
+    if (
+      selectionMode === "squares" &&
+      isDragging &&
+      dragStart &&
+      dragEnd &&
+      mouseDownPos
+    ) {
       // Check if this was a click (minimal movement) or a drag
       const movementThreshold = 5; // pixels
       const dx = Math.abs(e.clientX - mouseDownPos.clientX);
@@ -361,10 +368,7 @@ export default function FloorGrid({
   };
 
   return (
-    <div
-      ref={containerRef}
-      className="relative inline-block max-w-full overflow-auto rounded-xl border border-graphite-200 bg-white p-3 shadow-sm dark:border-graphite-700 dark:bg-graphite-900"
-    >
+    <div ref={containerRef} className="relative">
       <canvas
         ref={canvasRef}
         width={width}
@@ -394,36 +398,8 @@ export default function FloorGrid({
         <div
           className="pointer-events-none absolute whitespace-nowrap rounded-lg bg-graphite-900/95 px-3 py-2 text-xs text-white shadow-xl backdrop-blur-sm z-10 border border-graphite-700/50"
           style={{
-            left: hover.x + 8,
-            top: hover.y + 8,
-            transform: (() => {
-              const containerRect =
-                containerRef.current.getBoundingClientRect();
-              const tooltipX = hover.x + 8;
-              const tooltipY = hover.y + 8;
-
-              // Check if tooltip would be too close to right edge
-              const tooCloseToRight = tooltipX > containerRect.width - 100;
-              // Check if tooltip would be too close to left edge
-              const tooCloseToLeft = tooltipX < 100;
-              // Check if tooltip would be too close to top edge
-              const tooCloseToTop = tooltipY < 50;
-
-              let transform = "translate(-50%, calc(-100% - 8px))";
-
-              if (tooCloseToRight) {
-                transform = "translate(-100%, calc(-100% - 8px))";
-              } else if (tooCloseToLeft) {
-                transform = "translate(0%, calc(-100% - 8px))";
-              }
-
-              if (tooCloseToTop) {
-                // Show below instead of above
-                transform = transform.replace("calc(-100% - 8px)", "8px");
-              }
-
-              return transform;
-            })(),
+            left: hover.x + 10,
+            top: hover.y - 40,
             maxWidth: "250px",
             overflow: "hidden",
             textOverflow: "ellipsis",

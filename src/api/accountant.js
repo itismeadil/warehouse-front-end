@@ -70,3 +70,19 @@ export const deleteExpense = (id) =>
 
 export const getExpenseSummary = (params) =>
   accountantApi.get("/expenses/summary", { params }).then((res) => res.data);
+
+// Profit calculations — manual monthly profit tracking
+export const getProfitCalculations = () =>
+  accountantApi.get("/profit").then((res) => res.data);
+
+export const createProfitCalculation = (payload) =>
+  accountantApi.post("/profit", payload).then((res) => res.data);
+
+export const getProfitCalculationById = (id) =>
+  accountantApi.get(`/profit/${id}`).then((res) => res.data);
+
+export const updateProfitCalculation = (id, payload) =>
+  accountantApi.put(`/profit/${id}`, payload).then((res) => res.data);
+
+export const deleteProfitCalculation = (id) =>
+  accountantApi.delete(`/profit/${id}`).then((res) => res.data);

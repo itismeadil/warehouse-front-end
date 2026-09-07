@@ -21,6 +21,42 @@ const COLORS = {
   previewErase: "#dc2626", // red-600, rectangle about to be removed
 };
 
+const edgeBtnClass =
+  "flex h-5 w-5 items-center justify-center rounded border border-graphite-300 text-xs leading-none text-graphite-600 hover:bg-graphite-100 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent dark:border-graphite-600 dark:text-graphite-400 dark:hover:bg-graphite-700";
+
+/** Pair of +/- buttons for growing/shrinking the floor from one edge. */
+function EdgeControl({ orientation, onAdd, onRemove, canAdd, canRemove }) {
+  const isRow = orientation === "row"; // row edges (top/bottom) stack buttons horizontally
+  return (
+    <div
+      className={
+        isRow
+          ? "flex items-center justify-center gap-1 py-1"
+          : "flex flex-col items-center justify-center gap-1 px-1"
+      }
+    >
+      <button
+        type="button"
+        onClick={onRemove}
+        disabled={!canRemove}
+        className={edgeBtnClass}
+        title="Remove"
+      >
+        −
+      </button>
+      <button
+        type="button"
+        onClick={onAdd}
+        disabled={!canAdd}
+        className={edgeBtnClass}
+        title="Add"
+      >
+        +
+      </button>
+    </div>
+  );
+}
+
 /**
  * Graph-paper style floor canvas. Draws only grid lines (not one shape per
  * cell) plus whatever's actually filled, so even very large floors (hundreds
@@ -29,12 +65,23 @@ const COLORS = {
  *
  * Drag from one point to another to fill a straight rectangle (release =
  * commit). Starting the drag on an already-filled cell erases that
- * rectangle instead. Pass readOnly to disable drawing.
+ * rectangle instead. Pass readOnly to disable drawing AND resizing.
  *
  * Zoom with the +/- buttons or Ctrl/Cmd + scroll wheel. Pan by scrolling
  * the container (trackpad, scrollbars, shift+scroll for horizontal).
  *
- * Ref API: getCells() -> [{row, col}], clear()
+ * Resize with the +/- buttons on each edge of the grid: top/bottom add or
+ * remove a row on that side, left/right add or remove a column. Like
+ * `initialCells`, `rows`/`cols` are only the *initial* dimensions — this
+ * component owns the live size after that. Read the current size via the
+ * `getDimensions()` ref method, or via the `onResize` callback, which fires
+ * as `{ side, delta, rows, cols }` any time the floor is resized (so a
+ * parent can persist the new size or shift its own `occupied` coordinates).
+ * Removing a row/col that contains an `occupied` cell is blocked and shows
+ * a brief inline warning instead, since this component can't safely drop
+ * data it doesn't own.
+ *
+ * Ref API: getCells() -> [{row, col}], clear(), getDimensions() -> {rows, cols}
  */
 const FloorCanvas = forwardRef(function FloorCanvas(
   {
@@ -44,6 +91,11 @@ const FloorCanvas = forwardRef(function FloorCanvas(
     occupied = [],
     readOnly = false,
     height = 480,
+    onResize,
+    minRows = 1,
+    minCols = 1,
+    maxRows = 200,
+    maxCols = 200,
   },
   ref,
 ) {
@@ -56,12 +108,15 @@ const FloorCanvas = forwardRef(function FloorCanvas(
   const startCellRef = useRef(null);
   const eraseModeRef = useRef(false);
   const previewRectRef = useRef(null);
+  const warningTimeoutRef = useRef(null);
 
   const [zoom, setZoom] = useState(1);
+  const [dims, setDims] = useState({ rows, cols });
+  const [warning, setWarning] = useState("");
 
   const pitch = BASE_PITCH * zoom;
-  const width = cols * pitch;
-  const heightPx = rows * pitch;
+  const width = dims.cols * pitch;
+  const heightPx = dims.rows * pitch;
 
   const draw = () => {
     const canvas = canvasRef.current;
@@ -102,12 +157,12 @@ const FloorCanvas = forwardRef(function FloorCanvas(
 
     // Grid lines — the part that keeps this fast: O(rows+cols), not O(rows*cols)
     ctx.beginPath();
-    for (let c = 0; c <= cols; c++) {
+    for (let c = 0; c <= dims.cols; c++) {
       const x = Math.round(c * pitch) + 0.5;
       ctx.moveTo(x, 0);
       ctx.lineTo(x, heightPx);
     }
-    for (let r = 0; r <= rows; r++) {
+    for (let r = 0; r <= dims.rows; r++) {
       const y = Math.round(r * pitch) + 0.5;
       ctx.moveTo(0, y);
       ctx.lineTo(width, y);
@@ -118,12 +173,12 @@ const FloorCanvas = forwardRef(function FloorCanvas(
 
     // Bolder line every 5 cells, like a math notebook grid
     ctx.beginPath();
-    for (let c = 0; c <= cols; c += 5) {
+    for (let c = 0; c <= dims.cols; c += 5) {
       const x = Math.round(c * pitch) + 0.5;
       ctx.moveTo(x, 0);
       ctx.lineTo(x, heightPx);
     }
-    for (let r = 0; r <= rows; r += 5) {
+    for (let r = 0; r <= dims.rows; r += 5) {
       const y = Math.round(r * pitch) + 0.5;
       ctx.moveTo(0, y);
       ctx.lineTo(width, y);
@@ -151,7 +206,13 @@ const FloorCanvas = forwardRef(function FloorCanvas(
   useEffect(() => {
     draw();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rows, cols, zoom]);
+  }, [dims, zoom]);
+
+  useEffect(() => {
+    return () => {
+      if (warningTimeoutRef.current) clearTimeout(warningTimeoutRef.current);
+    };
+  }, []);
 
   useImperativeHandle(ref, () => ({
     getCells: () =>
@@ -163,14 +224,15 @@ const FloorCanvas = forwardRef(function FloorCanvas(
       activeRef.current = new Set();
       draw();
     },
+    getDimensions: () => ({ ...dims }),
   }));
 
   const cellFromEvent = (e) => {
     const rect = canvasRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    const col = Math.min(cols - 1, Math.max(0, Math.floor(x / pitch)));
-    const row = Math.min(rows - 1, Math.max(0, Math.floor(y / pitch)));
+    const col = Math.min(dims.cols - 1, Math.max(0, Math.floor(x / pitch)));
+    const row = Math.min(dims.rows - 1, Math.max(0, Math.floor(y / pitch)));
     return { row, col };
   };
 
@@ -237,11 +299,95 @@ const FloorCanvas = forwardRef(function FloorCanvas(
     else zoomOut();
   };
 
+  // ---- Resize (add/remove rows & columns from a given edge) ----
+
+  const showWarning = (msg) => {
+    setWarning(msg);
+    if (warningTimeoutRef.current) clearTimeout(warningTimeoutRef.current);
+    warningTimeoutRef.current = setTimeout(() => setWarning(""), 2200);
+  };
+
+  const shiftActiveCells = (rowDelta, colDelta) => {
+    if (!rowDelta && !colDelta) return;
+    const next = new Set();
+    activeRef.current.forEach((key) => {
+      const [r, c] = key.split("-").map(Number);
+      next.add(`${r + rowDelta}-${c + colDelta}`);
+    });
+    activeRef.current = next;
+  };
+
+  const rowHasOccupied = (rowIndex) => {
+    for (const key of occupiedMapRef.current.keys()) {
+      if (Number(key.split("-")[0]) === rowIndex) return true;
+    }
+    return false;
+  };
+
+  const colHasOccupied = (colIndex) => {
+    for (const key of occupiedMapRef.current.keys()) {
+      if (Number(key.split("-")[1]) === colIndex) return true;
+    }
+    return false;
+  };
+
+  const commitResize = (partial, meta) => {
+    const next = { ...dims, ...partial };
+    setDims(next);
+    onResize?.({ ...meta, rows: next.rows, cols: next.cols });
+  };
+
+  const addRow = (side) => {
+    if (readOnly || dims.rows >= maxRows) return;
+    if (side === "top") shiftActiveCells(1, 0);
+    commitResize({ rows: dims.rows + 1 }, { side, delta: 1 });
+  };
+
+  const removeRow = (side) => {
+    if (readOnly || dims.rows <= minRows) return;
+    const target = side === "top" ? 0 : dims.rows - 1;
+    if (rowHasOccupied(target)) {
+      showWarning("Can't remove — that row has items on it");
+      return;
+    }
+    const next = new Set();
+    activeRef.current.forEach((key) => {
+      const [r, c] = key.split("-").map(Number);
+      if (r === target) return;
+      next.add(`${side === "top" ? r - 1 : r}-${c}`);
+    });
+    activeRef.current = next;
+    commitResize({ rows: dims.rows - 1 }, { side, delta: -1 });
+  };
+
+  const addCol = (side) => {
+    if (readOnly || dims.cols >= maxCols) return;
+    if (side === "left") shiftActiveCells(0, 1);
+    commitResize({ cols: dims.cols + 1 }, { side, delta: 1 });
+  };
+
+  const removeCol = (side) => {
+    if (readOnly || dims.cols <= minCols) return;
+    const target = side === "left" ? 0 : dims.cols - 1;
+    if (colHasOccupied(target)) {
+      showWarning("Can't remove — that column has items on it");
+      return;
+    }
+    const next = new Set();
+    activeRef.current.forEach((key) => {
+      const [r, c] = key.split("-").map(Number);
+      if (c === target) return;
+      next.add(`${r}-${side === "left" ? c - 1 : c}`);
+    });
+    activeRef.current = next;
+    commitResize({ cols: dims.cols - 1 }, { side, delta: -1 });
+  };
+
   return (
     <div className="inline-block max-w-full rounded-lg border border-graphite-300 bg-white dark:border-graphite-600 dark:bg-graphite-800">
       <div className="flex items-center justify-between border-b border-graphite-200 px-2 py-1.5 dark:border-graphite-700">
         <span className="text-xs text-graphite-500 dark:text-graphite-400">
-          {rows} × {cols} · {Math.round(zoom * 100)}%
+          {dims.rows} × {dims.cols} · {Math.round(zoom * 100)}%
         </span>
         <div className="flex items-center gap-1">
           <button
@@ -268,21 +414,82 @@ const FloorCanvas = forwardRef(function FloorCanvas(
         </div>
       </div>
 
-      <div
-        onWheel={handleWheel}
-        style={{ maxHeight: height, maxWidth: "100%" }}
-        className="overflow-auto"
-      >
-        <canvas
-          ref={canvasRef}
-          width={width}
-          height={heightPx}
-          onMouseDown={handleDown}
-          onMouseMove={handleMove}
-          className={readOnly ? "" : "cursor-crosshair"}
-          style={{ display: "block" }}
-        />
-      </div>
+      {warning && (
+        <div className="border-b border-amber-200 bg-amber-50 px-2 py-1 text-xs text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-300">
+          {warning}
+        </div>
+      )}
+
+      {readOnly ? (
+        <div
+          onWheel={handleWheel}
+          style={{ maxHeight: height, maxWidth: "100%" }}
+          className="overflow-auto"
+        >
+          <canvas
+            ref={canvasRef}
+            width={width}
+            height={heightPx}
+            style={{ display: "block" }}
+          />
+        </div>
+      ) : (
+        <div className="flex items-stretch">
+          <div className="flex flex-col items-center justify-center border-r border-graphite-200 dark:border-graphite-700">
+            <EdgeControl
+              orientation="col"
+              onAdd={() => addCol("left")}
+              onRemove={() => removeCol("left")}
+              canAdd={dims.cols < maxCols}
+              canRemove={dims.cols > minCols}
+            />
+          </div>
+
+          <div className="flex flex-col">
+            <EdgeControl
+              orientation="row"
+              onAdd={() => addRow("top")}
+              onRemove={() => removeRow("top")}
+              canAdd={dims.rows < maxRows}
+              canRemove={dims.rows > minRows}
+            />
+
+            <div
+              onWheel={handleWheel}
+              style={{ maxHeight: height, maxWidth: "100%" }}
+              className="overflow-auto"
+            >
+              <canvas
+                ref={canvasRef}
+                width={width}
+                height={heightPx}
+                onMouseDown={handleDown}
+                onMouseMove={handleMove}
+                className="cursor-crosshair"
+                style={{ display: "block" }}
+              />
+            </div>
+
+            <EdgeControl
+              orientation="row"
+              onAdd={() => addRow("bottom")}
+              onRemove={() => removeRow("bottom")}
+              canAdd={dims.rows < maxRows}
+              canRemove={dims.rows > minRows}
+            />
+          </div>
+
+          <div className="flex flex-col items-center justify-center border-l border-graphite-200 dark:border-graphite-700">
+            <EdgeControl
+              orientation="col"
+              onAdd={() => addCol("right")}
+              onRemove={() => removeCol("right")}
+              canAdd={dims.cols < maxCols}
+              canRemove={dims.cols > minCols}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 });

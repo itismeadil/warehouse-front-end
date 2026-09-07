@@ -14,3 +14,8 @@ export const deleteFloor = (floorId) =>
 
 export const restoreFloor = (floorId) =>
   api.post(`/floors/${floorId}/restore`).then((res) => res.data);
+
+export async function updateFloor(id, data) {
+  const res = await api.patch(`/floors/${id}`, data);
+  return res.data;
+}

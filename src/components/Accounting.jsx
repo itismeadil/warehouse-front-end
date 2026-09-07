@@ -8,12 +8,14 @@ import {
   ArrowDown,
   ArrowUp,
   CreditCard,
+  TrendingUp,
 } from "lucide-react";
 import CalculationsTab from "./accounting/CalculationsTab";
 import SellReserveTab from "./accounting/SellReserveTab";
 import PurchaseInvoicesTab from "./accounting/PurchaseInvoicesTab";
 import SalesInvoicesTab from "./accounting/SalesInvoicesTab";
 import ExpensesTab from "./accounting/ExpensesTab";
+import ProfitCalculator from "./accounting/ProfitCalculator";
 
 const TABS = [
   {
@@ -22,6 +24,13 @@ const TABS = [
     description: "calculationsDescription",
     Component: CalculationsTab,
     icon: Calculator,
+  },
+  {
+    id: "profitCalculator",
+    label: "profitCalculator",
+    description: "profitCalculatorDescription",
+    Component: ProfitCalculator,
+    icon: TrendingUp,
   },
   {
     id: "sellReserve",

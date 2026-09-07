@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Trash2, RotateCcw, Map } from "lucide-react";
+import { Trash2, RotateCcw, Map, Pencil } from "lucide-react";
 import {
   getFloors,
   createFloor,
+  updateFloor,
   getFloorOccupancy,
   deleteFloor,
   restoreFloor,
@@ -17,7 +18,7 @@ import AlertModal from "./AlertModal";
 import EmptyState from "./EmptyState";
 import { useAlert } from "../hooks/useAlert";
 
-function FloorCard({ floor, occupancy, onDelete, onRestore }) {
+function FloorCard({ floor, occupancy, onDelete, onRestore, onEdit }) {
   const { t } = useTranslation();
 
   const shapeCells = useMemo(
@@ -114,6 +115,15 @@ function FloorCard({ floor, occupancy, onDelete, onRestore }) {
         <div className="flex items-center gap-2">
           {!isDeleted && (
             <button
+              onClick={() => onEdit(floor)}
+              className="rounded-lg p-2 text-graphite-400 transition-colors hover:bg-graphite-100 hover:text-graphite-700 dark:text-graphite-500 dark:hover:bg-graphite-700"
+              title={t("editFloor", "Edit Floor")}
+            >
+              <Pencil className="h-5 w-5" />
+            </button>
+          )}
+          {!isDeleted && (
+            <button
               onClick={() => onDelete(floor)}
               className="rounded-lg p-2 text-graphite-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:text-graphite-500 dark:hover:bg-red-900/30"
               title={t("deleteFloor")}
@@ -134,7 +144,7 @@ function FloorCard({ floor, occupancy, onDelete, onRestore }) {
       </div>
 
       {!isDeleted && (
-        <div className="rounded-xl border border-graphite-200 bg-white p-4 dark:border-graphite-700 dark:bg-graphite-900">
+        <div>
           {occupancy ? (
             <FloorGrid
               rows={floor.rows}
@@ -164,6 +174,7 @@ export default function FloorsMap() {
   const [preset, setPreset] = useState(null);
   const [template, setTemplate] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [editingFloor, setEditingFloor] = useState(null);
   const [toast, setToast] = useState(null);
   const editorRef = useRef(null);
   const toastTimeoutRef = useRef(null);
@@ -201,6 +212,7 @@ export default function FloorsMap() {
     setName("");
     setPreset(null);
     setTemplate(null);
+    setEditingFloor(null);
     setShowForm(false);
   };
 
@@ -208,6 +220,17 @@ export default function FloorsMap() {
     setToast(message);
     window.clearTimeout(toastTimeoutRef.current);
     toastTimeoutRef.current = window.setTimeout(() => setToast(null), 3500);
+  };
+
+  const handleEditFloor = (floor) => {
+    setEditingFloor(floor);
+    setName(floor.name);
+    // Lock the preset to the floor's existing size — resizing isn't part of
+    // this edit flow, so we skip the size-picker and template-picker steps
+    // and go straight to the shape editor pre-filled with the current shape.
+    setPreset({ id: "existing", rows: floor.rows, cols: floor.cols });
+    setTemplate({ id: "existing" });
+    setShowForm(true);
   };
 
   const handleCreateFloor = async () => {
@@ -234,12 +257,21 @@ export default function FloorsMap() {
 
     setSaving(true);
     try {
-      await createFloor({
-        name,
-        rows: preset.rows,
-        cols: preset.cols,
-        shape,
-      });
+      if (editingFloor) {
+        await updateFloor(editingFloor._id, {
+          name,
+          rows: preset.rows,
+          cols: preset.cols,
+          shape,
+        });
+      } else {
+        await createFloor({
+          name,
+          rows: preset.rows,
+          cols: preset.cols,
+          shape,
+        });
+      }
       resetForm();
       loadFloors();
     } catch (error) {
@@ -324,7 +356,10 @@ export default function FloorsMap() {
             {showDeleted ? t("hideDeleted") : t("showDeleted")}
           </button>
           <button
-            onClick={() => setShowForm((v) => !v)}
+            onClick={() => {
+              setEditingFloor(null);
+              setShowForm((v) => !v);
+            }}
             className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-graphite-900"
           >
             <span className="text-lg leading-none">+</span>
@@ -337,10 +372,15 @@ export default function FloorsMap() {
         <div className="mb-5 rounded-xl border border-graphite-200 bg-white p-4 shadow-sm dark:border-graphite-700 dark:bg-graphite-800">
           <div className="mb-5">
             <h2 className="text-sm font-semibold text-graphite-900 dark:text-graphite-100">
-              {t("newFloor")}
+              {editingFloor ? t("editFloor", "Edit Floor") : t("newFloor")}
             </h2>
             <p className="mt-1 text-sm text-graphite-600 dark:text-graphite-400">
-              {t("newFloorDescription")}
+              {editingFloor
+                ? t(
+                    "editFloorDescription",
+                    "Update the name or fine-tune the shape.",
+                  )
+                : t("newFloorDescription")}
             </p>
           </div>
 
@@ -359,46 +399,48 @@ export default function FloorsMap() {
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-semibold text-graphite-700 dark:text-graphite-300">
-                {t("size")}
-              </label>
+            {!editingFloor && (
+              <div>
+                <label className="block text-sm font-semibold text-graphite-700 dark:text-graphite-300">
+                  {t("size")}
+                </label>
 
-              <div className="mt-3 flex items-end gap-4">
-                {FLOOR_SIZE_PRESETS.map((p) => (
-                  <button
-                    key={p.id}
-                    type="button"
-                    onClick={() => {
-                      setPreset(p);
-                      setTemplate(null); // changing size invalidates the previous template pick
-                    }}
-                    className={`flex h-20 w-20 flex-col items-center justify-center gap-2 rounded-xl border-2 transition-colors ${
-                      preset?.id === p.id
-                        ? "border-primary-500 bg-primary-50 dark:bg-primary-900/30"
-                        : "border-graphite-200 bg-white hover:border-graphite-300 dark:border-graphite-700 dark:bg-graphite-800 dark:hover:border-graphite-600"
-                    }`}
-                  >
-                    <span
-                      className={`rounded-md transition-colors ${
-                        preset?.id === p.id
-                          ? "bg-primary-600"
-                          : "bg-graphite-400"
-                      }`}
-                      style={{
-                        width: p.previewPx,
-                        height: p.previewPx,
+                <div className="mt-3 flex items-end gap-4">
+                  {FLOOR_SIZE_PRESETS.map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => {
+                        setPreset(p);
+                        setTemplate(null); // changing size invalidates the previous template pick
                       }}
-                    />
-                    <span className="text-xs font-medium text-graphite-600 dark:text-graphite-400">
-                      {p.label}
-                    </span>
-                  </button>
-                ))}
+                      className={`flex h-20 w-20 flex-col items-center justify-center gap-2 rounded-xl border-2 transition-colors ${
+                        preset?.id === p.id
+                          ? "border-primary-500 bg-primary-50 dark:bg-primary-900/30"
+                          : "border-graphite-200 bg-white hover:border-graphite-300 dark:border-graphite-700 dark:bg-graphite-800 dark:hover:border-graphite-600"
+                      }`}
+                    >
+                      <span
+                        className={`rounded-md transition-colors ${
+                          preset?.id === p.id
+                            ? "bg-primary-600"
+                            : "bg-graphite-400"
+                        }`}
+                        style={{
+                          width: p.previewPx,
+                          height: p.previewPx,
+                        }}
+                      />
+                      <span className="text-xs font-medium text-graphite-600 dark:text-graphite-400">
+                        {p.label}
+                      </span>
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
-            {preset && (
+            {preset && !editingFloor && (
               <div>
                 <label className="block text-sm font-semibold text-graphite-700 dark:text-graphite-300">
                   {t("chooseStartingLayout", "Starting layout")}
@@ -435,13 +477,22 @@ export default function FloorsMap() {
 
                 <div className="mt-3">
                   <FloorShapeEditor
-                    // Re-key on both preset and template so switching either
-                    // remounts the editor with a fresh, pre-filled starting shape.
-                    key={`${preset.id}-${template.id}`}
+                    // Re-key on preset, template, and the floor being edited (if
+                    // any) so switching any of them remounts the editor with a
+                    // fresh, pre-filled starting shape.
+                    key={`${preset.id}-${template.id}-${editingFloor?._id ?? "new"}`}
                     ref={editorRef}
                     rows={preset.rows}
                     cols={preset.cols}
-                    initialCells={template.getCells(preset.rows, preset.cols)}
+                    initialCells={
+                      editingFloor
+                        ? decodeShape(
+                            editingFloor.rows,
+                            editingFloor.cols,
+                            editingFloor.shape,
+                          )
+                        : template.getCells(preset.rows, preset.cols)
+                    }
                   />
                 </div>
 
@@ -470,7 +521,11 @@ export default function FloorsMap() {
                 disabled={saving}
                 className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {saving ? t("saving") : t("createFloor")}
+                {saving
+                  ? t("saving")
+                  : editingFloor
+                    ? t("saveChanges", "Save Changes")
+                    : t("createFloor")}
               </button>
             </div>
           </div>
@@ -496,7 +551,7 @@ export default function FloorsMap() {
           action={{ label: t("createFloor"), onClick: () => setShowForm(true) }}
         />
       ) : (
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-1">
           {floors.map((floor) => (
             <FloorCard
               key={floor._id}
@@ -504,6 +559,7 @@ export default function FloorsMap() {
               occupancy={occupancyByFloor[floor._id]}
               onDelete={handleDeleteFloor}
               onRestore={handleRestoreFloor}
+              onEdit={handleEditFloor}
             />
           ))}
         </div>
